@@ -1,0 +1,74 @@
+
+services:
+
+  database:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    volumes:
+      - ./database/data/prod:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    stop_grace_period: 30s
+
+  backend:
+    build:
+      context: ../forja_back-end
+      dockerfile: Dockerfile.prod
+
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-3101}:3001"
+
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../forja_frontend
+      dockerfile: Dockerfile.prod
+
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+
+    restart: unless-stopped
+
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3100}:3000"
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      INTERNAL_API_URL: http://backend:3001
+
+    depends_on:
+      - backend
