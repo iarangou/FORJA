@@ -88,3 +88,15 @@ services:
       - backend
 
     command: npm run dev -- --hostname 0.0.0.0
+
+  adminer:
+    image: adminer:latest
+    container_name: forja_adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
