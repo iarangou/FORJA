@@ -9,9 +9,4 @@ export class TestController {
     test() {
         return this.testService.test();
     }
-
-    @Get("time")
-    getCurrentTime() {
-        return this.testService.getCurrentTime();
-    }
 }

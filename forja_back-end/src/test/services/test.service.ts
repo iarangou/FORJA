@@ -1,19 +1,17 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
+import { DatabaseService } from "../../database/service/database.service.js";
 
 @Injectable()
 export class TestService {
-    constructor () {}
+    constructor(
+        private readonly db: DatabaseService
+    ) { }
     async test() {
-        return "todo bien :)";
-    }
+        const { rows } = await this.db.query(
+            'SELECT * FROM docker_test WHERE id = $1',
+            [1],
+        );
 
-    getCurrentTime() {
-        const now = new Date();
-
-        return {
-            iso: now.toISOString(),
-            time: now.toLocaleTimeString("es-CO"),
-            date: now.toLocaleDateString("es-CO"),
-        };
+        return rows;
     }
 }

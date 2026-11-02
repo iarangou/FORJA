@@ -8,7 +8,6 @@ import { TestService } from "./services/test.service.js";
     controllers: [TestController],
     providers: [TestService],
     exports: [TestService]
-
 })
 
 export class TestModule{}
