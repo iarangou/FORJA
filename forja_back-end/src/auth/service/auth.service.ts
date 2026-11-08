@@ -77,8 +77,6 @@ export class AuthService {
             [dto.username, dto.email],
         )
 
-        console.log(rows);
-
         const { username, email} = rows[0];
         if(username && email) {
             throw new ConflictException('The username and the email is already taken.');

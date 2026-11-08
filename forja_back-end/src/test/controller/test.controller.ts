@@ -2,7 +2,7 @@ import { Controller, Get, UseGuards } from "@nestjs/common";
 import { TestService } from "../services/test.service.js";
 import { AuthGuard } from '../../auth/guard/auth.guard.js';
 import { RolesGuard } from '../../auth/guard/roles.guard.js';
-import { Roles } from '../../auth/decorator/roles.decorator.js';
+import { Roles } from '../../shared/decorator/roles.decorator.js';
 
 @Controller("test/")
 export class TestController {

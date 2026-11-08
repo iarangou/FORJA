@@ -6,7 +6,7 @@ export class RegisterDto {
     username: string;
 
     @IsString()
-    @IsEmail()
+    @IsEmail({host_whitelist: ['javerianacali.edu.co']})
     @IsNotEmpty()
     email: string;
 
@@ -16,7 +16,6 @@ export class RegisterDto {
 
     @IsString()
     @IsNotEmpty()
-    // @MinLength(8)
+    @MinLength(8)
     password: string;
 }
-
