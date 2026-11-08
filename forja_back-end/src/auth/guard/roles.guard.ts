@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { PayloadJwt } from '../../shared/types/auth.types.js';
+import type { PayloadJwt, RoleId } from '../../shared/types/auth.types.js';
+import { ROLES_KEY } from '../decorator/roles.decorator.js';
 
 interface RequestHttp {
   user?: PayloadJwt;
@@ -11,7 +12,7 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+    const requiredRoles = this.reflector.getAllAndOverride<RoleId[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -23,12 +24,12 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestHttp>();
     const user = request.user;
 
-    if (!user?.rol) {
+    if (!user?.rol_id) {
       throw new ForbiddenException('No tienes rol asignado');
     }
 
     // 4. ¿Tiene alguno de los roles requeridos?
-    const allowed = requiredRoles.includes(user.rol as Role);
+    const allowed = requiredRoles.includes(user.rol_id);
     if (!allowed) {
       throw new ForbiddenException('No tienes permiso para esta ruta');
     }

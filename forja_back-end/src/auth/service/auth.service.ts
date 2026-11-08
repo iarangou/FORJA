@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 
 import { DatabaseService } from "../../database/service/database.service.js";
 import { LoginDto } from "../dto/login.dto.js";
-import { PayloadJwt } from "../../shared/types/auth.types.js";
+import type { PayloadJwt } from "../../shared/types/auth.types.js";
 import { RegisterDto } from "../dto/register.dto.js";
 
 @Injectable()
@@ -23,7 +23,8 @@ export class AuthService {
             rol_id: number
         }>(
             `
-            SELECT u.id, u.username, u.password_hash, u.email, u.rol_id FROM users u
+            SELECT u.id, u.username, u.password_hash, u.email, u.rol_id
+                FROM users u
                 WHERE u.username = $1
                 ORDER BY u.id
                 LIMIT 1
@@ -53,7 +54,8 @@ export class AuthService {
         
         const payload: PayloadJwt = {
             sub: user.id,
-            username: user.username
+            username: user.username,
+            rol_id: user.rol_id
         }
 
         return {
