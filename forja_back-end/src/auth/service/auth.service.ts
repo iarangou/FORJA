@@ -20,13 +20,13 @@ export class AuthService {
             username: string,
             password_hash: string,
             email: string,
-            rol_id: number
+            rol_id: number,
+            active: boolean
         }>(
             `
-            SELECT u.id, u.username, u.password_hash, u.email, u.rol_id
+            SELECT u.id, u.username, u.password_hash, u.email, u.rol_id, u.active
                 FROM users u
                 WHERE u.username = $1
-                ORDER BY u.id
                 LIMIT 1
             `,
             [dto.username],
@@ -38,6 +38,10 @@ export class AuthService {
         const user = rows[0];
         if(!user) {
             throw new UnauthorizedException('Credenciales inválidas');
+        }
+
+        if(!user.active) {
+            throw new UnauthorizedException('Usuario inactivo');
         }
         
         const isValid = await bcrypt.compare(dto.password, user.password_hash)
@@ -66,43 +70,36 @@ export class AuthService {
 
     async register(dto: RegisterDto) {
         const { rows } = await this.db.query<{
-            username: string,
             email: string,
         }>(
             `
-            SELECT bool_or(u.username = $1) AS username, bool_or(u.email    = $2) AS email
+            SELECT bool_or(u.email = $1) AS email
             FROM users u
-            WHERE u.username = $1 OR u.email = $2
+            WHERE u.email = $1
             `,
-            [dto.username, dto.email],
+            [dto.email],
         )
 
-        const { username, email} = rows[0];
-        if(username && email) {
-            throw new ConflictException('The username and the email is already taken.');
-        }
-
-        if(username) {
-            throw new ConflictException('The username is taken.');
-        };
+        const {email} = rows[0];
 
         if(email) {
-            throw new ConflictException('The email is taken.');
+            throw new ConflictException('El correo electrónico ya está registrado');
         }
 
         const password_hash = await bcrypt.hash(dto.password, 12);
+
+        const username = dto.email.split('@')[0].toLowerCase();
 
         await this.db.query(
             `
             INSERT INTO users (username, email, full_name, password_hash)
                 VALUES ($1, $2, $3, $4);
             `,
-            [dto.username, dto.email, dto.full_name, password_hash]
+            [username, dto.email, dto.full_name, password_hash]
         )
 
-        return this.login({
-            username: dto.username,
-            password: dto.password
-        })
+        return {
+            message: 'User registered successfully',
+        }
     }
 }

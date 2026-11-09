@@ -4,6 +4,9 @@ import { TestModule } from './test/test.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AuthModule } from './auth/auth.module.js';
 
+import { CourseModule } from './course/course.module.js';
+import { FacultyModule } from './faculty/faculty.module.js';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -13,6 +16,8 @@ import { AuthModule } from './auth/auth.module.js';
     TestModule,
     DatabaseModule,
     AuthModule,
+    CourseModule,
+    FacultyModule
   ],
 })
 export class AppModule {}

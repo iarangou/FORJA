@@ -2,11 +2,7 @@ import { IsEmail, isEmail, IsNotEmpty, IsString, MinLength } from 'class-validat
 
 export class RegisterDto {
     @IsString()
-    @IsNotEmpty()
-    username: string;
-
-    @IsString()
-    @IsEmail({host_whitelist: ['javerianacali.edu.co']})
+    @IsEmail({host_whitelist: ['javerianacali.edu.co']}, {message: 'Email must be a valid javerianacali.edu.co email address'})
     @IsNotEmpty()
     email: string;
 
