@@ -1,132 +1,288 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Endpoints de FORJA
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Roles y alcance de permisos
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Los IDs siguientes corresponden a la carga inicial de roles en una base nueva. Los permisos descritos corresponden a los endpoints del commit documentado.
 
-## Description
+| ID | Rol | Significado | Permisos actuales |
+| --- | --- | --- | --- |
+| 1 | `admin` — Administrador | Perfil de administración de la plataforma. | Puede acceder a todos los endpoints protegidos documentados: crear cursos; crear, actualizar y eliminar facultades; y consultar `/test`. Las limitaciones actuales de actualizar y eliminar facultades se detallan en sus endpoints. |
+| 2 | `evaluator` — Evaluador | Perfil destinado a la evaluación de proyectos. | Todavía no tiene endpoints propios ni permisos de evaluación implementados. No puede acceder a los endpoints protegidos documentados. |
+| 3 | `teacher` — Docente | Perfil docente, asignado por defecto al registrar una cuenta. | Todavía no tiene endpoints propios ni permisos de gestión de proyectos implementados. No puede acceder a los endpoints protegidos documentados. |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Registro e inicio de sesión son públicos. Cualquier cuenta puede iniciar sesión si está activa y presenta credenciales válidas. Los roles no implican una jerarquía automática: los permisos futuros de evaluadores y docentes deben definirse al implementar sus endpoints.
 
-## Project setup
 
-```bash
-$ npm install
+## 1. POST /auth/register
+
+**Explicación:** registra una cuenta con username generado a partir de la parte anterior a `@` del correo, convertida a minúsculas. Guarda la contraseña con bcrypt. No inicia sesión ni entrega JWT.
+
+**Recibe — cuerpo JSON:**
+
+```json
+{
+  "email": "ana@javerianacali.edu.co",
+  "full_name": "Ana Pérez",
+  "password": "una-clave-segura"
+}
 ```
 
-## Compile and run the project
+| Campo | Tipo | Restricciones |
+| --- | --- | --- |
+| `email` | string | Obligatorio; correo válido con dominio permitido `javerianacali.edu.co`. |
+| `full_name` | string | Obligatorio, no vacío. |
+| `password` | string | Obligatorio, mínimo 8 caracteres. |
 
-```bash
-# development
-$ npm run start
+**Retorna — HTTP 201:**
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```json
+{
+  "message": "User registered successfully"
+}
 ```
 
-## Run tests
+**Restricciones y errores:**
 
-```bash
-# unit tests
-$ npm run test
+- Público: no requiere token.
+- No recibe username, ID de rol ni estado de activación.
+- Según el esquema, el rol predeterminado es `3` y `active` queda en `false` (por temas de testeo estara en true, pero tendra que hacerse la respetiva verificacion que se hablara despues :). La cuenta no podrá iniciar sesión hasta activarse. No existe en estos controladores un endpoint de activación o verificación por correo.
+- HTTP 400 si falla el DTO o se incluyen campos adicionales. El mensaje específico del validador de correo es `Email must be a valid javerianacali.edu.co email address`.
+- HTTP 409 con `El correo electrónico ya está registrado` si la consulta previa encuentra exactamente el correo recibido.
+- La comprobación de correo en el servicio es sensible a mayúsculas/minúsculas y no normaliza el email. La generación del username sí lo convierte a minúsculas.
+- PostgreSQL exige email y username únicos. Una colisión de username generado o una carrera entre registros puede producir HTTP 500 porque el INSERT no captura esas violaciones.
+- Límites de base de datos: email 254 caracteres, nombre completo 180 y username generado 80. No tienen validadores de longitud máxima en el DTO; si se superan pueden producir HTTP 500.
 
-# e2e tests
-$ npm run test:e2e
+## 2. POST /auth/login
 
-# test coverage
-$ npm run test:cov
+**Explicación:** autentica una cuenta activa, actualiza `last_login_at` y entrega un JWT con `sub`, `username` y `rol_id`.
+
+**Recibe — cuerpo JSON:**
+
+```json
+{
+  "username": "ana",
+  "password": "una-clave-segura"
+}
 ```
 
-## Deployment
+| Campo | Tipo | Restricciones |
+| --- | --- | --- |
+| `username` | string | Obligatorio, no vacío; se compara exactamente con `users.username`. |
+| `password` | string | Obligatorio, no vacío. No hay longitud mínima de login en el DTO. |
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+**Retorna — HTTP 201:**
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```json
+{
+  "access_token": "<jwt-firmado>",
+  "user": {
+    "id": "7",
+    "username": "ana",
+    "rol": 3
+  }
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+El ejemplo muestra `id` como string porque `users.id` es BIGINT y el servicio usa el parser predeterminado de `pg`. Su anotación TypeScript como `number` no convierte el valor en ejecución. `rol` en la respuesta es numérico; el mismo dato se llama `rol_id` dentro del JWT. No se devuelve el hash de contraseña.
 
-## Observability
+**Restricciones y errores:**
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+- Público: no requiere token previo.
+- En este commit solo admite username. No busca por correo, aunque exista una propuesta local de login por correo fuera del commit documentado.
+- HTTP 400 si el cuerpo no cumple el DTO o contiene campos extra.
+- HTTP 401 con `Credenciales inválidas` si el username no existe o la contraseña es incorrecta.
+- HTTP 401 con `Usuario inactivo` si la cuenta existe y tiene `active = false`. Esta comprobación ocurre antes de verificar la contraseña.
+- Requiere configuración JWT válida y conectividad con PostgreSQL.
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+## 3. POST /course/create
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+**Explicación:** crea un curso en la tabla `course`.
 
-To add it to this project, run this and approve the code it prints at [observe.nestjs.com/link](https://observe.nestjs.com/link) - signing up for free if you have no account:
+**Recibe — headers:**
 
-```bash
-$ npx @nestjs/observe link
+```http
+Authorization: Bearer <access_token>
+Content-Type: application/json
 ```
 
-It installs `@nestjs/observe`, wires it into `AppModule` and `main.ts`, and writes the app key and secret into `.env`, which every `nest start` script (`start`, `start:dev`, `start:debug`) then loads. In production, set `OBSERVE_APP_KEY` and `OBSERVE_APP_SECRET` in the environment instead.
+**Recibe — cuerpo JSON:**
 
-Or do it by hand:
-
-```bash
-$ npm install @nestjs/observe
+```json
+{
+  "name": "Programación I"
+}
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/sdk) - it takes a single import and an app key.
+`name`: string obligatorio y no vacío.
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+**Retorna — HTTP 201:**
 
-## Resources
+```json
+{
+  "message": "Course created successfully"
+}
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+**Restricciones y errores:**
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- JWT válido y rol ID `1`. Aplican los HTTP 401/403 descritos al inicio.
+- HTTP 400 por cuerpo inválido o campos extra.
+- HTTP 409 con `El curso ya existe` al violarse la restricción `course_name_key`.
+- El nombre es único y admite hasta 180 caracteres en PostgreSQL. El DTO no valida esa longitud máxima.
+- No se normalizan mayúsculas ni espacios; la restricción definida no implementa unicidad ignorando mayúsculas.
+- No devuelve el ID ni el registro creado. Otros errores SQL no se traducen y pueden producir HTTP 500.
 
-## Support
+## 4. POST /faculty/create
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+**Explicación:** crea una facultad en la tabla `faculty`.
 
-## Stay in touch
+**Recibe — headers:** `Authorization: Bearer <access_token>` y `Content-Type: application/json`.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Recibe — cuerpo JSON:**
 
-## License
+```json
+{
+  "name": "Facultad de Ingeniería"
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+`name`: string obligatorio y no vacío.
+
+**Retorna — HTTP 201:**
+
+```json
+{
+  "message": "Facultad creada exitosamente"
+}
+```
+
+**Restricciones y errores:**
+
+- JWT válido y rol ID `1`. Aplican los HTTP 401/403 generales.
+- HTTP 400 por cuerpo inválido o campos extra.
+- HTTP 409 con `La facultad ya existe` al violarse `faculty_name_key`.
+- Nombre único, máximo 180 caracteres en PostgreSQL, sin validación de longitud máxima en el DTO ni normalización de espacios/mayúsculas.
+- No devuelve el ID ni el registro creado. Otros errores SQL pueden producir HTTP 500.
+
+## 5. POST /faculty/update
+
+**Explicación:** ejecuta la actualización del nombre de una facultad por ID. Actualmente su respuesta tiene un defecto: el servicio consulta `rows[0]` después de un UPDATE sin `RETURNING`.
+
+**Recibe — headers:** `Authorization: Bearer <access_token>` y `Content-Type: application/json`.
+
+**Recibe — cuerpo JSON:**
+
+```json
+{
+  "id": 1,
+  "name": "Facultad de Ciencias"
+}
+```
+
+| Campo | Tipo | Restricciones |
+| --- | --- | --- |
+| `id` | number | Obligatorio; enviar número JSON, no string. |
+| `name` | string | Obligatorio, no vacío. |
+
+**Retorna actualmente — HTTP 404 si el UPDATE termina sin error SQL:**
+
+```json
+{
+  "message": "Faculty not found",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
+
+**Restricciones y comportamiento actual:**
+
+- JWT válido y rol ID `1`. Aplican HTTP 401/403 generales y HTTP 400 por DTO inválido.
+- El nombre sigue sujeto a unicidad y longitud máxima de 180 caracteres en PostgreSQL.
+- El UPDATE puede guardar el cambio y luego responder 404 porque `rows` está vacío. El mismo 404 aparece si no existe el ID. No se debe interpretar esa respuesta como garantía de que no se modificaron datos.
+- Un nombre duplicado no se captura aquí como conflicto; puede terminar en HTTP 500.
+- El servicio contiene el mensaje de éxito `{"message":"faculty has been updated"}`, que correspondería a HTTP 201, pero no se alcanza en el flujo SQL actual. No debe documentarse como éxito operativo.
+
+## 6. POST /faculty/delete
+
+**Explicación:** ejecuta la eliminación de una facultad por ID. El controlador usa actualmente `FacultyUpdateDto`, aunque existe `FacultyDeleteDto` con solo `id`.
+
+**Recibe — headers:** `Authorization: Bearer <access_token>` y `Content-Type: application/json`.
+
+**Recibe actualmente — cuerpo JSON:**
+
+```json
+{
+  "id": 1,
+  "name": "Facultad de Ingeniería"
+}
+```
+
+| Campo | Tipo | Restricciones |
+| --- | --- | --- |
+| `id` | number | Obligatorio; es el dato usado para borrar. |
+| `name` | string | Obligatorio por el DTO registrado, aunque el servicio no lo utiliza. |
+
+**Retorna actualmente — HTTP 500 si el DELETE termina sin error SQL:**
+
+```json
+{
+  "statusCode": 500,
+  "message": "Internal server error"
+}
+```
+
+**Restricciones y comportamiento actual:**
+
+- JWT válido y rol ID `1`. Aplican HTTP 401/403 generales.
+- Enviar solo `id` produce HTTP 400 porque falta `name` en el DTO usado por el controlador.
+- El DELETE no incluye `RETURNING`. Después intenta desestructurar `rows[0]`, que es `undefined`, causando una excepción. Puede borrar el registro y luego responder 500; no se debe reintentar asumiendo que la operación no ocurrió.
+- Si no existe el ID, también termina en ese error; el `NotFoundException` posterior no se alcanza.
+- Si una fila de `teacher` referencia la facultad, su clave foránea `ON DELETE RESTRICT` impide borrarla. El servicio no captura ese caso y puede devolver HTTP 500.
+- El mensaje previsto `{"message":"Faculty has been deleted successfully"}` (HTTP 201 por ser POST) no se alcanza en el flujo actual.
+- El método HTTP registrado es POST, no DELETE.
+
+## 7. GET /test
+
+**Explicación:** consulta la tabla `docker_test` y devuelve las filas con `id = 1`. Sirve como comprobación funcional de lectura de la base de datos.
+
+**Recibe — header:**
+
+```http
+Authorization: Bearer <access_token>
+```
+
+No recibe cuerpo, parámetros de ruta ni query documentados.
+
+**Retorna — HTTP 200:** un arreglo de filas. Ejemplo ilustrativo de la estructura definida en `01_init.sql`:
+
+```json
+[
+  {
+    "id": "1",
+    "message": "Base de datos FORJA funcionando, claro que si",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  }
+]
+```
+
+El contenido y la fecha dependen de los datos reales. `id` es BIGSERIAL y se serializa normalmente como string con el parser predeterminado de `pg`.
+
+**Restricciones y errores:**
+
+- JWT válido y rol ID `1`. Aplican HTTP 401/403 generales.
+- Si no existe una fila con ID 1, devuelve HTTP 200 con `[]`.
+- Si falla la conexión o no existe la tabla, el error no se captura y puede devolver HTTP 500.
+
+## Resumen de rutas registradas
+
+| Método | Dirección | Token | Rol ID | Resultado actual principal |
+| --- | --- | --- | --- | --- |
+| POST | `/auth/register` | No | No aplica | 201: mensaje de registro, cuenta inactiva |
+| POST | `/auth/login` | No | No aplica | 201: JWT y usuario activo |
+| POST | `/course/create` | Sí | 1 | 201: mensaje de creación |
+| POST | `/faculty/create` | Sí | 1 | 201: mensaje de creación |
+| POST | `/faculty/update` | Sí | 1 | 404 después de ejecutar UPDATE sin RETURNING |
+| POST | `/faculty/delete` | Sí | 1 | 500 después de ejecutar DELETE sin RETURNING |
+| GET | `/test` | Sí | 1 | 200: arreglo de filas |
+
+No hay endpoints registrados para listar cursos o facultades, activar usuarios, verificar correo ni administrar proyectos en este commit.

@@ -10,7 +10,7 @@ export class TestController {
 
     @Get()
     @UseGuards(AuthGuard, RolesGuard)
-    @Roles(1)
+    @Roles(1, 2,3)
     test() {
         return this.testService.test();
     }

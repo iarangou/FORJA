@@ -6,7 +6,7 @@ ON CONFLICT (name) DO NOTHING;
 INSERT INTO faculty (name)
 VALUES ('Ingeniería en Sistemas y Computación');
 
-INSERT INTO users (username, email, full_name, password_hash, rol_id, active)
+INSERT INTO users (username, email, full_name, password_hash, rol_id, is_active)
 VALUES (
     'admin',
     'admin@javerianacali.edu.co',
