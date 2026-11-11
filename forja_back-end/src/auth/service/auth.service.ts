@@ -21,10 +21,10 @@ export class AuthService {
             password_hash: string,
             email: string,
             rol_id: number,
-            active: boolean
+            is_active: boolean
         }>(
             `
-            SELECT u.id, u.username, u.password_hash, u.email, u.rol_id, u.active
+            SELECT u.id, u.username, u.password_hash, u.email, u.rol_id, u.is_active
                 FROM users u
                 WHERE u.username = $1
                 LIMIT 1
@@ -32,15 +32,12 @@ export class AuthService {
             [dto.username],
         ) 
 
-        // El email es para una implementacion futura en el que permita el `username` + `email` (NO OLVIDARME) 
-        // att: Alejandro
-
         const user = rows[0];
         if(!user) {
             throw new UnauthorizedException('Credenciales inválidas');
         }
 
-        if(!user.active) {
+        if(!user.is_active) {
             throw new UnauthorizedException('Usuario inactivo');
         }
         

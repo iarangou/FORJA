@@ -1,24 +1,34 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsInt, IsNumber, IsString, Min, MaxLength } from "class-validator";
 
 export class FacultyCreateDto {
+    @IsInt()
+    @Min(1)
+    id: number;
+
     @IsString()
     @IsNotEmpty()
+    @MaxLength(180)
     name: string;
+
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(10)
+    code: string;
 };
 
 
 export class FacultyUpdateDto {
-    @IsString()
     @IsNotEmpty()
+    @IsString()
     name: string;
 
-    @IsNumber()
-    @IsNotEmpty()
+    @IsInt()
+    @Min(1)
     id: number;
 }
 
 export class FacultyDeleteDto {
-    @IsNumber()
-    @IsNotEmpty()
+    @IsInt()
+    @Min(1)
     id: number;
 }

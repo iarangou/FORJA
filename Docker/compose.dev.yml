@@ -1,6 +1,5 @@
 
 services:
-
   database:
     build:
       context: ./database
@@ -63,34 +62,34 @@ services:
 
     command: npm run start:dev
 
-  frontend:
-    build:
-      context: ../forja_frontend
-      dockerfile: Dockerfile.dev
+  # frontend:
+  #   build:
+  #     context: ../forja_frontend
+  #     dockerfile: Dockerfile.dev
 
-    restart: unless-stopped
+  #   restart: unless-stopped
 
-    working_dir: /app
+  #   working_dir: /app
 
-    ports:
-      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+  #   ports:
+  #     - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
 
-    environment:
-      NODE_ENV: development
-      PORT: 3000
+  #   environment:
+  #     NODE_ENV: development
+  #     PORT: 3000
 
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      INTERNAL_API_URL: http://backend:3001
+  #     NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+  #     INTERNAL_API_URL: http://backend:3001
 
-    volumes:
-      - ../forja_frontend:/app
-      - /app/node_modules
-      - /app/.next
+  #   volumes:
+  #     - ../forja_frontend:/app
+  #     - /app/node_modules
+  #     - /app/.next
 
-    depends_on:
-      - backend
+  #   depends_on:
+  #     - backend
 
-    command: npm run dev -- --hostname 0.0.0.0
+  #   command: npm run dev -- --hostname 0.0.0.0
 
   adminer:
     image: adminer:latest
