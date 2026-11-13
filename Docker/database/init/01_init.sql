@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS docker_test (
 );
 
 INSERT INTO docker_test (message)
-VALUES ('Base de datos FORJA funcionando');
+VALUES ('Base de datos FORJA funcionando, claro que si');

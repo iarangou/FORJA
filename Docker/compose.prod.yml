@@ -47,6 +47,9 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
 
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS}
+
     depends_on:
       database:
         condition: service_healthy

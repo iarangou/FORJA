@@ -1,6 +1,5 @@
 
 services:
-
   database:
     build:
       context: ./database
@@ -27,6 +26,29 @@ services:
       timeout: 5s
       retries: 10
 
+  adminer:
+    image: adminer:latest
+    container_name: forja_adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   backend:
     build:
       context: ../forja_back-end
@@ -49,6 +71,20 @@ services:
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
+
+      REDIS_URL: redis://redis:6379
+      EMAIL_VERIFICATION_SECRET: ${EMAIL_VERIFICATION_SECRET}
+      VERIFICATION_LOG_CODES: ${VERIFICATION_LOG_CODES:-false}
+
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS}
 
     volumes:
       - ../forja_back-end:/app
