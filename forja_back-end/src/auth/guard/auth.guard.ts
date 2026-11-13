@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
+import { DatabaseService } from '../../database/service/database.service.js';
 
 interface RequestHttp {
   headers: Record<string, string | undefined>;
@@ -9,7 +10,10 @@ interface RequestHttp {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly db: DatabaseService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestHttp>();
@@ -19,11 +23,36 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Falta el token');
     }
 
+    let payload: PayloadJwt;
     try {
-      request.user = await this.jwtService.verifyAsync<PayloadJwt>(token);
+      payload = await this.jwtService.verifyAsync<PayloadJwt>(token);
     } catch {
       throw new UnauthorizedException('Token inválido o vencido');
+    };
+
+    const { rows } = await this.db.query<{
+      id: number;
+      username: string;
+      rol_id: number;
+      is_active: boolean;
+    }>(
+      `SELECT u.id, u.username, u.rol_id, u.is_active FROM users u
+       WHERE u.id = $1`,
+      [payload.sub],
+    );
+
+    const user = rows[0];
+
+    if(!user || !user.is_active) {
+      throw new UnauthorizedException('Usuario inactivo o inexistente');
     }
+
+    request.user = {
+      ...payload,
+      sub: user.id,
+      username: user.username,
+      rol_id: user.rol_id,
+    };
 
     return true;
   }

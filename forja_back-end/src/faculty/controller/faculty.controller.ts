@@ -6,25 +6,23 @@ import { Roles } from "../../shared/decorator/roles.decorator.js";
 import { FacultyService } from "../service/faculty.service.js";
 
 
-@Controller("faculties/")
+@Controller("faculty/")
 export class FacultyController {
     constructor (
         private facultyService: FacultyService
     ) {}
 
     @Get()
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(1, 2, 3)
     getAll() {
         return this.facultyService.getAll();
     }
 
-    @Post("create")
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(1)
-    create(@Body() dto: FacultyCreateDto) {
-        return this.facultyService.create(dto);
-    }
+    // @Post("create")
+    // @UseGuards(AuthGuard, RolesGuard)
+    // @Roles(1)
+    // create(@Body() dto: FacultyCreateDto) {
+    //     return this.facultyService.create(dto);
+    // }
 
     // @Post("update")
     // @UseGuards(AuthGuard, RolesGuard)

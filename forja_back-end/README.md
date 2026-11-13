@@ -1,62 +1,123 @@
-# Endpoints de FORJA
+﻿# Endpoints de FORJA
 
-## Roles y alcance de permisos
+## Roles
 
-Los IDs siguientes corresponden a la carga inicial de roles en una base nueva. Los permisos descritos corresponden a los endpoints del commit documentado.
+| ID | Rol | Permisos en estos módulos |
+| --- | --- | --- |
+| 1 | `admin` — Administrador | Administra usuarios, edita su perfil y consulta facultades y programas. |
+| 2 | `evaluator` — Evaluador | Consulta y edita su perfil, y consulta facultades y programas. |
+| 3 | `teacher` — Profesor | Consulta y edita su perfil y facultad, y consulta facultades y programas. |
 
-| ID | Rol | Significado | Permisos actuales |
-| --- | --- | --- | --- |
-| 1 | `admin` — Administrador | Perfil de administración de la plataforma. | Puede acceder a todos los endpoints protegidos documentados: crear cursos; crear, actualizar y eliminar facultades; y consultar `/test`. Las limitaciones actuales de actualizar y eliminar facultades se detallan en sus endpoints. |
-| 2 | `evaluator` — Evaluador | Perfil destinado a la evaluación de proyectos. | Todavía no tiene endpoints propios ni permisos de evaluación implementados. No puede acceder a los endpoints protegidos documentados. |
-| 3 | `teacher` — Docente | Perfil docente, asignado por defecto al registrar una cuenta. | Todavía no tiene endpoints propios ni permisos de gestión de proyectos implementados. No puede acceder a los endpoints protegidos documentados. |
+## Flujo de registro
 
-Registro e inicio de sesión son públicos. Cualquier cuenta puede iniciar sesión si está activa y presenta credenciales válidas. Los roles no implican una jerarquía automática: los permisos futuros de evaluadores y docentes deben definirse al implementar sus endpoints.
+1. Envía los datos a `POST /auth/register`. Se envía un código al correo.
+2. Confirma el código en `POST /auth/verify-email`. Se crea la cuenta como profesor, pendiente de aprobación.
+3. El administrador activa la cuenta desde `POST /users/update` con el `id` del usuario e `is_active: true`.
+4. Inicia sesión en `POST /auth/login` para obtener el token.
 
+## Cuenta del administrador
 
-## 1. POST /auth/register
+Para iniciar sesión como administrador, envía estos datos a `POST /auth/login`:
 
-**Explicación:** registra una cuenta con username generado a partir de la parte anterior a `@` del correo, convertida a minúsculas. Guarda la contraseña con bcrypt. No inicia sesión ni entrega JWT.
+```json
+{
+  "username": "admin",
+  "password": "12345678"
+}
+```
 
-**Recibe — cuerpo JSON:**
+## Cómo enviar las peticiones
+
+Los datos se envían en el cuerpo como JSON. Usa estos encabezados:
+
+```http
+Content-Type: application/json
+Authorization: Bearer <access_token>
+```
+
+El token se obtiene al iniciar sesión. Las rutas de **auth** y `GET /faculty` son públicas; las demás necesitan el token de una cuenta activa. Las consultas `GET` no llevan cuerpo.
+
+Las respuestas correctas usan `200` para `GET` y `PATCH`, y `201` para `POST`. Los datos de los ejemplos son ilustrativos.
+
+## Auth
+
+### POST `/auth/register`
+
+Inicia el registro y envía un código al correo. La cuenta se crea al verificarlo.
+
+**Recibe:**
 
 ```json
 {
   "email": "ana@javerianacali.edu.co",
   "full_name": "Ana Pérez",
-  "password": "una-clave-segura"
+  "password": "una-clave-segura",
+  "faculty_id": 2
 }
 ```
 
-| Campo | Tipo | Restricciones |
-| --- | --- | --- |
-| `email` | string | Obligatorio; correo válido con dominio permitido `javerianacali.edu.co`. |
-| `full_name` | string | Obligatorio, no vacío. |
-| `password` | string | Obligatorio, mínimo 8 caracteres. |
+El `username` se genera con la parte del correo anterior a `@`: en este caso, `ana`.
 
-**Retorna — HTTP 201:**
+**Devuelve:**
 
 ```json
 {
-  "message": "User registered successfully"
+  "message": "Registro pendiente. Introduce el código de verificación",
+  "expires_in": 600
 }
 ```
 
-**Restricciones y errores:**
+El código llega por correo y dura 10 minutos. `expires_in` se expresa en segundos.
 
-- Público: no requiere token.
-- No recibe username, ID de rol ni estado de activación.
-- Según el esquema, el rol predeterminado es `3` y `active` queda en `false` (por temas de testeo estara en true, pero tendra que hacerse la respetiva verificacion que se hablara despues :). La cuenta no podrá iniciar sesión hasta activarse. No existe en estos controladores un endpoint de activación o verificación por correo.
-- HTTP 400 si falla el DTO o se incluyen campos adicionales. El mensaje específico del validador de correo es `Email must be a valid javerianacali.edu.co email address`.
-- HTTP 409 con `El correo electrónico ya está registrado` si la consulta previa encuentra exactamente el correo recibido.
-- La comprobación de correo en el servicio es sensible a mayúsculas/minúsculas y no normaliza el email. La generación del username sí lo convierte a minúsculas.
-- PostgreSQL exige email y username únicos. Una colisión de username generado o una carrera entre registros puede producir HTTP 500 porque el INSERT no captura esas violaciones.
-- Límites de base de datos: email 254 caracteres, nombre completo 180 y username generado 80. No tienen validadores de longitud máxima en el DTO; si se superan pueden producir HTTP 500.
+### POST `/auth/verify-email`
 
-## 2. POST /auth/login
+Verifica el código y crea la cuenta como profesor, con la facultad elegida. Queda pendiente de aprobación del administrador.
 
-**Explicación:** autentica una cuenta activa, actualiza `last_login_at` y entrega un JWT con `sub`, `username` y `rol_id`.
+**Recibe:**
 
-**Recibe — cuerpo JSON:**
+```json
+{
+  "email": "ana@javerianacali.edu.co",
+  "code": "012345"
+}
+```
+
+**Devuelve:**
+
+```json
+{
+  "message": "Correo verificado. Cuenta creada y pendiente de aprobación del administrador"
+}
+```
+
+El administrador activa la cuenta desde `/users/update` con `is_active: true`.
+
+### POST `/auth/resend-verification`
+
+Envía un nuevo código para un registro pendiente y reemplaza el anterior.
+
+**Recibe:**
+
+```json
+{
+  "email": "ana@javerianacali.edu.co"
+}
+```
+
+**Devuelve:**
+
+```json
+{
+  "message": "Se generó un nuevo código de verificación",
+  "expires_in": 600
+}
+```
+
+### POST `/auth/login`
+
+Inicia sesión con el nombre de usuario y la contraseña.
+
+**Recibe:**
 
 ```json
 {
@@ -65,224 +126,230 @@ Registro e inicio de sesión son públicos. Cualquier cuenta puede iniciar sesi�
 }
 ```
 
-| Campo | Tipo | Restricciones |
-| --- | --- | --- |
-| `username` | string | Obligatorio, no vacío; se compara exactamente con `users.username`. |
-| `password` | string | Obligatorio, no vacío. No hay longitud mínima de login en el DTO. |
-
-**Retorna — HTTP 201:**
+**Devuelve:**
 
 ```json
 {
-  "access_token": "<jwt-firmado>",
+  "access_token": "<token>",
   "user": {
-    "id": "7",
+    "id": 7,
     "username": "ana",
     "rol": 3
   }
 }
 ```
 
-El ejemplo muestra `id` como string porque `users.id` es BIGINT y el servicio usa el parser predeterminado de `pg`. Su anotación TypeScript como `number` no convierte el valor en ejecución. `rol` en la respuesta es numérico; el mismo dato se llama `rol_id` dentro del JWT. No se devuelve el hash de contraseña.
+Usa `access_token` en el encabezado `Authorization` de las siguientes peticiones. Aquí `rol` es el ID del rol.
 
-**Restricciones y errores:**
+## Users
 
-- Público: no requiere token previo.
-- En este commit solo admite username. No busca por correo, aunque exista una propuesta local de login por correo fuera del commit documentado.
-- HTTP 400 si el cuerpo no cumple el DTO o contiene campos extra.
-- HTTP 401 con `Credenciales inválidas` si el username no existe o la contraseña es incorrecta.
-- HTTP 401 con `Usuario inactivo` si la cuenta existe y tiene `active = false`. Esta comprobación ocurre antes de verificar la contraseña.
-- Requiere configuración JWT válida y conectividad con PostgreSQL.
+### GET `/users`
 
-## 3. POST /course/create
+**Acceso:** administrador. Devuelve la lista de usuarios. No recibe cuerpo.
 
-**Explicación:** crea un curso en la tabla `course`.
-
-**Recibe — headers:**
-
-```http
-Authorization: Bearer <access_token>
-Content-Type: application/json
-```
-
-**Recibe — cuerpo JSON:**
-
-```json
-{
-  "name": "Programación I"
-}
-```
-
-`name`: string obligatorio y no vacío.
-
-**Retorna — HTTP 201:**
-
-```json
-{
-  "message": "Course created successfully"
-}
-```
-
-**Restricciones y errores:**
-
-- JWT válido y rol ID `1`. Aplican los HTTP 401/403 descritos al inicio.
-- HTTP 400 por cuerpo inválido o campos extra.
-- HTTP 409 con `El curso ya existe` al violarse la restricción `course_name_key`.
-- El nombre es único y admite hasta 180 caracteres en PostgreSQL. El DTO no valida esa longitud máxima.
-- No se normalizan mayúsculas ni espacios; la restricción definida no implementa unicidad ignorando mayúsculas.
-- No devuelve el ID ni el registro creado. Otros errores SQL no se traducen y pueden producir HTTP 500.
-
-## 4. POST /faculty/create
-
-**Explicación:** crea una facultad en la tabla `faculty`.
-
-**Recibe — headers:** `Authorization: Bearer <access_token>` y `Content-Type: application/json`.
-
-**Recibe — cuerpo JSON:**
-
-```json
-{
-  "name": "Facultad de Ingeniería"
-}
-```
-
-`name`: string obligatorio y no vacío.
-
-**Retorna — HTTP 201:**
-
-```json
-{
-  "message": "Facultad creada exitosamente"
-}
-```
-
-**Restricciones y errores:**
-
-- JWT válido y rol ID `1`. Aplican los HTTP 401/403 generales.
-- HTTP 400 por cuerpo inválido o campos extra.
-- HTTP 409 con `La facultad ya existe` al violarse `faculty_name_key`.
-- Nombre único, máximo 180 caracteres en PostgreSQL, sin validación de longitud máxima en el DTO ni normalización de espacios/mayúsculas.
-- No devuelve el ID ni el registro creado. Otros errores SQL pueden producir HTTP 500.
-
-## 5. POST /faculty/update
-
-**Explicación:** ejecuta la actualización del nombre de una facultad por ID. Actualmente su respuesta tiene un defecto: el servicio consulta `rows[0]` después de un UPDATE sin `RETURNING`.
-
-**Recibe — headers:** `Authorization: Bearer <access_token>` y `Content-Type: application/json`.
-
-**Recibe — cuerpo JSON:**
-
-```json
-{
-  "id": 1,
-  "name": "Facultad de Ciencias"
-}
-```
-
-| Campo | Tipo | Restricciones |
-| --- | --- | --- |
-| `id` | number | Obligatorio; enviar número JSON, no string. |
-| `name` | string | Obligatorio, no vacío. |
-
-**Retorna actualmente — HTTP 404 si el UPDATE termina sin error SQL:**
-
-```json
-{
-  "message": "Faculty not found",
-  "error": "Not Found",
-  "statusCode": 404
-}
-```
-
-**Restricciones y comportamiento actual:**
-
-- JWT válido y rol ID `1`. Aplican HTTP 401/403 generales y HTTP 400 por DTO inválido.
-- El nombre sigue sujeto a unicidad y longitud máxima de 180 caracteres en PostgreSQL.
-- El UPDATE puede guardar el cambio y luego responder 404 porque `rows` está vacío. El mismo 404 aparece si no existe el ID. No se debe interpretar esa respuesta como garantía de que no se modificaron datos.
-- Un nombre duplicado no se captura aquí como conflicto; puede terminar en HTTP 500.
-- El servicio contiene el mensaje de éxito `{"message":"faculty has been updated"}`, que correspondería a HTTP 201, pero no se alcanza en el flujo SQL actual. No debe documentarse como éxito operativo.
-
-## 6. POST /faculty/delete
-
-**Explicación:** ejecuta la eliminación de una facultad por ID. El controlador usa actualmente `FacultyUpdateDto`, aunque existe `FacultyDeleteDto` con solo `id`.
-
-**Recibe — headers:** `Authorization: Bearer <access_token>` y `Content-Type: application/json`.
-
-**Recibe actualmente — cuerpo JSON:**
-
-```json
-{
-  "id": 1,
-  "name": "Facultad de Ingeniería"
-}
-```
-
-| Campo | Tipo | Restricciones |
-| --- | --- | --- |
-| `id` | number | Obligatorio; es el dato usado para borrar. |
-| `name` | string | Obligatorio por el DTO registrado, aunque el servicio no lo utiliza. |
-
-**Retorna actualmente — HTTP 500 si el DELETE termina sin error SQL:**
-
-```json
-{
-  "statusCode": 500,
-  "message": "Internal server error"
-}
-```
-
-**Restricciones y comportamiento actual:**
-
-- JWT válido y rol ID `1`. Aplican HTTP 401/403 generales.
-- Enviar solo `id` produce HTTP 400 porque falta `name` en el DTO usado por el controlador.
-- El DELETE no incluye `RETURNING`. Después intenta desestructurar `rows[0]`, que es `undefined`, causando una excepción. Puede borrar el registro y luego responder 500; no se debe reintentar asumiendo que la operación no ocurrió.
-- Si no existe el ID, también termina en ese error; el `NotFoundException` posterior no se alcanza.
-- Si una fila de `teacher` referencia la facultad, su clave foránea `ON DELETE RESTRICT` impide borrarla. El servicio no captura ese caso y puede devolver HTTP 500.
-- El mensaje previsto `{"message":"Faculty has been deleted successfully"}` (HTTP 201 por ser POST) no se alcanza en el flujo actual.
-- El método HTTP registrado es POST, no DELETE.
-
-## 7. GET /test
-
-**Explicación:** consulta la tabla `docker_test` y devuelve las filas con `id = 1`. Sirve como comprobación funcional de lectura de la base de datos.
-
-**Recibe — header:**
-
-```http
-Authorization: Bearer <access_token>
-```
-
-No recibe cuerpo, parámetros de ruta ni query documentados.
-
-**Retorna — HTTP 200:** un arreglo de filas. Ejemplo ilustrativo de la estructura definida en `01_init.sql`:
+**Devuelve:**
 
 ```json
 [
   {
-    "id": "1",
-    "message": "Base de datos FORJA funcionando, claro que si",
-    "created_at": "2026-01-01T00:00:00.000Z"
+    "id": 7,
+    "username": "ana",
+    "email": "ana@javerianacali.edu.co",
+    "full_name": "Ana Pérez",
+    "rol_id": 3,
+    "rol": "teacher",
+    "is_active": true,
+    "last_login_at": null,
+    "created_at": "2026-11-12T14:00:00.000Z",
+    "updated_at": "2026-11-12T14:00:00.000Z"
   }
 ]
 ```
 
-El contenido y la fecha dependen de los datos reales. `id` es BIGSERIAL y se serializa normalmente como string con el parser predeterminado de `pg`.
+`rol_id` es el ID del rol y `rol` es su nombre. `last_login_at` indica el último inicio de sesión; puede ser `null`.
 
-**Restricciones y errores:**
+### GET `/users/:id`
 
-- JWT válido y rol ID `1`. Aplican HTTP 401/403 generales.
-- Si no existe una fila con ID 1, devuelve HTTP 200 con `[]`.
-- Si falla la conexión o no existe la tabla, el error no se captura y puede devolver HTTP 500.
+**Acceso:** administrador. Consulta un usuario con el ID de la ruta, por ejemplo: `/users/7`. No recibe cuerpo.
 
-## Resumen de rutas registradas
+**Devuelve:** un objeto con los mismos campos del usuario mostrado en `GET /users`, sin el arreglo exterior.
 
-| Método | Dirección | Token | Rol ID | Resultado actual principal |
-| --- | --- | --- | --- | --- |
-| POST | `/auth/register` | No | No aplica | 201: mensaje de registro, cuenta inactiva |
-| POST | `/auth/login` | No | No aplica | 201: JWT y usuario activo |
-| POST | `/course/create` | Sí | 1 | 201: mensaje de creación |
-| POST | `/faculty/create` | Sí | 1 | 201: mensaje de creación |
-| POST | `/faculty/update` | Sí | 1 | 404 después de ejecutar UPDATE sin RETURNING |
-| POST | `/faculty/delete` | Sí | 1 | 500 después de ejecutar DELETE sin RETURNING |
-| GET | `/test` | Sí | 1 | 200: arreglo de filas |
+### GET `/users/me`
 
-No hay endpoints registrados para listar cursos o facultades, activar usuarios, verificar correo ni administrar proyectos en este commit.
+**Acceso:** cualquier rol. Consulta el perfil de quien envía el token. No recibe cuerpo ni ID.
+
+**Devuelve:**
+
+```json
+{
+  "id": 7,
+  "username": "ana",
+  "full_name": "Ana Pérez",
+  "email": "ana@javerianacali.edu.co",
+  "rol_id": 3,
+  "faculty_id": 2,
+  "faculty_name": "Ingeniería y Ciencias"
+}
+```
+
+Los datos de facultad pueden ser `null` cuando no hay una facultad asociada al perfil.
+
+### PATCH `/users/me`
+
+**Acceso:** cualquier rol. Actualiza el nombre propio y, para profesores, su facultad. Envía los campos que quieras cambiar.
+
+**Recibe:**
+
+```json
+{
+  "full_name": "Ana María Pérez",
+  "faculty_id": 2
+}
+```
+
+**Devuelve:**
+
+```json
+{
+  "message": "Perfil actualizado exitosamente.",
+  "user": {
+    "id": 7,
+    "username": "ana",
+    "full_name": "Ana María Pérez",
+    "email": "ana@javerianacali.edu.co",
+    "rol_id": 3,
+    "faculty_id": 2,
+    "faculty_name": "Ingeniería y Ciencias"
+  }
+}
+```
+
+### POST `/users/create`
+
+**Acceso:** administrador. Crea una cuenta directamente, sin verificación por correo. `faculty_id` se envía al crear profesores; para los otros roles se omite.
+
+**Recibe:**
+
+```json
+{
+  "email": "ana@javerianacali.edu.co",
+  "full_name": "Ana Pérez",
+  "password": "una-clave-segura",
+  "rol_id": 3,
+  "is_active": true,
+  "faculty_id": 2
+}
+```
+
+**Devuelve:**
+
+```json
+{
+  "message": "Usuario creado exitosamente.",
+  "user": {
+    "id": 7,
+    "username": "ana",
+    "email": "ana@javerianacali.edu.co",
+    "full_name": "Ana Pérez",
+    "rol_id": 3,
+    "is_active": true,
+    "created_at": "2026-11-12T14:00:00.000Z",
+    "updated_at": "2026-11-12T14:00:00.000Z"
+  }
+}
+```
+
+### POST `/users/update`
+
+**Acceso:** administrador. Actualiza un usuario. Envía su `id` y los campos que quieras cambiar: `full_name`, `rol_id`, `is_active` o `faculty_id` (para profesores).
+
+**Recibe, por ejemplo, para aprobar una cuenta:**
+
+```json
+{
+  "id": 7,
+  "is_active": true
+}
+```
+
+**Devuelve:**
+
+```json
+{
+  "message": "Usuario actualizado exitosamente.",
+  "user": {
+    "id": 7,
+    "username": "ana",
+    "email": "ana@javerianacali.edu.co",
+    "full_name": "Ana Pérez",
+    "rol_id": 3,
+    "is_active": true,
+    "last_login_at": null,
+    "created_at": "2026-11-12T14:00:00.000Z",
+    "updated_at": "2026-11-12T15:00:00.000Z"
+  }
+}
+```
+
+Con `is_active: false` se desactiva la cuenta. Los campos omitidos conservan su valor.
+
+### POST `/users/delete`
+
+**Acceso:** administrador. Elimina el usuario indicado.
+
+**Recibe:**
+
+```json
+{
+  "id": 7
+}
+```
+
+**Devuelve:**
+
+```json
+{
+  "message": "Usuario eliminado exitosamente."
+}
+```
+
+## Faculty
+
+### GET `/faculty`
+
+**Acceso:** público, sin token. Consulta las facultades para elegir una durante el registro. No recibe cuerpo.
+
+**Devuelve:**
+
+```json
+[
+  {
+    "id": 2,
+    "name": "Ingeniería y Ciencias",
+    "code": "FIC"
+  }
+]
+```
+
+La ruta del módulo `faculty` es `/faculty`. Actualmente solo está habilitada la consulta.
+
+## Academic programs
+
+### GET `/academic-programs`
+
+**Acceso:** administrador, evaluador o profesor. Consulta los programas académicos junto con el nombre de su facultad. No recibe cuerpo.
+
+**Devuelve:**
+
+```json
+[
+  {
+    "id": 9,
+    "name": "Ingeniería de Sistemas y Computación",
+    "snies_code": "1042",
+    "faculty_name": "Ingeniería y Ciencias"
+  }
+]
+```
+
+La ruta del módulo `academic_programs` es `/academic-programs`. Actualmente solo está habilitada la consulta.

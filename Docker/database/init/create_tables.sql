@@ -1,9 +1,7 @@
--- Esta es la primera iteracion de la base de datos, se agregaran muchas mas cosas a medida que se vaya avanzando.
--- ATT: Alejandro
-
 CREATE TABLE IF NOT EXISTS rol (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -15,76 +13,137 @@ CREATE TABLE IF NOT EXISTS faculty (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS department (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(180) NOT NULL,
+    faculty_id INT NOT NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_department_name UNIQUE(name, faculty_id),
+
+    CONSTRAINT fk_department_faculty FOREIGN KEY(faculty_id)
+        REFERENCES faculty(id)
+);
+
 CREATE TABLE IF NOT EXISTS academic_programs (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(180) NOT NULL,
+    snies_code VARCHAR(25),
 
-    faculty_id INT NOT NULL REFERENCES faculty(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    faculty_id INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_academic_programs_name UNIQUE(name),
+    CONSTRAINT uq_academic_programs_snies_code UNIQUE(snies_code),
+    CONSTRAINT fk_academic_programs_faculty FOREIGN KEY(faculty_id)
+        REFERENCES faculty(id)
 );
 
 CREATE TABLE IF NOT EXISTS course (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(180) NOT NULL,    
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT course_name_key UNIQUE (name)
+
+    CONSTRAINT uq_course_name UNIQUE(name)
 );
 
 CREATE TABLE IF NOT EXISTS users (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-    username VARCHAR(80) NOT NULL UNIQUE,
-    email VARCHAR(254) NOT NULL UNIQUE,
+    username VARCHAR(80) NOT NULL,
+    email VARCHAR(254) NOT NULL,
     full_name VARCHAR(180) NOT NULL,
 
-    rol_id INT NOT NULL REFERENCES rol(id),
+    rol_id INT NOT NULL DEFAULT 3,
 
     password_hash TEXT NOT NULL,
 
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
 
     last_login_at TIMESTAMPTZ,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_username UNIQUE(username),
+    CONSTRAINT uq_email UNIQUE(email),
+    CONSTRAINT fk_rol_id FOREIGN KEY(rol_id)
+        REFERENCES rol(id)
 );
 
 CREATE TABLE IF NOT EXISTS teacher (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) UNIQUE,
-    faculty_id INT NOT NULL REFERENCES faculty(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    user_id INT NOT NULL,
+    faculty_id INT,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT uq_user_id UNIQUE(user_id),
+
+    CONSTRAINT fk_teacher_user_id FOREIGN KEY(user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_teacher_faculty_id FOREIGN KEY(faculty_id)
+        REFERENCES faculty(id)
 );
 
+CREATE TABLE IF NOT EXISTS project (
+    id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
+    title VARCHAR(255) NOT NULL,
 
+    duration INT,
+    start_date DATE,
+    end_date DATE,
 
+    created_by INT NOT NULL,
 
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
+    -- CONSTRAINT uq_project_code UNIQUE(code),
+    CONSTRAINT ck_project_duration CHECK(
+        duration IN (1, 2)
+    ),
 
--- CREATE TABLE IF NOT EXISTS communities (
---     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    CONSTRAINT ck_project_dates CHECK(
+        end_date >= start_date
+    ),
 
---     name VARCHAR(100) NOT NULL,
---     location VARCHAR(150),
---     description TEXT,
+    -- CONSTRAINT fk_project_faculty FOREIGN KEY(faculty_id)
+        -- REFERENCES faculty(id),
 
---     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    -- CONSTRAINT fk_project_department FOREIGN KEY(department_id)
+        -- REFERENCES department(id),
 
---     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
--- );
+    -- CONSTRAINT fk_project_academic_program FOREIGN KEY(academic_program_id)
+        -- REFERENCES academic_programs(id),
 
+    CONSTRAINT fk_project_created_by FOREIGN KEY(created_by)
+        REFERENCES users(id)
+);
 
--- CREATE TABLE IF NOT EXISTS sustainable_development_goals (
---     id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS project_teacher (
+    project_id INT NOT NULL,
+    teacher_id INT NOT NULL,
 
---     goal_number SMALLINT NOT NULL UNIQUE
---         CHECK (goal_number BETWEEN 1 AND 17),
+    is_responsible BOOLEAN NOT NULL DEFAULT FALSE,
 
---     name VARCHAR(150) NOT NULL,
---     description TEXT
--- );
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
+    CONSTRAINT pk_project_teacher PRIMARY KEY(project_id, teacher_id),
+
+    CONSTRAINT fk_project_teacher_project FOREIGN KEY(project_id)
+        REFERENCES project(id),
+
+    CONSTRAINT fk_project_teacher_teacher FOREIGN KEY(teacher_id)
+        REFERENCES teacher(id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_project_responsible_teacher
+    ON project_teacher(project_id) 
+        WHERE is_responsible = TRUE;
 
 -- CREATE TABLE IF NOT EXISTS projects (
 --     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

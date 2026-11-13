@@ -18,38 +18,11 @@ export class FacultyService {
             `
         );
 
-        console.log(rows);
+        return rows;
     }
 
     async create(dto: FacultyCreateDto) {
-        try {
-            await this.db.query(
-                `
-            INSERT INTO faculty (name, code)
-            VALUES ($1, $2)
-            `, [dto.name, dto.code]
-            );
-        } catch (error: unknown) {
-            if (!(error instanceof DatabaseError)) {
-                throw error;
-            }
-
-            if (error.code === '23505') {
-                if (error.constraint === 'faculty_name_key') {
-                    throw new ConflictException('La facultad ya existe');
-                }
-
-                if (error.constraint === 'faculty_code_key') {
-                    throw new ConflictException('El código de la facultad ya existe');
-                }
-            }
-
-            throw error;
-        }
-
-        return {
-            message: 'Facultad creada exitosamente.',
-        };
+        // pendiente
     }
 
 
