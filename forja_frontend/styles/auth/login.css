@@ -1,0 +1,54 @@
+
+/* FORJA — Estilos principales del Login */
+
+@import "./brand-panel.css";
+@import "./login-form.css";
+@import "./form-fields.css";
+@import "./login-responsive.css";
+
+/* Identidad visual */
+
+:root {
+  --purple: #633582;
+  --purple-dark: #492268;
+  --blue: #08669d;
+  --orange: #f39120;
+  --ink: #252137;
+  --muted: #777486;
+  --line: #e7e4ef;
+  --bg: #fcfbff;
+  --error: #d32f3f;
+  --success: #27804c;
+
+  font-family: "Montserrat", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.page-shell {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: minmax(350px, 45%) 1fr;
+}

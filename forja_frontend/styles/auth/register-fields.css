@@ -1,0 +1,130 @@
+
+/* FORJA — Campos reutilizables del registro */
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.register-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.register-field .input-wrap {
+  min-height: 56px;
+}
+
+.register-field .input-wrap input {
+  width: 100%;
+  min-height: 52px;
+  font-size: 13px;
+}
+
+.register-field .input-wrap--error {
+  border-color: var(--error);
+}
+
+.register-field .field-error {
+  margin: 0;
+}
+
+
+/* Selector de facultades */
+
+.register-select-wrap select {
+  width: 100%;
+  min-height: 52px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.register-select-wrap select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Botón para mostrar u ocultar contraseña */
+
+.register-field .password-toggle {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  color: #928b9b;
+  cursor: pointer;
+}
+
+.register-field .password-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.register-field .password-toggle:hover:not(:disabled) {
+  color: var(--purple);
+}
+
+.register-field .password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+
+
+/* Selector de facultades */
+
+.register-select-wrap select {
+  width: 100%;
+  min-height: 52px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.register-select-wrap select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Botón para mostrar u ocultar contraseña */
+
+.register-field .password-toggle {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  color: #928b9b;
+  cursor: pointer;
+}
+
+.register-field .password-toggle svg {
+  width: 19px;
+  height: 19px;
+}
+
+.register-field .password-toggle:hover:not(:disabled) {
+  color: var(--purple);
+}
+
+.register-field .password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

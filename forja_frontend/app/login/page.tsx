@@ -1,5 +1,4 @@
-
-import "@/styles/login.css";
+import "@/styles/auth/login.css";
 import LoginPage from "@/components/auth/LoginPage";
 
 export const metadata = {

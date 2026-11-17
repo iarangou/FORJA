@@ -1,0 +1,79 @@
+
+/* FORJA — Enlace secundario hacia Login */
+
+.register-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  margin-top: 35px;
+  padding-top: 24px;
+
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.register-login__text {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.register-login__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 12px 22px;
+  min-height: 44px;
+
+  border-radius: 9px;
+  border: 1px solid var(--purple);
+
+  background: var(--purple);
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.register-login__button svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.register-login__button:hover {
+  background: var(--purple-dark);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 53, 130, 0.23);
+}
+
+.register-login__button:hover svg {
+  transform: translateX(5px);
+}
+
+.register-login__button:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-login__button,
+  .register-login__button svg {
+    transition: none;
+  }
+}
