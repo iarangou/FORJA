@@ -27,7 +27,7 @@
 - Panel administrativo para crear profesores y monitores, cambio obligatorio de contraseña temporal
 - Incorporar múltiples asignaturas/profesores/carreras por período y catálogo definitivo de siete territorios
 - Gestión real de ODS, población beneficiaria y presupuestos pormenorizados en formularios
-- Formulario comunitario de una respuesta por proyecto con enlace/token seguro
+- Pruebas en Docker del formulario comunitario de respuesta única con enlace/token seguro
 - La finalización general por administrador se implementó con confirmación y bloqueo de períodos actuales abiertos. Pendiente probarla con Docker, revisar reglas especiales para históricos y confirmar requisitos con FORJA.
 - Exportar informes Excel por territorio; permisos de descarga y backups verificados
 - Integración y pruebas con PostgreSQL y Docker, tests de API, revisión de validaciones/seguridad
@@ -85,3 +85,18 @@ La meta es lograr coherencia entre requisitos, datos, backend y pantallas sin in
 - La sección **03. Digitalización histórica** se limita a agregar otros semestres anteriores y, para administradores, asignar un profesor que continúe un proyecto activo. Se eliminó el segundo formulario duplicado de datos académicos.
 - Las evidencias y la carta final siguen asociadas al semestre seleccionado y se cargan por separado como PDF.
 - Si el semestre es ACTUAL, la aprobación, revisión de evidencias, resultados y cierre administrativo funcionan como antes.
+
+## Evaluación comunitaria (MVP en pruebas)
+
+- Una única respuesta por **proyecto** (no por semestre), como se acordó para la comunidad. La carta firmada y las evidencias continúan siendo documentos PDF **por semestre**.
+- El administrador genera o regenera un enlace privado de un solo uso, con token aleatorio de 256 bits, hash SHA-256 guardado en base de datos y validez de 14 días. Regenerar invalida el enlace anterior. El token completo solamente se muestra al generarlo.
+- La comunidad abre el enlace sin crear cuenta. Puntúa objetivos, utilidad y participación del 1 al 5; puede indicar nombre de organización, relación con el proyecto y comentarios. Se solicita consentimiento explícito. El cuestionario es **propuesto**, no un instrumento oficial suministrado por FORJA.
+- La respuesta se guarda de manera transaccional; la base impide respuestas duplicadas mediante restricción UNIQUE por proyecto. Usuarios autorizados ven resultados en la sección desplegable «Evaluación de la comunidad».
+- **Migración para bases existentes:** respaldar y ejecutar `Docker/database/migrations/20261122_community_feedback.sql` mediante psql antes de iniciar el módulo. Los archivos de inicialización de PostgreSQL solo se ejecutan al crear una base nueva.
+- Antes de producción: acordar el cuestionario con FORJA, añadir límites de peticiones para proteger el enlace, revisar privacidad y política de conservación de respuestas. Nunca usar información sensible real en las pruebas locales.
+
+### Prueba sugerida
+1. Como administrador, abrir un proyecto ficticio y desplegar «Evaluación de la comunidad».
+2. Generar enlace y copiarlo; abrirlo en ventana privada sin iniciar sesión.
+3. Diligenciar puntuaciones 1–5 y consentimiento; enviar.
+4. Intentar reutilizar el enlace: debe bloquearse. Volver al administrador: debe mostrarse la respuesta y deshabilitarse la generación de nuevos enlaces.
