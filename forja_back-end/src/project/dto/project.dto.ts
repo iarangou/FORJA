@@ -1,27 +1,36 @@
-import { IsDate, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from "class-validator";
+import { IsDateString, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class CreateProjectDTO {
-    @IsString()
-    @IsNotEmpty()
-    @MaxLength(255)
-    title: string;
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  title: string;
 
-    @IsInt()
-    @Min(1)
-    // @IsOptional()
-    faculty_id?: number;
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  general_problem?: string;
 
-    @IsInt()
-    @Min(1)
-    @Max(2)
-    // @IsOptional()
-    duration?: number;
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  general_objective?: string;
 
-    @IsDate()
-    // @IsOptional()
-    start_date?: Date;
+  @IsOptional()
+  @IsIn(['NUEVO', 'HISTORICO'])
+  registration_type?: 'NUEVO' | 'HISTORICO';
 
-    @IsDate()
-    // @IsOptional()
-    end_date?: Date;
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(2)
+  duration?: number;
+
+  @IsOptional()
+  @IsDateString()
+  start_date?: string;
+
+  @IsOptional()
+  @IsDateString()
+  end_date?: string;
 }
