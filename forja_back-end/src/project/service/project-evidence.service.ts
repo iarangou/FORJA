@@ -21,6 +21,7 @@ interface PeriodAccess {
   execution_status: string;
   general_status: string;
   teacher_user_id: number | null;
+  assigned_teacher: boolean;
 }
 
 @Injectable()
@@ -36,20 +37,26 @@ export class ProjectEvidenceService {
   }
 
   private async checkPeriod(projectId: number, periodId: number, user: PayloadJwt) {
-    if (user.rol_id !== 1 && user.rol_id !== 3) {
-      throw new ForbiddenException('Acceso exclusivo del administrador y el profesor responsable');
+    if (![1,2,3].includes(user.rol_id)) {
+      throw new ForbiddenException('No tienes acceso a evidencias de proyectos');
     }
     const { rows } = await this.db.query<PeriodAccess>(
       `SELECT pp.approval_status,pp.record_type,pp.execution_status,p.general_status,
-              t.user_id AS teacher_user_id
+              t.user_id AS teacher_user_id,
+              EXISTS(SELECT 1 FROM project_teacher pt
+                     JOIN teacher assigned ON assigned.id=pt.teacher_id
+                     WHERE pt.project_id=pp.project_id AND assigned.user_id=$3) AS assigned_teacher
        FROM project_periods pp
        JOIN project p ON p.id=pp.project_id
        LEFT JOIN teacher t ON t.id=pp.teacher_id
        WHERE pp.id=$1 AND pp.project_id=$2`,
-      [periodId,projectId],
+      [periodId,projectId,user.sub],
     );
     const period=rows[0];
-    if(!period || (user.rol_id===3 && period.teacher_user_id!==user.sub)) {
+    if(!period ||
+       (user.rol_id===2 && period.record_type!=='HISTORICO') ||
+       (user.rol_id===3 && period.teacher_user_id!==user.sub &&
+        !(period.record_type==='HISTORICO' && period.assigned_teacher))) {
       throw new NotFoundException('Período no encontrado o sin acceso');
     }
     return period;
@@ -95,10 +102,17 @@ export class ProjectEvidenceService {
 
   async upload(projectId:number,periodId:number,user:PayloadJwt,file:IncomingPdf|undefined) {
     const period=await this.checkPeriod(projectId,periodId,user);
-    if(user.rol_id!==3)throw new ForbiddenException('Solo el profesor responsable carga evidencias');
-    if(period.general_status!=='ACTIVO' || period.record_type!=='ACTUAL' ||
-       period.approval_status!=='APROBADO' || period.execution_status==='CERRADO') {
-      throw new ConflictException('Se cargan evidencias después de aprobar el semestre actual');
+    const historical=period.record_type==='HISTORICO';
+    if(historical){
+      if(user.rol_id!==1 && user.rol_id!==2){
+        throw new ForbiddenException('Solo el administrador o monitor digitaliza evidencias históricas');
+      }
+    }else{
+      if(user.rol_id!==3)throw new ForbiddenException('Solo el profesor responsable carga evidencias actuales');
+      if(period.general_status!=='ACTIVO' || period.approval_status!=='APROBADO' ||
+         period.execution_status==='CERRADO'){
+        throw new ConflictException('El período actual debe estar aprobado, activo y sin cerrar');
+      }
     }
     this.validatePdf(file);
     if(!file)throw new BadRequestException('Falta el PDF');
@@ -150,6 +164,10 @@ export class ProjectEvidenceService {
   async review(projectId:number,periodId:number,id:number,
     decision:'APROBADA'|'DEVUELTA',notes:string|undefined,user:PayloadJwt) {
     if(user.rol_id!==1)throw new ForbiddenException('Solo el administrador revisa evidencias');
+    const period=await this.checkPeriod(projectId,periodId,user);
+    if(period.record_type==='HISTORICO') {
+      throw new ConflictException('Las evidencias históricas se archivan sin revisión retroactiva');
+    }
     await this.findEvidence(projectId,periodId,id,user);
     if(decision==='DEVUELTA' && !notes?.trim()){
       throw new BadRequestException('Escribe una observación para devolver la evidencia');
