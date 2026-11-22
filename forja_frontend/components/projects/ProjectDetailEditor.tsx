@@ -421,8 +421,8 @@ export default function ProjectDetailEditor(){
     {period&&<ProjectAccordion id="letter" title={project.registration_type==="HISTORICO"?"08. Carta final firmada del semestre":"07. Carta final firmada del semestre"} open={openSection==="letter"} onToggle={()=>toggleSection("letter")} summary={`${period.academic_year}-${period.academic_semester}`}>
       <FinalLetterSection key={period.id} projectId={projectId} periodId={period.id} role={role} recordType={period.record_type} approvalStatus={period.approval_status} executionStatus={period.execution_status}/>
     </ProjectAccordion>}
-    <ProjectAccordion id="community" title={project.registration_type==="HISTORICO"?"09. Evaluación de la comunidad":"08. Evaluación de la comunidad"} open={openSection==="community"} onToggle={()=>toggleSection("community")}>
-      <CommunityFeedbackSection projectId={projectId} role={role}/>
-    </ProjectAccordion>
+    {period&&<ProjectAccordion id="community" title={project.registration_type==="HISTORICO"?"09. Evaluación de la comunidad del semestre":"08. Evaluación de la comunidad del semestre"} open={openSection==="community"} onToggle={()=>toggleSection("community")} summary={`${period.academic_year}-${period.academic_semester}`}>
+      <CommunityFeedbackSection key={period.id} projectId={projectId} periodId={period.id} role={role} academicYear={period.academic_year} academicSemester={period.academic_semester}/>
+    </ProjectAccordion>}
   </div></main>;
 }
