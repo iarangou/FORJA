@@ -107,7 +107,7 @@ export class ProjectWorkflowController {
   }
 
   @Put(':projectId/ethics')
-  @Roles(1, 3)
+  @Roles(1, 2, 3)
   saveEthics(
     @Param('projectId', ParseIntPipe) projectId: number,
     @Body() dto: SaveEthicsDto,
