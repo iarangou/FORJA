@@ -69,8 +69,7 @@ export default function PeriodResultsSection({projectId,period,role,projectStatu
     }catch(e){setError(e instanceof Error?e.message:"Error al cerrar período");}
     finally{setBusy(false);}
   }
-  return <section className="forja-panel forja-editor-section">
-    <h2>05. Resultados, conclusiones y cierre</h2>
+  return <div className="forja-accordion-inner">
     <p className="forja-description">El profesor registra qué se logró durante este semestre. El administrador revisa y cierra el período cuando la evidencia PDF esté aprobada.</p>
     <p className="forja-note"><strong>Estado de ejecución:</strong> {period.execution_status}</p>
     <div className="forja-fields">
@@ -95,5 +94,5 @@ export default function PeriodResultsSection({projectId,period,role,projectStatu
     {closed&&<p className="forja-ok">Este semestre está cerrado. La finalización definitiva del proyecto se gestiona por separado.</p>}
     {error&&<p className="forja-alert" role="alert">{error}</p>}
     {message&&<p className="forja-ok" role="status">{message}</p>}
-  </section>;
+  </div>;
 }
