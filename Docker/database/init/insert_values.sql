@@ -82,20 +82,6 @@ VALUES
     ('Tecnología en Danza y Artes del Movimiento', '117055', 5);
 
 
-INSERT INTO users (username, email, full_name, password_hash, rol_id, is_active)
-VALUES (
-    'admin',
-    'admin@javerianacali.edu.co',
-    'Administrador FORJA',
-    '$2b$12$sVQZbyrSSS6s0IWJN10bMOTfI55ecvLjTOleQsU6mUkHYHG1gdpE2', -- la clave es 12345678
-    (SELECT id FROM rol WHERE name = 'admin'),
-    TRUE
-);
-
-INSERT INTO users (username, email, full_name, password_hash)
-VALUES ('vctrmrtnz', 'vctrmrtnz@javerianacali.edu.co', 'Víctor Martínez', '$2b$12$sVQZbyrSSS6s0IWJN10bMOTfI55ecvLjTOleQsU6mUkHYHG1gdpE2');
-
--- INSERT INTO teacher (user_id)
--- SELECT id FROM users WHERE rol_id = 3
--- ON CONFLICT (user_id) DO NOTHING;
--- 
+-- Los usuarios de demostración con contraseñas compartidas se eliminaron del seed.
+-- Registrar el primer administrador de forma segura con scripts/bootstrap-admin.mjs.
+-- No usar contraseñas conocidas ni almacenar hashes de pruebas en Git.
