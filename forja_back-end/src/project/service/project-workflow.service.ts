@@ -5,7 +5,7 @@ import {
 import { DatabaseError } from 'pg';
 import { DatabaseService } from '../../database/service/database.service.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
-import { CreatePeriodDto, UpdatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
+import { CreatePeriodDto, UpdatePeriodDto, ReviewPeriodDto, SavePeriodResultsDto } from '../dto/period.dto.js';
 import { SaveEthicsDto } from '../dto/ethics.dto.js';
 
 @Injectable()
@@ -156,6 +156,65 @@ export class ProjectWorkflowService {
     });
   }
 
+  async saveResults(projectId: number, periodId: number, dto: SavePeriodResultsDto, user: PayloadJwt) {
+    if (user.rol_id !== 3) throw new ForbiddenException('Solo el profesor responsable registra resultados');
+    const project=await this.accessibleProject(projectId,user);
+    if(project.general_status!=='ACTIVO') throw new ConflictException('El proyecto está finalizado');
+    const teacher=await this.db.query<{id:number}>('SELECT id FROM teacher WHERE user_id=$1',[user.sub]);
+    if(!teacher.rows[0])throw new ForbiddenException('No hay perfil docente asociado');
+    const {rows}=await this.db.query(
+      `UPDATE project_periods SET results=$1,conclusions=$2,updated_at=NOW()
+       WHERE id=$3 AND project_id=$4 AND teacher_id=$5
+         AND record_type='ACTUAL' AND approval_status='APROBADO'
+         AND execution_status<>'CERRADO'
+       RETURNING id,results,conclusions,execution_status`,
+      [dto.results.trim(),dto.conclusions.trim(),periodId,projectId,teacher.rows[0].id],
+    );
+    if(!rows[0])throw new ConflictException('Solo el profesor responsable puede actualizar resultados de un período aprobado y abierto');
+    return rows[0];
+  }
+
+  async closePeriod(projectId:number,periodId:number,user:PayloadJwt) {
+    if(user.rol_id!==1)throw new ForbiddenException('Solo el administrador cierra semestres');
+    return this.db.transaction(async client=>{
+      const {rows}=await client.query(
+        `SELECT pp.id,pp.approval_status,pp.execution_status,pp.record_type,
+                pp.results,pp.conclusions,p.general_status
+           FROM project_periods pp JOIN project p ON p.id=pp.project_id
+          WHERE pp.id=$1 AND pp.project_id=$2 FOR UPDATE OF pp`,
+        [periodId,projectId],
+      );
+      const period=rows[0];
+      if(!period)throw new NotFoundException('Período no encontrado');
+      if(period.general_status!=='ACTIVO'||period.record_type!=='ACTUAL'||
+         period.approval_status!=='APROBADO'||period.execution_status==='CERRADO'){
+        throw new ConflictException('El semestre debe estar aprobado, activo y sin cerrar');
+      }
+      if(!period.results?.trim()||!period.conclusions?.trim()){
+        throw new BadRequestException('El profesor debe registrar resultados y conclusiones');
+      }
+      const {rows:counts}=await client.query<{approved:string;pending:string}>(
+        `SELECT COUNT(*) FILTER(WHERE review_status='APROBADA')::text AS approved,
+                COUNT(*) FILTER(WHERE review_status='PENDIENTE')::text AS pending
+         FROM project_documents
+         WHERE project_period_id=$1 AND document_kind='EVIDENCIA'`,
+        [periodId],
+      );
+      if(Number(counts[0]?.approved??0)<1){
+        throw new BadRequestException('Debe existir al menos una evidencia PDF aprobada');
+      }
+      if(Number(counts[0]?.pending??0)>0){
+        throw new BadRequestException('Hay evidencias pendientes de revisión');
+      }
+      const {rows:updated}=await client.query(
+        `UPDATE project_periods SET execution_status='CERRADO',updated_at=NOW()
+         WHERE id=$1 RETURNING id,execution_status,approval_status`,
+        [periodId],
+      );
+      return updated[0];
+    });
+  }
+
   async getReviews(projectId: number, periodId: number, user: PayloadJwt) {
     await this.accessibleProject(projectId,user);
     const period = await this.db.query(
@@ -177,7 +236,7 @@ export class ProjectWorkflowService {
               teacher_id, course_id, faculty_id, academic_program_id,
               objectives, activities, budget, student_count, start_date, end_date,
               community_population_description, territory_name, missing_information,
-              approval_status, execution_status, last_submitted_at
+              approval_status, execution_status, results, conclusions, last_submitted_at
        FROM project_periods WHERE project_id=$1
        ORDER BY academic_year DESC, academic_semester DESC`, [projectId],
     );
