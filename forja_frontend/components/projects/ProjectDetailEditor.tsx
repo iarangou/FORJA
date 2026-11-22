@@ -4,6 +4,7 @@ import {useEffect,useState} from "react";
 import {useParams} from "next/navigation";
 import Link from "next/link";
 import EvidenceSection from "./EvidenceSection";
+import PeriodResultsSection from "./PeriodResultsSection";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -19,6 +20,7 @@ type Period = {
   budget:number|null;student_count:number|null;
   start_date:string|null;end_date:string|null;
   missing_information:string|null;
+  results:string|null;conclusions:string|null;execution_status:string;
 };
 type Review = {id:number;decision:string;notes:string|null;reviewed_at:string;reviewer:string};
 type Ethics = {
@@ -240,6 +242,7 @@ export default function ProjectDetailEditor(){
       </>}
     </section>
     {period&&<EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status}/>}
+    {period&&<PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>}
     <section className="forja-panel forja-editor-section">
       <h2>03. Consideraciones éticas</h2>
       {!ethics?<p>No se ha diligenciado un análisis ético para este proyecto.</p>:<>
