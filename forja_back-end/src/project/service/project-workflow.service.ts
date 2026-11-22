@@ -372,7 +372,12 @@ export class ProjectWorkflowService {
   async saveEthics(projectId: number, dto: SaveEthicsDto, user: PayloadJwt) {
     const project = await this.accessibleProject(projectId,user);
     if (user.rol_id === 2) {
-      throw new ForbiddenException('El monitor registra históricos, pero no valida su análisis ético');
+      const {rows:types}=await this.db.query<{registration_type:string}>(
+        'SELECT registration_type FROM project WHERE id=$1',[projectId],
+      );
+      if(types[0]?.registration_type!=='HISTORICO'){
+        throw new ForbiddenException('El monitor solo registra análisis ético de proyectos históricos');
+      }
     }
     if (project.general_status === 'FINALIZADO') {
       throw new ConflictException('No se modifica el análisis de un proyecto finalizado');
