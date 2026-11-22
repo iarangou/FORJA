@@ -67,6 +67,15 @@ export class ProjectWorkflowController {
     return this.workflow.closePeriod(projectId,periodId,request.user);
   }
 
+  @Post(':projectId/finalize')
+  @Roles(1)
+  finalizeProject(
+    @Param('projectId',ParseIntPipe) projectId:number,
+    @Req() request:AuthenticatedRequest,
+  ){
+    return this.workflow.finalizeProject(projectId,request.user);
+  }
+
   @Get(':projectId/periods/:periodId/reviews')
   @Roles(1, 2, 3)
   getReviews(
