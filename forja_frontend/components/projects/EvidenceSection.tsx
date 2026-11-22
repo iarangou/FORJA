@@ -18,7 +18,8 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
   const base=`/api/projects/${projectId}/periods/${periodId}/evidences`;
-  const canUpload=role===3 && approvalStatus==="APROBADO" && recordType==="ACTUAL" && projectStatus==="ACTIVO" && executionStatus!=="CERRADO";
+  const historical=recordType==="HISTORICO";
+  const canUpload=historical?(role===1||role===2):(role===3 && approvalStatus==="APROBADO" && projectStatus==="ACTIVO" && executionStatus!=="CERRADO");
 
   async function refresh(){
     const response=await fetch(base,{cache:"no-store"});
@@ -53,7 +54,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
       setFile(null);
       const control=document.getElementById(`evidence-file-${periodId}`) as HTMLInputElement|null;
       if(control)control.value="";
-      setMessage("PDF guardado. Quedó pendiente de revisión del administrador.");
+      setMessage(historical?"PDF histórico archivado, sin aprobación retroactiva.":"PDF guardado. Quedó pendiente de revisión del administrador.");
       await refresh();
     }catch(e){setError(e instanceof Error?e.message:"Error al subir");}
     finally{setBusy(false);}
@@ -74,7 +75,8 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
   }
 
   return <div className="forja-accordion-inner">
-    <p className="forja-description">Incluye fotografías en el PDF. Para videos, agrega dentro del PDF un enlace a YouTube. Cada PDF se guarda como evidencia nueva de este semestre. Si una evidencia es devuelta, carga un nuevo PDF corregido; se conserva el historial. El administrador revisa cada archivo una sola vez.</p>
+    <p className="forja-description">{historical?
+      "Digitaliza evidencias antiguas en PDF. No se exige aprobación retroactiva: el documento queda archivado con el semestre correspondiente.":"Incluye fotografías en el PDF. Para videos, agrega dentro del PDF un enlace a YouTube. Cada PDF se guarda como evidencia nueva de este semestre. Si una evidencia es devuelta, carga un nuevo PDF corregido; se conserva el historial. El administrador revisa cada archivo una sola vez."}</p>
     {canUpload&&<form onSubmit={upload} className="forja-form">
       <div className="forja-fields"><label className="full">Documento de evidencia (.pdf, máximo 20 MB)
         <input id={`evidence-file-${periodId}`} type="file" accept=".pdf,application/pdf"
@@ -82,7 +84,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
       </label></div>
       <div className="forja-actions"><button type="submit" disabled={busy||!file}>{busy?"Subiendo...":"Subir evidencia PDF"}</button></div>
     </form>}
-    {!canUpload&&role===3&&<p className="forja-note">Las evidencias se cargan cuando el semestre está aprobado.</p>}
+    {!canUpload&&role===3&&!historical&&<p className="forja-note">Las evidencias se cargan cuando el semestre está aprobado.</p>}
     {error&&<p role="alert" className="forja-alert">{error}</p>}
     {message&&<p role="status" className="forja-ok">{message}</p>}
     <div className="forja-user-list">
@@ -90,11 +92,11 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
         items.map(item=><div className="forja-evidence-item" key={item.id}>
           <div>
             <strong>{item.original_filename}</strong>
-            <p>{Math.ceil(item.file_size/1024)} KB · {item.review_status} · {item.uploaded_by_name}</p>
+            <p>{Math.ceil(item.file_size/1024)} KB · {historical?"ARCHIVADA (HISTÓRICA)":item.review_status} · {item.uploaded_by_name}</p>
             {item.review_notes&&<p><strong>Observaciones:</strong> {item.review_notes}</p>}
             <a className="forja-textbutton" href={`${base}/${item.id}/download`}>Descargar PDF</a>
           </div>
-          {role===1&&item.review_status==="PENDIENTE"&&<div className="forja-evidence-review">
+          {role===1&&!historical&&item.review_status==="PENDIENTE"&&<div className="forja-evidence-review">
             <label>Observaciones
               <textarea rows={2} value={notes[item.id]??""} onChange={e=>setNotes(v=>({...v,[item.id]:e.target.value}))}/>
             </label>
