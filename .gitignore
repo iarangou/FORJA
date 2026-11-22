@@ -76,3 +76,5 @@ docker-compose.override.yml
 compose.override.yml
 
 .vscode
+# Documentos privados de evidencia; nunca enviar PDFs de usuarios a Git.
+/Docker/evidence-storage/
