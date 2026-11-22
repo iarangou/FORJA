@@ -176,6 +176,19 @@ export default function ProjectDetailEditor(){
       await reload();
     }catch(e){setError(e instanceof Error?e.message:"Error al guardar análisis ético");}finally{setBusy(false);}
   }
+  async function finalizeProject(){
+    if(role!==1||!project||project.general_status!=="ACTIVO"||busy)return;
+    const label=project.code;
+    if(!window.confirm(`¿Finalizar definitivamente el proyecto ${label}? Esto bloqueará nuevos registros y cambios. Esta acción no equivale al cierre semestral.`))return;
+    setBusy(true);setError("");setMessage("");
+    try{
+      await requestJSON(`/api/projects/${projectId}/finalize`,"POST",{});
+      await reload();
+      setMessage("Proyecto finalizado. Se conservaron los períodos, resultados y evidencias.");
+    }catch(e){setError(e instanceof Error?e.message:"No se pudo finalizar");}
+    finally{setBusy(false);}
+  }
+
   async function submit(){
     if(!period)return;
     setBusy(true);setError("");setMessage("");
@@ -197,6 +210,17 @@ export default function ProjectDetailEditor(){
       <p>Consulta y completa los datos de tu proyecto. Los campos solo se pueden editar antes de la aprobación.</p>
     </div>
     {message&&<p className="forja-ok" role="status">{message}</p>}
+    {role===1&&<section className="forja-panel forja-editor-section">
+      <h2>Finalización definitiva del proyecto</h2>
+      <p className="forja-description">Solo el administrador puede finalizar el proyecto completo. Deben estar cerrados todos los períodos actuales. Los históricos y las evidencias se conservan.</p>
+      <p className="forja-note"><strong>Estado general:</strong> {project.general_status}</p>
+      {project.general_status==="ACTIVO"&&<div className="forja-actions">
+        <button type="button" disabled={busy||periods.length===0||periods.some(p=>p.record_type==="ACTUAL"&&(p.approval_status!=="APROBADO"||p.execution_status!=="CERRADO"))}
+          onClick={finalizeProject}>Finalizar proyecto definitivamente</button>
+      </div>}
+      {project.general_status==="FINALIZADO"&&<p>El proyecto quedó finalizado. Sus registros siguen disponibles para consulta.</p>}
+    </section>}
+
     {error&&<p className="forja-alert" role="alert">{error}</p>}
     <section className="forja-panel forja-editor-section">
       <h2>01. Información general</h2>
