@@ -97,6 +97,23 @@ CREATE TABLE IF NOT EXISTS community_feedback (
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Enlace privado para una sola respuesta de la comunidad por proyecto.
+ALTER TABLE community_feedback
+  ADD COLUMN IF NOT EXISTS relationship_to_project VARCHAR(300),
+  ADD COLUMN IF NOT EXISTS consent_confirmed BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE IF NOT EXISTS community_feedback_links (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  project_id INT NOT NULL UNIQUE REFERENCES project(id) ON DELETE RESTRICT,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  created_by INT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_community_feedback_links_expires
+  ON community_feedback_links(expires_at);
+
 -- El catalogo de territorios solo se completara cuando existan los siete nombres oficiales.
 CREATE TABLE IF NOT EXISTS forja_territories (
   id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
