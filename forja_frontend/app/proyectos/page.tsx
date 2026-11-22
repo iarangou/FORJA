@@ -94,7 +94,7 @@ export default function ProjectsPage() {
         {periods[p.id]&&<div className="forja-periods">
           {periods[p.id].length===0?<p>Sin períodos registrados.</p>:periods[p.id].map(period=>
             <div key={period.id} className="forja-perioditem">
-              <p><strong>{period.academic_year}-{period.academic_semester}</strong> · {period.record_type} · {period.approval_status}</p>
+              <p><strong>{period.academic_year}-{period.academic_semester}</strong> · {period.record_type==="HISTORICO"?"HISTÓRICO · SIN APROBACIÓN RETROACTIVA":`ACTUAL · ${period.approval_status}`}</p>
               {profile?.rol_id===1&&period.approval_status==="EN_REVISION"&&<>
                 <label>Observaciones de la revisión
                   <textarea rows={2} value={notes[period.id]??""} onChange={e=>setNotes(prev=>({...prev,[period.id]:e.target.value}))}/>
