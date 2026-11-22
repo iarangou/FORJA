@@ -5,6 +5,11 @@
 
 BEGIN;
 
+-- Se conserva el ID de rol 2; la aplicación lo utiliza para monitor.
+UPDATE rol SET name = 'monitor'
+WHERE name = 'evaluator'
+  AND NOT EXISTS (SELECT 1 FROM rol WHERE name = 'monitor');
+
 ALTER TABLE project
   ADD COLUMN IF NOT EXISTS code VARCHAR(50),
   ADD COLUMN IF NOT EXISTS general_problem TEXT,
