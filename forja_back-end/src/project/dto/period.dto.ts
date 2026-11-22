@@ -96,3 +96,12 @@ export class UpdatePeriodDto {
   @IsOptional() @IsString() @MaxLength(5000)
   missing_information?: string;
 }
+
+/** Informe de ejecución, editable únicamente por el profesor responsable. */
+export class SavePeriodResultsDto {
+  @IsString() @IsNotEmpty() @MaxLength(10000)
+  results: string;
+
+  @IsString() @IsNotEmpty() @MaxLength(10000)
+  conclusions: string;
+}
