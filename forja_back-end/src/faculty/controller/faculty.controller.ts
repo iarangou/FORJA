@@ -17,6 +17,11 @@ export class FacultyController {
         return this.facultyService.getAll();
     }
 
+    @Get("programs")
+    getPrograms() {
+        return this.facultyService.getPrograms();
+    }
+
     // @Post("create")
     // @UseGuards(AuthGuard, RolesGuard)
     // @Roles(1)
