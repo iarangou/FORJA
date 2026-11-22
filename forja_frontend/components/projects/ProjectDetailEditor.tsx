@@ -3,6 +3,7 @@
 import {useEffect,useState} from "react";
 import {useParams} from "next/navigation";
 import Link from "next/link";
+import EvidenceSection from "./EvidenceSection";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -238,6 +239,7 @@ export default function ProjectDetailEditor(){
         </>}
       </>}
     </section>
+    {period&&<EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status}/>}
     <section className="forja-panel forja-editor-section">
       <h2>03. Consideraciones éticas</h2>
       {!ethics?<p>No se ha diligenciado un análisis ético para este proyecto.</p>:<>
