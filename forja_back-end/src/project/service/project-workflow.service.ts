@@ -42,6 +42,21 @@ export class ProjectWorkflowService {
     if (user.rol_id === 3 && recordType !== 'ACTUAL') {
       throw new ForbiddenException('El profesor registra períodos actuales');
     }
+    if (recordType === 'HISTORICO') {
+      const {rows}=await this.db.query<{registration_type:string}>(
+        'SELECT registration_type FROM project WHERE id=$1',[projectId],
+      );
+      if(rows[0]?.registration_type!=='HISTORICO'){
+        throw new BadRequestException('Los períodos históricos deben pertenecer a un proyecto histórico');
+      }
+      const now=new Date();
+      const currentYear=now.getUTCFullYear();
+      const currentSemester=now.getUTCMonth()<6?1:2;
+      if(dto.academic_year>currentYear ||
+         (dto.academic_year===currentYear && dto.academic_semester>=currentSemester)){
+        throw new BadRequestException('Solo pueden digitalizarse semestres anteriores al semestre actual');
+      }
+    }
     if (dto.start_date && dto.end_date && dto.end_date < dto.start_date) {
       throw new BadRequestException('La fecha final es anterior al inicio');
     }
@@ -84,6 +99,59 @@ export class ProjectWorkflowService {
       }
       throw error;
     }
+  }
+
+  async updateHistoricalPeriod(projectId:number,periodId:number,dto:UpdatePeriodDto,user:PayloadJwt){
+    if(user.rol_id!==1 && user.rol_id!==2){
+      throw new ForbiddenException('La digitalización corresponde al monitor o administrador');
+    }
+    const project=await this.accessibleProject(projectId,user);
+    if(project.general_status!=='ACTIVO') {
+      throw new ConflictException('El proyecto está finalizado');
+    }
+    return this.db.transaction(async client=>{
+      const {rows}=await client.query<{
+        id:number;start_date:string|null;end_date:string|null;record_type:string;
+      }>(
+        `SELECT id,start_date,end_date,record_type FROM project_periods
+          WHERE id=$1 AND project_id=$2 FOR UPDATE`,[periodId,projectId],
+      );
+      const period=rows[0];
+      if(!period)throw new NotFoundException('Período no encontrado');
+      if(period.record_type!=='HISTORICO'){
+        throw new ConflictException('Solo se editan períodos históricos por esta ruta');
+      }
+      const start=dto.start_date??period.start_date;
+      const end=dto.end_date??period.end_date;
+      if(start&&end&&String(end).slice(0,10)<String(start).slice(0,10)){
+        throw new BadRequestException('La fecha final no puede ser anterior a la inicial');
+      }
+      const {rows:updated}=await client.query(
+        `UPDATE project_periods SET
+         course_id=COALESCE($2,course_id),
+         objectives=COALESCE($3,objectives),
+         activities=COALESCE($4,activities),
+         student_count=COALESCE($5,student_count),
+         budget=COALESCE($6,budget),
+         start_date=COALESCE($7,start_date),
+         end_date=COALESCE($8,end_date),
+         community_population_description=COALESCE($9,community_population_description),
+         territory_name=COALESCE($10,territory_name),
+         missing_information=COALESCE($11,missing_information),
+         updated_at=NOW()
+         WHERE id=$1 RETURNING *`,
+        [periodId,dto.course_id??null,dto.objectives??null,dto.activities??null,
+         dto.student_count??null,dto.budget??null,dto.start_date??null,dto.end_date??null,
+         dto.community_population_description??null,dto.territory_name??null,
+         dto.missing_information??null],
+      );
+      if(dto.course_id!==undefined){
+        await client.query('DELETE FROM project_period_courses WHERE project_period_id=$1',[periodId]);
+        await client.query('INSERT INTO project_period_courses(project_period_id,course_id) VALUES($1,$2)',
+          [periodId,dto.course_id]);
+      }
+      return updated[0];
+    });
   }
 
   async updatePeriod(projectId: number, periodId: number, dto: UpdatePeriodDto, user: PayloadJwt) {
