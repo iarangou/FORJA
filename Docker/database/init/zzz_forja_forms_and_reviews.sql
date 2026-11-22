@@ -12,6 +12,9 @@ ALTER TABLE project
   ADD COLUMN IF NOT EXISTS ods_ids SMALLINT[] NOT NULL DEFAULT '{}';
 
 ALTER TABLE project_periods
+  ADD COLUMN IF NOT EXISTS historical_teacher_name VARCHAR(180);
+
+ALTER TABLE project_periods
   ADD COLUMN IF NOT EXISTS faculty_id INT REFERENCES faculty(id),
   ADD COLUMN IF NOT EXISTS academic_program_id INT REFERENCES academic_programs(id),
   ADD COLUMN IF NOT EXISTS start_date DATE,
