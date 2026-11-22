@@ -58,6 +58,7 @@ export default function NewProjectForm() {
   const [error,setError]=useState("");
   const [project,setProject]=useState<CreateResponse|null>(null);
   const [period,setPeriod]=useState<PeriodResponse|null>(null);
+  const [role,setRole]=useState<number|null>(null);
   const [form,setForm]=useState({
     title:"", general_problem:"", general_objective:"", justification:"",
     community_name:"", community_contact:"",community_location:"",
@@ -77,6 +78,16 @@ export default function NewProjectForm() {
       .then(r=>r.ok?r.json():[])
       .then((value:unknown)=>setCourses(Array.isArray(value)?value:[]))
       .catch(()=>setCourses([]));
+  },[]);
+  useEffect(()=>{
+    fetch("/api/users/me",{credentials:"same-origin"})
+      .then(async response=>{
+        if(!response.ok) return null;
+        const data = (await response.json()) as {rol_id?:number};
+        return typeof data.rol_id==="number"?data.rol_id:null;
+      })
+      .then(setRole)
+      .catch(()=>setRole(null));
   },[]);
 
   async function save(event:FormEvent<HTMLFormElement>){
@@ -136,7 +147,7 @@ export default function NewProjectForm() {
   }
 
   async function submit(){
-    if(!project||!period||loading)return;
+    if(!project||!period||loading||role!==3)return;
     setLoading(true);setError("");
     try{
       await jsonRequest(
@@ -266,7 +277,7 @@ export default function NewProjectForm() {
           {message&&<p role="status" className="forja-ok">{message}</p>}
           <div className="forja-actions">
             <button type="submit" disabled={loading}>{loading?"Guardando...":"Guardar borrador"}</button>
-            {project&&period&&form.registration_type==="NUEVO"&&
+            {project&&period&&role===3&&form.registration_type==="NUEVO"&&
               <button className="secondary" type="button" disabled={loading} onClick={submit}>Enviar período a revisión</button>}
           </div>
         </form>
