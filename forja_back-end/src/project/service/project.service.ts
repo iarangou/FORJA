@@ -13,7 +13,7 @@ export class ProjectService {
     const privileged = user.rol_id === 1 || user.rol_id === 2;
     const { rows } = await this.db.query(
       `SELECT p.id, p.code, p.title, p.general_problem, p.general_objective,
-              p.registration_type, p.general_status, p.duration, p.start_date,
+              p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at
          FROM project p
         WHERE $1::boolean
@@ -32,7 +32,7 @@ export class ProjectService {
   async getById(id: number, user: PayloadJwt) {
     const { rows } = await this.db.query(
       `SELECT p.id, p.code, p.title, p.general_problem, p.general_objective,
-              p.registration_type, p.general_status, p.duration, p.start_date,
+              p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at
          FROM project p
         WHERE p.id = $1
@@ -65,14 +65,22 @@ export class ProjectService {
       const { rows } = await client.query(
         `INSERT INTO project
            (title, general_problem, general_objective, registration_type,
-            duration, start_date, end_date, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            duration, start_date, end_date, created_by,
+            justification, community_name, community_contact, community_location,
+            prior_project_id, ods_ids)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8,
+                 $9, $10, $11, $12, $13, $14)
          RETURNING id, code, title, general_problem, general_objective,
                    registration_type, general_status, duration, start_date,
-                   end_date, created_by, created_at, updated_at`,
+                   end_date, created_by, justification, community_name,
+                   community_contact, community_location, prior_project_id,
+                   ods_ids, created_at, updated_at`,
         [dto.title.trim(), dto.general_problem?.trim() ?? null,
           dto.general_objective?.trim() ?? null, registrationType,
-          dto.duration ?? null, dto.start_date ?? null, dto.end_date ?? null, user.sub],
+          dto.duration ?? null, dto.start_date ?? null, dto.end_date ?? null, user.sub,
+          dto.justification?.trim() ?? null, dto.community_name?.trim() ?? null,
+          dto.community_contact?.trim() ?? null, dto.community_location?.trim() ?? null,
+          dto.prior_project_id ?? null, dto.ods_ids ?? []],
       );
       const project = rows[0];
       // Si el profesor crea el proyecto, asociarlo como responsable.
