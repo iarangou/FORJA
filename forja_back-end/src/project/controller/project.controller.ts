@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ProjectService } from '../service/project.service.js';
 import { AuthGuard } from '../../auth/guard/auth.guard.js';
 import { RolesGuard } from '../../auth/guard/roles.guard.js';
@@ -26,6 +26,19 @@ export class ProjectController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.projectService.getById(id, request.user);
+  }
+
+  @Post(':id/responsible-teacher')
+  @Roles(1)
+  assignResponsibleTeacher(
+    @Param('id',ParseIntPipe) id:number,
+    @Body() dto:{user_id:number},
+    @Req() request:AuthenticatedRequest,
+  ){
+    if(!Number.isInteger(dto.user_id)||dto.user_id<1){
+      throw new BadRequestException('Selecciona un docente válido');
+    }
+    return this.projectService.assignResponsibleTeacher(id,dto.user_id,request.user);
   }
 
   @Patch(':id')
