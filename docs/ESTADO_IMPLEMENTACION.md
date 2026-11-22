@@ -31,7 +31,7 @@
 ## Precauciones conocidas
 
 - El registro de evidencia está modelado en SQL, **pero no hay subida de archivos implementada**.
-- El envío para aprobación bloquea casos que requieren aval mientras no exista carga segura de archivos.
+- El envío a revisión no está condicionado a avales automáticos por tipo de población. El administrador aprueba o devuelve después de revisar la información.
 - El formulario ético es una propuesta basada en el archivo disponible; no afirmar que es un formato institucional oficial definitivo.
 - La cuenta admin se crea manualmente con `npm run bootstrap:admin`; la base nueva no instala usuarios con claves de prueba.
 - Los scripts de `/docker-entrypoint-initdb.d/` se ejecutan automáticamente **solo en bases nuevas**. No resetear bases con datos.
