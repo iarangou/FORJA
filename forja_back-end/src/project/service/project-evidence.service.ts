@@ -18,6 +18,7 @@ interface IncomingPdf {
 interface PeriodAccess {
   approval_status: string;
   record_type: string;
+  execution_status: string;
   general_status: string;
   teacher_user_id: number | null;
 }
@@ -39,7 +40,7 @@ export class ProjectEvidenceService {
       throw new ForbiddenException('Acceso exclusivo del administrador y el profesor responsable');
     }
     const { rows } = await this.db.query<PeriodAccess>(
-      `SELECT pp.approval_status,pp.record_type,p.general_status,
+      `SELECT pp.approval_status,pp.record_type,pp.execution_status,p.general_status,
               t.user_id AS teacher_user_id
        FROM project_periods pp
        JOIN project p ON p.id=pp.project_id
@@ -96,7 +97,7 @@ export class ProjectEvidenceService {
     const period=await this.checkPeriod(projectId,periodId,user);
     if(user.rol_id!==3)throw new ForbiddenException('Solo el profesor responsable carga evidencias');
     if(period.general_status!=='ACTIVO' || period.record_type!=='ACTUAL' ||
-       period.approval_status!=='APROBADO') {
+       period.approval_status!=='APROBADO' || period.execution_status==='CERRADO') {
       throw new ConflictException('Se cargan evidencias después de aprobar el semestre actual');
     }
     this.validatePdf(file);
