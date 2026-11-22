@@ -125,7 +125,7 @@ export class CommunityFeedbackService {
       const {rows}=await client.query<{
         project_period_id:number;expires_at:string;used_at:string|null;
       }>(
-        `SELECT project_id,expires_at,used_at FROM community_period_feedback_links
+        `SELECT project_period_id,expires_at,used_at FROM community_period_feedback_links
          WHERE token_hash=$1 FOR UPDATE`,[hashToken(token)],
       );
       const link=rows[0];
