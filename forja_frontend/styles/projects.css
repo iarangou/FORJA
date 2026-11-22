@@ -1,0 +1,35 @@
+:root{--forja-purple:#673787;--forja-orange:#f39022;--forja-ink:#20314a}
+.forja-projects{background:#f7f7fb;color:var(--forja-ink);min-height:100vh;font-family:Arial,Helvetica,sans-serif}
+.forja-shell{max-width:1040px;padding:0 24px 80px;margin:0 auto}
+.forja-nav{height:78px;display:flex;align-items:center;justify-content:space-between;gap:22px;border-bottom:1px solid #e1dfeb}
+.forja-nav a:first-child{font-size:24px;font-weight:800;color:var(--forja-purple)}
+.forja-nav a{color:var(--forja-purple);text-decoration:none;font-weight:700}
+.forja-heading{padding:52px 0 25px}.forja-eyebrow{font-size:11px;color:var(--forja-purple);letter-spacing:2px;font-weight:800}
+.forja-heading h1{font-size:clamp(30px,4vw,46px);margin:14px 0;color:var(--forja-ink)}
+.forja-heading p{line-height:1.7;max-width:720px;color:#5f6a7a}
+.forja-form{display:grid;gap:22px}
+.forja-panel{background:white;border:1px solid #e7e3ef;border-radius:15px;padding:28px;box-shadow:0 8px 22px #281d4609}
+.forja-panel h2{font-size:21px;margin:0 0 19px;line-height:1.3;color:var(--forja-ink)}
+.forja-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:19px}
+.forja-fields label{font-weight:700;font-size:13px;display:flex;flex-direction:column;gap:8px}
+.forja-fields label.full{grid-column:1/-1}
+.forja-fields input:not([type="checkbox"]),.forja-fields select,.forja-fields textarea{font:inherit;font-weight:400;color:#1c2835;background:#fff;width:100%;border:1px solid #d0d3dd;border-radius:8px;padding:11px 13px}
+.forja-fields input:focus,.forja-fields select:focus,.forja-fields textarea:focus{outline:2px solid var(--forja-purple);outline-offset:2px}
+.forja-fields textarea{resize:vertical;min-height:66px}
+.forja-fields label.forja-check{flex-direction:row;align-items:flex-start;gap:10px;line-height:1.5;font-weight:500}
+.forja-check input{width:17px;height:17px;accent-color:var(--forja-purple);flex-shrink:0}
+.forja-fields small,.forja-description{color:#677285;line-height:1.6}
+.forja-note{background:#f9f3e9;padding:14px;border-radius:8px;border-left:3px solid var(--forja-orange);margin-top:18px;line-height:1.6}
+.forja-actions{display:flex;gap:13px;flex-wrap:wrap;margin:10px 0 24px}
+.forja-actions button,.forja-button{appearance:none;border:0;background:var(--forja-purple);color:white;display:inline-flex;align-items:center;justify-content:center;padding:13px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:13px;cursor:pointer}
+.forja-actions button.secondary{background:white;color:var(--forja-purple);border:1px solid var(--forja-purple)}
+.forja-actions button:disabled{opacity:.55;cursor:not-allowed}
+.forja-alert,.forja-ok{border-radius:8px;padding:15px;line-height:1.6}
+.forja-alert{background:#fff1f0;color:#a52e26;border:1px solid #f3c0bb}
+.forja-ok{background:#edf8f0;color:#1b6e44;border:1px solid #a4d4b5}
+.forja-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.forja-cardhead{display:flex;justify-content:space-between;gap:14px;font-size:12px;color:#6f7582}
+.forja-code{font-weight:800;color:var(--forja-purple)}
+.forja-textbutton{border:0;background:none;padding:12px 0;color:var(--forja-purple);font-weight:700;cursor:pointer}
+.forja-periods{border-top:1px solid #e7e3ef;padding-top:12px;font-size:12px}
+@media(max-width:700px){.forja-fields,.forja-cards{grid-template-columns:1fr}.forja-panel{padding:22px}.forja-shell{padding:0 17px 50px}}
