@@ -118,6 +118,12 @@ export default function ProjectDetailEditor(){
   const generalEditable=Boolean(project&&project.general_status==="ACTIVO"&&
     (role===1||role===3)&&!periods.some(x=>["EN_REVISION","APROBADO"].includes(x.approval_status)));
   const ethicsEditable=generalEditable;
+  const ethicsData:Ethics = ethics ?? {
+    external_population:"NINGUNO",university_population:"NINGUNO",
+    handles_personal_data:false,involves_vulnerable_population:false,
+    identifiable_media:false,privacy_measures:"",risk_mitigation:"",
+    truthful_declaration:false,
+  };
 
   function updateProject<K extends keyof Project>(key:K,value:Project[K]) {
     setProject(v=>v?{...v,[key]:value}:v);
@@ -163,18 +169,18 @@ export default function ProjectDetailEditor(){
     }catch(e){setError(e instanceof Error?e.message:"Error al guardar período");}finally{setBusy(false);}
   }
   async function saveEthics(){
-    if(!ethics)return;
+    if(!ethicsEditable)return;
     setBusy(true);setError("");setMessage("");
     try {
       await requestJSON(`/api/projects/${projectId}/ethics`,"PUT",{
-        external_population:ethics.external_population??"NINGUNO",
-        university_population:ethics.university_population??"NINGUNO",
-        handles_personal_data:Boolean(ethics.handles_personal_data),
-        involves_vulnerable_population:Boolean(ethics.involves_vulnerable_population),
-        identifiable_media:Boolean(ethics.identifiable_media),
-        privacy_measures:ethics.privacy_measures??"",
-        risk_mitigation:ethics.risk_mitigation??"",
-        truthful_declaration:Boolean(ethics.truthful_declaration),
+        external_population:ethicsData.external_population??"NINGUNO",
+        university_population:ethicsData.university_population??"NINGUNO",
+        handles_personal_data:Boolean(ethicsData.handles_personal_data),
+        involves_vulnerable_population:Boolean(ethicsData.involves_vulnerable_population),
+        identifiable_media:Boolean(ethicsData.identifiable_media),
+        privacy_measures:ethicsData.privacy_measures??"",
+        risk_mitigation:ethicsData.risk_mitigation??"",
+        truthful_declaration:Boolean(ethicsData.truthful_declaration),
       });
       setMessage("Análisis ético guardado.");
       await reload();
@@ -257,18 +263,18 @@ export default function ProjectDetailEditor(){
       </>}
     </ProjectAccordion>
     <ProjectAccordion id="ethics" title="03. Consideraciones éticas" open={openSection==="ethics"} onToggle={()=>toggleSection("ethics")}>
-      {!ethics?<p>No se ha diligenciado un análisis ético para este proyecto.</p>:<>
+      {<>
         <div className="forja-fields">
-          <label>Población externa predominante<select disabled={!ethicsEditable||busy} value={ethics.external_population??"NINGUNO"} onChange={e=>updateEthics("external_population",e.target.value)}>
+          <label>Población externa predominante<select disabled={!ethicsEditable||busy} value={ethicsData.external_population??"NINGUNO"} onChange={e=>updateEthics("external_population",e.target.value)}>
             {externalCategories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-          <label>Grupo universitario<select disabled={!ethicsEditable||busy} value={ethics.university_population??"NINGUNO"} onChange={e=>updateEthics("university_population",e.target.value)}>
+          <label>Grupo universitario<select disabled={!ethicsEditable||busy} value={ethicsData.university_population??"NINGUNO"} onChange={e=>updateEthics("university_population",e.target.value)}>
             {universityCategories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
-          <label className="forja-check"><input disabled={!ethicsEditable||busy} type="checkbox" checked={Boolean(ethics.involves_vulnerable_population)} onChange={e=>updateEthics("involves_vulnerable_population",e.target.checked)}/> Población vulnerable</label>
-          <label className="forja-check"><input disabled={!ethicsEditable||busy} type="checkbox" checked={Boolean(ethics.handles_personal_data)} onChange={e=>updateEthics("handles_personal_data",e.target.checked)}/> Tratamiento de datos personales</label>
-          <label className="forja-check"><input disabled={!ethicsEditable||busy} type="checkbox" checked={Boolean(ethics.identifiable_media)} onChange={e=>updateEthics("identifiable_media",e.target.checked)}/> Evidencias con personas identificables</label>
-          <label className="full">Medidas de privacidad<textarea rows={3} disabled={!ethicsEditable||busy} value={ethics.privacy_measures??""} onChange={e=>updateEthics("privacy_measures",e.target.value)}/></label>
-          <label className="full">Mitigación de riesgos<textarea rows={3} disabled={!ethicsEditable||busy} value={ethics.risk_mitigation??""} onChange={e=>updateEthics("risk_mitigation",e.target.value)}/></label>
-          <label className="forja-check full"><input disabled={!ethicsEditable||busy} type="checkbox" checked={ethics.truthful_declaration} onChange={e=>updateEthics("truthful_declaration",e.target.checked)}/> Declaro que la información es verídica</label>
+          <label className="forja-check"><input disabled={!ethicsEditable||busy} type="checkbox" checked={Boolean(ethicsData.involves_vulnerable_population)} onChange={e=>updateEthics("involves_vulnerable_population",e.target.checked)}/> Población vulnerable</label>
+          <label className="forja-check"><input disabled={!ethicsEditable||busy} type="checkbox" checked={Boolean(ethicsData.handles_personal_data)} onChange={e=>updateEthics("handles_personal_data",e.target.checked)}/> Tratamiento de datos personales</label>
+          <label className="forja-check"><input disabled={!ethicsEditable||busy} type="checkbox" checked={Boolean(ethicsData.identifiable_media)} onChange={e=>updateEthics("identifiable_media",e.target.checked)}/> Evidencias con personas identificables</label>
+          <label className="full">Medidas de privacidad<textarea rows={3} disabled={!ethicsEditable||busy} value={ethicsData.privacy_measures??""} onChange={e=>updateEthics("privacy_measures",e.target.value)}/></label>
+          <label className="full">Mitigación de riesgos<textarea rows={3} disabled={!ethicsEditable||busy} value={ethicsData.risk_mitigation??""} onChange={e=>updateEthics("risk_mitigation",e.target.value)}/></label>
+          <label className="forja-check full"><input disabled={!ethicsEditable||busy} type="checkbox" checked={ethicsData.truthful_declaration} onChange={e=>updateEthics("truthful_declaration",e.target.checked)}/> Declaro que la información es verídica</label>
         </div>
         <div className="forja-actions"><button type="button" disabled={!ethicsEditable||busy} onClick={saveEthics}>Guardar análisis ético</button></div>
       </>}
