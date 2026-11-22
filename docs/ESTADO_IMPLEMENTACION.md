@@ -77,3 +77,11 @@ La meta es lograr coherencia entre requisitos, datos, backend y pantallas sin in
 - Las asignaturas, carreras y facultades existentes se seleccionan de catálogos. Si el docente histórico ya no está vinculado a la universidad o no existe en el sistema, su nombre se conserva en `project_periods.historical_teacher_name`, sin crear una cuenta ficticia.
 - **Migración requerida en bases ya inicializadas:** ejecutar una única vez el script idempotente `Docker/database/migrations/20261122_historical_teacher.sql` después de un respaldo, antes de actualizar backend/frontend. Para bases nuevas, el campo ya está en `zzz_forja_forms_and_reviews.sql`. Esta migración no modifica documentos ni estados.
 - La edición de proyectos generales se mantiene restringida cuando existe un período actual en revisión o aprobado, para no cambiar información que ya fue revisada. Los datos históricos por semestre siguen editables para monitor/administrador mientras el proyecto esté activo.
+
+## Formulario compartido (profesor y monitor)
+
+- La sección **02. Períodos académicos** es el formulario de información académica tanto para docentes (semestres ACTUALES) como para monitores (semestres HISTORICOS): asignatura, facultad, programa, estudiantes, presupuesto, fechas, objetivos, actividades, población beneficiada y territorio.
+- En un semestre HISTORICO aparecen además: nombre textual del profesor de aquella época, resultados, conclusiones y listado de información faltante. Un dato que no se conoce se deja vacío y se conserva como NULL cuando corresponde. No se solicita validación ni aprobación del administrador.
+- La sección **03. Digitalización histórica** se limita a agregar otros semestres anteriores y, para administradores, asignar un profesor que continúe un proyecto activo. Se eliminó el segundo formulario duplicado de datos académicos.
+- Las evidencias y la carta final siguen asociadas al semestre seleccionado y se cargan por separado como PDF.
+- Si el semestre es ACTUAL, la aprobación, revisión de evidencias, resultados y cierre administrativo funcionan como antes.
