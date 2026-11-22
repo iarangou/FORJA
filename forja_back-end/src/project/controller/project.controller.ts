@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ProjectService } from '../service/project.service.js';
 import { AuthGuard } from '../../auth/guard/auth.guard.js';
 import { RolesGuard } from '../../auth/guard/roles.guard.js';
 import { Roles } from '../../shared/decorator/roles.decorator.js';
-import { CreateProjectDTO } from '../dto/project.dto.js';
+import { CreateProjectDTO, UpdateProjectDTO } from '../dto/project.dto.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
 
 interface AuthenticatedRequest { user: PayloadJwt }
@@ -26,6 +26,16 @@ export class ProjectController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.projectService.getById(id, request.user);
+  }
+
+  @Patch(':id')
+  @Roles(1, 3)
+  updateProject(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateProjectDTO,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.projectService.updateProject(id, dto, request.user);
   }
 
   @Post()
