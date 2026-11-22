@@ -20,6 +20,16 @@ WHERE code IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_project_code ON project (code);
 ALTER TABLE project ALTER COLUMN code SET NOT NULL;
 
+-- La secuencia permite generar códigos únicos sin consultar el último ID.
+CREATE SEQUENCE IF NOT EXISTS forja_project_code_seq;
+SELECT setval(
+  'forja_project_code_seq',
+  GREATEST((SELECT COALESCE(MAX(id), 0) FROM project), 1),
+  EXISTS(SELECT 1 FROM project)
+);
+ALTER TABLE project ALTER COLUMN code
+  SET DEFAULT ('FORJA-' || LPAD(nextval('forja_project_code_seq')::text, 8, '0'));
+
 -- Los estados de aprobación pertenecen a cada semestre, NO al proyecto general.
 CREATE TABLE IF NOT EXISTS project_periods (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
