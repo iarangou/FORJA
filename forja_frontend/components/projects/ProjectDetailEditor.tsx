@@ -181,11 +181,13 @@ export default function ProjectDetailEditor(){
         ...(historical?{course_id:period.course_id,faculty_id:period.faculty_id,
           academic_program_id:period.academic_program_id,
           historical_teacher_name:period.historical_teacher_name??"",
-          community_population_description:period.community_population_description??"",
-          territory_name:period.territory_name??"",
           results:period.results??"",conclusions:period.conclusions??"",
           missing_information:period.missing_information??""}:
-          {...(period.course_id?{course_id:period.course_id}:{})}),
+          {...(period.course_id?{course_id:period.course_id}:{}),
+           ...(period.faculty_id?{faculty_id:period.faculty_id}:{}),
+           ...(period.academic_program_id?{academic_program_id:period.academic_program_id}:{})}),
+        community_population_description:period.community_population_description??"",
+        territory_name:period.territory_name??"",
         objectives:period.objectives??"",activities:period.activities??"",
         ...(historical?{student_count:period.student_count,budget:period.budget}:
           {...(period.student_count!==null?{student_count:Number(period.student_count)}:{}),
@@ -403,7 +405,7 @@ export default function ProjectDetailEditor(){
     {period&&<ProjectAccordion id="evidence" title={project.registration_type==="HISTORICO"?"05. Evidencias del semestre (solo PDF)":"04. Evidencias del semestre (solo PDF)"} open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
       <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
     </ProjectAccordion>}
-    {period&&<ProjectAccordion id="results" title={project.registration_type==="HISTORICO"?"06. Resultados, conclusiones y cierre":"05. Resultados, conclusiones y cierre"} open={openSection==="results"} onToggle={()=>toggleSection("results")} summary={period.execution_status}>
+    {period&&period.record_type==="ACTUAL"&&<ProjectAccordion id="results" title={project.registration_type==="HISTORICO"?"06. Resultados, conclusiones y cierre":"05. Resultados, conclusiones y cierre"} open={openSection==="results"} onToggle={()=>toggleSection("results")} summary={period.execution_status}>
       <PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>
     </ProjectAccordion>}
     {role===1&&<ProjectAccordion id="finalize" title={project.registration_type==="HISTORICO"?"07. Finalización definitiva del proyecto":"06. Finalización definitiva del proyecto"} open={openSection==="finalize"} onToggle={()=>toggleSection("finalize")} summary={project.general_status}>
