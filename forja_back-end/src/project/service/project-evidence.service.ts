@@ -65,6 +65,15 @@ export class ProjectEvidenceService {
     }
   }
 
+  private readableFilename(filename:string) {
+    // Algunos clientes multipart transportan nombres UTF-8 interpretados como latin1.
+    // Corregir solo secuencias de codificación errónea y conservar el original si
+    // la conversión introduce caracteres de reemplazo.
+    if (!/[ÃÂâ][\x80-\xff]?/.test(filename)) return filename;
+    const decoded=Buffer.from(filename,'latin1').toString('utf8');
+    return decoded.includes('\uFFFD')?filename:decoded;
+  }
+
   async list(projectId:number,periodId:number,user:PayloadJwt) {
     await this.checkPeriod(projectId,periodId,user);
     const {rows}=await this.db.query(
@@ -77,7 +86,10 @@ export class ProjectEvidenceService {
        ORDER BY d.uploaded_at DESC,d.id DESC`,
       [periodId],
     );
-    return rows;
+    return rows.map(row=>({
+      ...row,
+      original_filename:this.readableFilename(String(row.original_filename)),
+    }));
   }
 
   async upload(projectId:number,periodId:number,user:PayloadJwt,file:IncomingPdf|undefined) {
@@ -89,7 +101,7 @@ export class ProjectEvidenceService {
     }
     this.validatePdf(file);
     if(!file)throw new BadRequestException('Falta el PDF');
-    const safeName=path.basename(file.originalname).replace(/[\u0000-\u001f]/g,'').slice(0,255);
+    const safeName=path.basename(this.readableFilename(file.originalname)).replace(/[\u0000-\u001f]/g,'').slice(0,255);
     const storageKey=randomUUID()+'.pdf';
     await fs.mkdir(this.directory,{recursive:true,mode:0o700});
     const absolutePath=path.join(this.directory,storageKey);
@@ -144,10 +156,14 @@ export class ProjectEvidenceService {
     const {rows}=await this.db.query(
       `UPDATE project_documents
        SET review_status=$1,reviewed_by=$2,reviewed_at=NOW(),review_notes=$3
-       WHERE id=$4 AND project_period_id=$5 AND document_kind='EVIDENCIA'
+       WHERE id=$4 AND project_period_id=$5
+         AND document_kind='EVIDENCIA' AND review_status='PENDIENTE'
        RETURNING id,review_status,review_notes,reviewed_at`,
       [decision,user.sub,notes?.trim()||null,id,periodId],
     );
+    if(!rows[0]) {
+      throw new ConflictException('Esta evidencia ya fue revisada. Para corregirla, sube un nuevo PDF.');
+    }
     return rows[0];
   }
 }
