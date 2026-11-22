@@ -7,8 +7,8 @@
 | DOC-01 | Formulario general del proyecto completo | Enviar semestre actual a revisión | Obligatorio (datos almacenados en sistema) | Profesor |
 | DOC-02 | Plan del período: objetivos, actividades, fechas, estudiantes, presupuesto | Enviar semestre a revisión | Obligatorio como campos; archivo de apoyo opcional | Profesor |
 | DOC-03 | Análisis previo de consideraciones éticas | Enviar primer semestre actual | Obligatorio como formulario digital | Profesor |
-| DOC-04 | Aval de organización / permiso institucional | Antes de revisión cuando aplique | **Condicional** si hay población vulnerable o la institución lo exige | Profesor |
-| DOC-05 | Autorización de uso de imagen/testimonio o consentimiento correspondiente | Antes de publicar evidencia identificable | **Condicional**, no publicar sin autorización | Profesor |
+| DOC-04 | Aval de organización / permiso institucional | No es requisito automático de envío | No se exige por seleccionar población vulnerable; cualquier solicitud excepcional la evalúa el administrador | No aplica por defecto |
+| DOC-05 | Autorización de uso de imagen/testimonio | Publicación externa de material identificable, si corresponde | Debe revisarse según normas aplicables, **no forma parte del bloqueo automático de aprobación del período** | Según corresponda |
 | DOC-06 | Evidencias de ejecución (Word, PDF, imágenes, videos) | Durante ejecución y cierre | Al menos una evidencia válida antes del cierre del período (supuesto) | Profesor |
 | DOC-07 | Resultados y conclusiones | Cierre del período | Obligatorio antes del cierre; es registro digital | Profesor |
 | DOC-08 | Evaluación de la comunidad | Cierre de proyecto o antes, según flujo | Una respuesta por proyecto, mediante enlace controlado | Comunidad |
@@ -22,7 +22,7 @@
 - [ ] Comunidad y territorio(s) descritos (si están disponibles)
 - [ ] Objetivos, actividades, presupuesto y cantidad de estudiantes presentes
 - [ ] Análisis ético completado, con coherencia respecto a la población
-- [ ] Avales y autorizaciones condicionales disponibles cuando correspondan
+- [ ] Información de población y análisis ético revisada; el administrador puede aprobar o devolver con observaciones. Sin exigencia automática de avales
 - [ ] Evidencias válidas, si se revisa ejecución o cierre
 - [ ] No hay archivos que revelen datos personales innecesarios
 - [ ] Observaciones registradas si se devuelve el período
