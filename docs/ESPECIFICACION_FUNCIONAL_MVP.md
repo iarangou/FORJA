@@ -43,7 +43,7 @@
 - **Fechas de inicio y fin**: fechas; fin >= inicio.
 - **Presupuesto**: valor en COP no negativo y breve explicación; requerido para envío.
 - **Resultados y conclusiones**: se diligencian durante o al terminar la ejecución.
-- **Evidencias**: documentos Word, PDF, imágenes y videos (con límite de peso, tipo y antivirus por configurar antes de producción).
+- **Evidencias**: exclusivamente documentos PDF (hasta 20 MB por archivo en el MVP). Las fotos se incorporan dentro del PDF y los videos se referencian mediante enlaces a YouTube escritos dentro del PDF. Los enlaces no se descargan ni verifican automáticamente. La verificación antivirus debe añadirse antes del despliegue institucional.
 - **Documentación faltante**: nota explícita cuando el registro es histórico e incompleto.
 
 ### A4. Reglas de guardado
