@@ -85,9 +85,11 @@ services:
 
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS}
+      FORJA_UPLOAD_DIR: /var/lib/forja/uploads
 
     volumes:
       - ../forja_back-end:/app
+      - ./evidence-storage/dev:/var/lib/forja/uploads
       - /app/node_modules
 
     depends_on:
