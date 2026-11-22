@@ -15,7 +15,7 @@
 | Revisión | Profesor solicita aprobación; administrador aprueba/devuelve y guarda historial de decisiones |
 | Ejecución y cierre | Profesor guarda resultados y conclusiones de semestre aprobado; administrador cierra tras comprobar al menos un PDF aprobado y ninguno pendiente |
 | Finalización general | Administrador finaliza proyecto únicamente si los períodos actuales están aprobados y cerrados; no elimina el historial |
-| Carta final comunitaria | Administrador o monitor archiva la única carta final firmada en PDF, a nivel de proyecto, una vez cerrados los períodos actuales. No se generan cartas ni se solicitan avales automáticos |
+| Carta final comunitaria | Administrador o monitor archiva una carta final firmada en PDF por cada semestre. Para el semestre actual, se sube después de cerrarlo; para períodos históricos se digitaliza sin aprobación retroactiva. |
 | Interfaz | `/proyectos` y `/proyectos/nuevo`; acceso desde login y consulta de períodos |
 | Infraestructura | Migraciones SQL incrementales de desarrollo y Action de comprobación de compilación |
 | Documentación | Especificación asumida, checklist documental, ejemplo ficticio y guía de instalación |
@@ -66,6 +66,6 @@ La meta es lograr coherencia entre requisitos, datos, backend y pantallas sin in
 
 - En los períodos históricos, el monitor o administrador puede subir evidencias antiguas PDF (máximo 20 MB). No se exigen revisiones retroactivas: el estado de revisión de la tabla documental no representa una aprobación pendiente para esos archivos.
 - Los documentos de ejecución actual siguen el flujo de aprobación del profesor y administrador ya probado.
-- La **carta final firmada por la comunidad** se prepara y firma fuera de FORJA y se archiva una sola vez (PDF, máximo 20 MB). La carga corresponde al administrador o monitor; el profesor autorizado puede consultarla. La carta pertenece al proyecto completo y se guarda reutilizando el almacenamiento privado existente.
-- La carta solo se puede adjuntar cuando no haya períodos actuales sin cerrar. Se permite completar el archivo histórico de proyectos ya finalizados. La función de finalizar proyecto no exige la carta obligatoriamente; si se requiere, FORJA debe confirmar esa política antes de activarla.
+- La **carta final firmada por la comunidad** se prepara y firma fuera de FORJA y se archiva una vez por semestre (PDF, máximo 20 MB). La carga corresponde al administrador o monitor; el profesor autorizado puede consultarla. Cada archivo queda asociado a project_periods.id usando el almacenamiento privado existente.
+- La carta del semestre actual se adjunta después de cerrar ese semestre, sin depender del estado de los demás semestres. En períodos históricos puede archivarse la carta existente sin exigir cierre retroactivo. El cierre general no requiere automáticamente una carta; está pendiente confirmar con FORJA si debería ser obligatoria.
 - Aún no hay detección de malware ni validación criptográfica de firmas digitales; el administrador debe verificar el documento. No usar datos personales reales en pruebas locales.
