@@ -73,8 +73,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
     finally{setBusy(false);}
   }
 
-  return <section className="forja-panel forja-editor-section">
-    <h2>04. Evidencias del semestre (solo PDF)</h2>
+  return <div className="forja-accordion-inner">
     <p className="forja-description">Incluye fotografías en el PDF. Para videos, agrega dentro del PDF un enlace a YouTube. Cada PDF se guarda como evidencia nueva de este semestre. Si una evidencia es devuelta, carga un nuevo PDF corregido; se conserva el historial. El administrador revisa cada archivo una sola vez.</p>
     {canUpload&&<form onSubmit={upload} className="forja-form">
       <div className="forja-fields"><label className="full">Documento de evidencia (.pdf, máximo 20 MB)
@@ -106,5 +105,5 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
           </div>}
         </div>)}
     </div>
-  </section>;
+  </div>;
 }
