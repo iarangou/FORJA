@@ -8,6 +8,7 @@ import PeriodResultsSection from "./PeriodResultsSection";
 import ProjectAccordion from "./ProjectAccordion";
 import HistoricalProjectSection from "./HistoricalProjectSection";
 import FinalLetterSection from "./FinalLetterSection";
+import CommunityFeedbackSection from "./CommunityFeedbackSection";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -420,5 +421,8 @@ export default function ProjectDetailEditor(){
     {period&&<ProjectAccordion id="letter" title={project.registration_type==="HISTORICO"?"08. Carta final firmada del semestre":"07. Carta final firmada del semestre"} open={openSection==="letter"} onToggle={()=>toggleSection("letter")} summary={`${period.academic_year}-${period.academic_semester}`}>
       <FinalLetterSection key={period.id} projectId={projectId} periodId={period.id} role={role} recordType={period.record_type} approvalStatus={period.approval_status} executionStatus={period.execution_status}/>
     </ProjectAccordion>}
+    <ProjectAccordion id="community" title={project.registration_type==="HISTORICO"?"09. Evaluación de la comunidad":"08. Evaluación de la comunidad"} open={openSection==="community"} onToggle={()=>toggleSection("community")}>
+      <CommunityFeedbackSection projectId={projectId} role={role}/>
+    </ProjectAccordion>
   </div></main>;
 }
