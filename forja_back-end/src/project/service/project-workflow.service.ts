@@ -192,6 +192,14 @@ export class ProjectWorkflowService {
     if (project.general_status === 'FINALIZADO') {
       throw new ConflictException('No se modifica el análisis de un proyecto finalizado');
     }
+    const locked = await this.db.query(
+      `SELECT 1 FROM project_periods
+       WHERE project_id=$1 AND approval_status IN ('EN_REVISION','APROBADO') LIMIT 1`,
+      [projectId],
+    );
+    if (locked.rows.length) {
+      throw new ConflictException('El análisis ético está bloqueado durante la revisión o tras la aprobación');
+    }
     const requiresPermission = dto.involves_vulnerable_population === true;
     const { rows } = await this.db.query(
       `INSERT INTO project_ethics
@@ -262,6 +270,12 @@ export class ProjectWorkflowService {
       const p=rows[0];
       if (!p) throw new NotFoundException('Período no encontrado');
       if (p.record_type !== 'ACTUAL') throw new ForbiddenException('Los registros históricos no se someten a este flujo');
+      const teacher = await client.query<{ id: number }>(
+        'SELECT id FROM teacher WHERE user_id=$1', [user.sub],
+      );
+      if (!teacher.rows[0] || teacher.rows[0].id !== p.teacher_id) {
+        throw new ForbiddenException('Solo el profesor responsable puede presentar este período');
+      }
       if (!['BORRADOR','DEVUELTO'].includes(p.approval_status)) {
         throw new ConflictException('El período no se encuentra editable');
       }
