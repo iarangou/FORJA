@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect,useState} from "react";
+import CurrentPeriodContinuation from "./CurrentPeriodContinuation";
 
 type HistoricalPeriod={
   id:number;academic_year:number;academic_semester:number;
@@ -197,6 +198,8 @@ export default function HistoricalProjectSection({
         <div className="forja-actions"><button type="button" disabled={busy||!teacherId} onClick={assignTeacher}>Asignar profesor</button></div>
       </div>}
     </div>}
+    <CurrentPeriodContinuation projectId={projectId} role={role} status={projectStatus}
+      periods={periods} onSaved={onSaved}/>
     {error&&<p className="forja-alert" role="alert">{error}</p>}
     {message&&<p className="forja-ok" role="status">{message}</p>}
   </div>;
