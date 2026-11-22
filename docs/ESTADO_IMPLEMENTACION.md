@@ -13,6 +13,7 @@
 | Ética | Formulario de categorías agregadas y medidas de privacidad; almacenamiento inicial por proyecto |
 | Revisión | Profesor solicita aprobación; administrador aprueba/devuelve y guarda historial de decisiones |
 | Ejecución y cierre | Profesor guarda resultados y conclusiones de semestre aprobado; administrador cierra tras comprobar al menos un PDF aprobado y ninguno pendiente |
+| Finalización general | Administrador finaliza proyecto únicamente si los períodos actuales están aprobados y cerrados; no elimina el historial |
 | Interfaz | `/proyectos` y `/proyectos/nuevo`; acceso desde login y consulta de períodos |
 | Infraestructura | Migraciones SQL incrementales de desarrollo y Action de comprobación de compilación |
 | Documentación | Especificación asumida, checklist documental, ejemplo ficticio y guía de instalación |
@@ -25,7 +26,7 @@
 - Incorporar múltiples asignaturas/profesores/carreras por período y catálogo definitivo de siete territorios
 - Gestión real de ODS, población beneficiaria y presupuestos pormenorizados en formularios
 - Formulario comunitario de una respuesta por proyecto con enlace/token seguro
-- Finalización **general** del proyecto por administrador (el cierre independiente por semestre ya está implementado)
+- La finalización general por administrador se implementó con confirmación y bloqueo de períodos actuales abiertos. Pendiente probarla con Docker, revisar reglas especiales para históricos y confirmar requisitos con FORJA.
 - Exportar informes Excel por territorio; permisos de descarga y backups verificados
 - Integración y pruebas con PostgreSQL y Docker, tests de API, revisión de validaciones/seguridad
 
