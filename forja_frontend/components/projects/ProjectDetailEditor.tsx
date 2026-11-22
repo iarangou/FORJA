@@ -5,6 +5,7 @@ import {useParams} from "next/navigation";
 import Link from "next/link";
 import EvidenceSection from "./EvidenceSection";
 import PeriodResultsSection from "./PeriodResultsSection";
+import ProjectAccordion from "./ProjectAccordion";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -69,6 +70,8 @@ export default function ProjectDetailEditor(){
   const [courses,setCourses]=useState<{id:number;name:string}[]>([]);
   const [role,setRole]=useState<number|null>(null);
   const [busy,setBusy]=useState(false);
+  const [openSection,setOpenSection]=useState<string|null>("general");
+  function toggleSection(section:string){setOpenSection(current=>current===section?null:section);}
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
 
@@ -210,20 +213,8 @@ export default function ProjectDetailEditor(){
       <p>Consulta y completa los datos de tu proyecto. Los campos solo se pueden editar antes de la aprobación.</p>
     </div>
     {message&&<p className="forja-ok" role="status">{message}</p>}
-    {role===1&&<section className="forja-panel forja-editor-section">
-      <h2>Finalización definitiva del proyecto</h2>
-      <p className="forja-description">Solo el administrador puede finalizar el proyecto completo. Deben estar cerrados todos los períodos actuales. Los históricos y las evidencias se conservan.</p>
-      <p className="forja-note"><strong>Estado general:</strong> {project.general_status}</p>
-      {project.general_status==="ACTIVO"&&<div className="forja-actions">
-        <button type="button" disabled={busy||periods.length===0||periods.some(p=>p.record_type==="ACTUAL"&&(p.approval_status!=="APROBADO"||p.execution_status!=="CERRADO"))}
-          onClick={finalizeProject}>Finalizar proyecto definitivamente</button>
-      </div>}
-      {project.general_status==="FINALIZADO"&&<p>El proyecto quedó finalizado. Sus registros siguen disponibles para consulta.</p>}
-    </section>}
-
     {error&&<p className="forja-alert" role="alert">{error}</p>}
-    <section className="forja-panel forja-editor-section">
-      <h2>01. Información general</h2>
+    <ProjectAccordion id="general" title="01. Información general" open={openSection==="general"} onToggle={()=>toggleSection("general")}>
       <div className="forja-fields">
         <label>Título<input disabled={!generalEditable||busy} value={project.title} onChange={e=>updateProject("title",e.target.value)}/></label>
         <label>Comunidad<input disabled={!generalEditable||busy} value={project.community_name??""} onChange={e=>updateProject("community_name",e.target.value)}/></label>
@@ -235,9 +226,8 @@ export default function ProjectDetailEditor(){
       </div>
       <div className="forja-actions"><button type="button" disabled={!generalEditable||busy} onClick={saveGeneral}>Guardar información general</button></div>
       {!generalEditable&&<p className="forja-note">Los datos generales están bloqueados mientras haya períodos en revisión o aprobados.</p>}
-    </section>
-    <section className="forja-panel forja-editor-section">
-      <h2>02. Períodos académicos</h2>
+    </ProjectAccordion>
+    <ProjectAccordion id="periods" title="02. Períodos académicos" open={openSection==="periods"} onToggle={()=>toggleSection("periods")} summary={period?`${period.academic_year}-${period.academic_semester} · ${period.approval_status}`:"Sin períodos registrados"}>
       {periods.length===0?<p>No hay períodos para este proyecto.</p>:<>
         <div className="forja-tabs">{periods.map(p=><button type="button" className={p.id===activeId?"active":""} key={p.id} onClick={()=>setActiveId(p.id)}>{p.academic_year}-{p.academic_semester}</button>)}</div>
         {period&&<><p className="forja-note"><strong>Estado:</strong> {period.approval_status} · {period.record_type}</p>
@@ -264,11 +254,8 @@ export default function ProjectDetailEditor(){
             <p>{r.notes||"Sin observaciones adicionales"}</p></div>)}</div>}
         </>}
       </>}
-    </section>
-    {period&&<EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>}
-    {period&&<PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>}
-    <section className="forja-panel forja-editor-section">
-      <h2>03. Consideraciones éticas</h2>
+    </ProjectAccordion>
+    <ProjectAccordion id="ethics" title="03. Consideraciones éticas" open={openSection==="ethics"} onToggle={()=>toggleSection("ethics")}>
       {!ethics?<p>No se ha diligenciado un análisis ético para este proyecto.</p>:<>
         <div className="forja-fields">
           <label>Población externa predominante<select disabled={!ethicsEditable||busy} value={ethics.external_population??"NINGUNO"} onChange={e=>updateEthics("external_population",e.target.value)}>
@@ -284,6 +271,21 @@ export default function ProjectDetailEditor(){
         </div>
         <div className="forja-actions"><button type="button" disabled={!ethicsEditable||busy} onClick={saveEthics}>Guardar análisis ético</button></div>
       </>}
-    </section>
+    </ProjectAccordion>
+    {period&&<ProjectAccordion id="evidence" title="04. Evidencias del semestre (solo PDF)" open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
+      <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
+    </ProjectAccordion>}
+    {period&&<ProjectAccordion id="results" title="05. Resultados, conclusiones y cierre" open={openSection==="results"} onToggle={()=>toggleSection("results")} summary={period.execution_status}>
+      <PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>
+    </ProjectAccordion>}
+    {role===1&&<ProjectAccordion id="finalize" title="06. Finalización definitiva del proyecto" open={openSection==="finalize"} onToggle={()=>toggleSection("finalize")} summary={project.general_status}>
+      <p className="forja-description">Solo el administrador puede finalizar el proyecto completo. Deben estar cerrados todos los períodos actuales. Los históricos y las evidencias se conservan.</p>
+      <p className="forja-note"><strong>Estado general:</strong> {project.general_status}</p>
+      {project.general_status==="ACTIVO"&&<div className="forja-actions">
+        <button type="button" disabled={busy||periods.length===0||periods.some(p=>p.record_type==="ACTUAL"&&(p.approval_status!=="APROBADO"||p.execution_status!=="CERRADO"))}
+          onClick={finalizeProject}>Finalizar proyecto definitivamente</button>
+      </div>}
+      {project.general_status==="FINALIZADO"&&<p>El proyecto quedó finalizado. Sus registros siguen disponibles para consulta.</p>}
+    </ProjectAccordion>}
   </div></main>;
 }
