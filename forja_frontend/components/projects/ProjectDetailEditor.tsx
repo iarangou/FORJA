@@ -262,7 +262,7 @@ export default function ProjectDetailEditor(){
         </>}
       </>}
     </ProjectAccordion>
-    <ProjectAccordion id="ethics" title="03. Consideraciones éticas" open={openSection==="ethics"} onToggle={()=>toggleSection("ethics")}>
+    <ProjectAccordion id="ethics" title={project.registration_type==="HISTORICO"?"04. Consideraciones éticas":"03. Consideraciones éticas"} open={openSection==="ethics"} onToggle={()=>toggleSection("ethics")}>
       {<>
         <div className="forja-fields">
           <label>Población externa predominante<select disabled={!ethicsEditable||busy} value={ethicsData.external_population??"NINGUNO"} onChange={e=>updateEthics("external_population",e.target.value)}>
@@ -284,13 +284,13 @@ export default function ProjectDetailEditor(){
         <HistoricalProjectSection projectId={projectId} role={role} registrationType={project.registration_type} projectStatus={project.general_status}
           periods={periods} courses={courses} onSaved={reload}/>
       </ProjectAccordion>}
-    {period&&<ProjectAccordion id="evidence" title="04. Evidencias del semestre (solo PDF)" open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
+    {period&&<ProjectAccordion id="evidence" title={project.registration_type==="HISTORICO"?"05. Evidencias del semestre (solo PDF)":"04. Evidencias del semestre (solo PDF)"} open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
       <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
     </ProjectAccordion>}
-    {period&&<ProjectAccordion id="results" title="05. Resultados, conclusiones y cierre" open={openSection==="results"} onToggle={()=>toggleSection("results")} summary={period.execution_status}>
+    {period&&<ProjectAccordion id="results" title={project.registration_type==="HISTORICO"?"06. Resultados, conclusiones y cierre":"05. Resultados, conclusiones y cierre"} open={openSection==="results"} onToggle={()=>toggleSection("results")} summary={period.execution_status}>
       <PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>
     </ProjectAccordion>}
-    {role===1&&<ProjectAccordion id="finalize" title="06. Finalización definitiva del proyecto" open={openSection==="finalize"} onToggle={()=>toggleSection("finalize")} summary={project.general_status}>
+    {role===1&&<ProjectAccordion id="finalize" title={project.registration_type==="HISTORICO"?"07. Finalización definitiva del proyecto":"06. Finalización definitiva del proyecto"} open={openSection==="finalize"} onToggle={()=>toggleSection("finalize")} summary={project.general_status}>
       <p className="forja-description">Solo el administrador puede finalizar el proyecto completo. Deben estar cerrados todos los períodos actuales. Los históricos y las evidencias se conservan.</p>
       <p className="forja-note"><strong>Estado general:</strong> {project.general_status}</p>
       {project.general_status==="ACTIVO"&&<div className="forja-actions">
