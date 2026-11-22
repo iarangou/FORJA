@@ -71,7 +71,7 @@ El Word disponible trae datos generales y preguntas numeradas **18 y 19**, sin p
 
 ## Formulario C. Evaluación de la comunidad
 
-Una respuesta por proyecto mediante un enlace privado con token de alta entropía. **No requiere crear usuario**. Captura: nombre de organización, relación con el proyecto, cumplimiento de objetivos (escala propuesta 1–5), utilidad para la comunidad (1–5), participación (1–5), comentarios y autorización para guardar la evaluación. Solo se captura nombre de la persona si resulta estrictamente necesario. **Preguntas y escala son propuestas**, no tomadas del Word.
+Una respuesta por semestre académico de cada proyecto mediante un enlace privado con token de alta entropía. **No requiere crear usuario**. Captura: nombre de organización, relación con el proyecto, cumplimiento de objetivos (escala propuesta 1–5), utilidad para la comunidad (1–5), participación (1–5), comentarios y autorización para guardar la evaluación. Solo se captura nombre de la persona si resulta estrictamente necesario. **Preguntas y escala son propuestas**, no tomadas del Word.
 
 ## Flujo administrativo y documentos
 
