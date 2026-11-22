@@ -9,7 +9,7 @@
 | DOC-03 | Análisis previo de consideraciones éticas | Enviar primer semestre actual | Obligatorio como formulario digital | Profesor |
 | DOC-04 | Aval de organización / permiso institucional | No es requisito automático de envío | No se exige por seleccionar población vulnerable; cualquier solicitud excepcional la evalúa el administrador | No aplica por defecto |
 | DOC-05 | Autorización de uso de imagen/testimonio | Publicación externa de material identificable, si corresponde | Debe revisarse según normas aplicables, **no forma parte del bloqueo automático de aprobación del período** | Según corresponda |
-| DOC-06 | Evidencias de ejecución (Word, PDF, imágenes, videos) | Durante ejecución y cierre | Al menos una evidencia válida antes del cierre del período (supuesto) | Profesor |
+| DOC-06 | Evidencias de ejecución (solo PDF; fotos incrustadas, enlace al video en el propio PDF) | Durante ejecución y cierre | Al menos una evidencia válida antes del cierre del período (supuesto) | Profesor |
 | DOC-07 | Resultados y conclusiones | Cierre del período | Obligatorio antes del cierre; es registro digital | Profesor |
 | DOC-08 | Evaluación de la comunidad | Cierre de proyecto o antes, según flujo | Una respuesta por proyecto, mediante enlace controlado | Comunidad |
 | DOC-09 | Carta final firmada | Cuando FORJA emita carta | Se almacena **solo archivo final firmado**; no bloquea creación del proyecto | Administrador |
@@ -34,4 +34,4 @@ El monitor puede **guardar sin documentos** cuando no existen registros disponib
 
 ## Seguridad y almacenamiento
 
-Validar MIME/extension y tamaño, restringir permisos por rol, almacenar archivos fuera del árbol público de Next.js, escanear contenido malicioso, almacenar rutas o claves seguras y ofrecer respaldos. Una lista en el frontend **no sustituye controles de backend**.
+Validar firma PDF, MIME, extensión y tamaño; restringir permisos por rol, almacenar archivos fuera del árbol público de Next.js, escanear contenido malicioso, almacenar rutas o claves seguras y ofrecer respaldos. Una lista en el frontend **no sustituye controles de backend**.
