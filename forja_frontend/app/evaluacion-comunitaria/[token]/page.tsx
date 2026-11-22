@@ -1,7 +1,7 @@
 "use client";
 
 import {useParams} from "next/navigation";
-import {useEffect,useState} from "react";
+import {Suspense,useEffect,useState} from "react";
 import "@/styles/projects.css";
 
 type ProjectInfo={title:string;code:string;expires_at:string};
@@ -19,7 +19,7 @@ const questions:[keyof Answer,string][]=[
  ["participation_rating","¿Cómo valora la participación y el trabajo conjunto?"],
 ];
 
-export default function CommunityEvaluationPage(){
+function CommunityEvaluationPageContent(){
  const {token}=useParams<{token:string}>();
  const [info,setInfo]=useState<ProjectInfo|null>(null);
  const [answer,setAnswer]=useState<Answer>(initial);
@@ -101,4 +101,10 @@ export default function CommunityEvaluationPage(){
   </section>}
   {!info&&!done&&<p role="alert" className="forja-alert">{error||"Cargando evaluación..."}</p>}
  </div></main>;
+}
+
+export default function CommunityEvaluationPage(){
+ return <Suspense fallback={<main className="forja-projects"><p>Cargando evaluación comunitaria...</p></main>}>
+  <CommunityEvaluationPageContent/>
+ </Suspense>;
 }
