@@ -136,12 +136,12 @@ export class ProjectService {
   }
 
   async updateProject(id: number, dto: UpdateProjectDTO, user: PayloadJwt) {
-    if (user.rol_id !== 1 && user.rol_id !== 3) {
-      throw new ForbiddenException('Solo un profesor responsable o el administrador puede modificar datos generales');
+    if (![1,2,3].includes(user.rol_id)) {
+      throw new ForbiddenException('No tienes permiso de edición');
     }
     return this.db.transaction(async (client) => {
-      const { rows } = await client.query<{id:number;start_date:string|null;end_date:string|null}>(
-        `SELECT p.id,p.start_date,p.end_date FROM project p
+      const { rows } = await client.query<{id:number;start_date:string|null;end_date:string|null;registration_type:string}>(
+        `SELECT p.id,p.start_date,p.end_date,p.registration_type FROM project p
            WHERE p.id=$1 AND (
              $2::boolean OR (p.created_by=$3 OR EXISTS(
                SELECT 1 FROM project_teacher pt
@@ -149,9 +149,12 @@ export class ProjectService {
                WHERE pt.project_id=p.id AND t.user_id=$3
              ))
            ) AND p.general_status='ACTIVO' FOR UPDATE OF p`,
-        [id,user.rol_id===1,user.sub],
+        [id,user.rol_id===1 || user.rol_id===2,user.sub],
       );
       if (!rows[0]) throw new NotFoundException('Proyecto no encontrado o no editable');
+      if(user.rol_id===2 && rows[0].registration_type!=='HISTORICO'){
+        throw new ForbiddenException('El monitor solo edita proyectos históricos');
+      }
       const approved = await client.query(
         `SELECT 1 FROM project_periods WHERE project_id=$1
            AND approval_status IN ('APROBADO','EN_REVISION') LIMIT 1`,[id],
