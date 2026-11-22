@@ -28,7 +28,7 @@ export class ProjectEvidenceController {
   constructor(private readonly evidence:ProjectEvidenceService){}
 
   @Get()
-  @Roles(1,3)
+  @Roles(1,2,3)
   list(
     @Param('projectId',ParseIntPipe) projectId:number,
     @Param('periodId',ParseIntPipe) periodId:number,
@@ -38,7 +38,7 @@ export class ProjectEvidenceController {
   }
 
   @Post()
-  @Roles(3)
+  @Roles(1,2,3)
   @UseInterceptors(FileInterceptor('file',{limits:{fileSize:20*1024*1024,files:1}}))
   upload(
     @Param('projectId',ParseIntPipe) projectId:number,
@@ -51,7 +51,7 @@ export class ProjectEvidenceController {
   }
 
   @Get(':evidenceId/download')
-  @Roles(1,3)
+  @Roles(1,2,3)
   async download(
     @Param('projectId',ParseIntPipe) projectId:number,
     @Param('periodId',ParseIntPipe) periodId:number,
