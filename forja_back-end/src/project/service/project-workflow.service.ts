@@ -215,6 +215,53 @@ export class ProjectWorkflowService {
     });
   }
 
+  async finalizeProject(projectId: number, user: PayloadJwt) {
+    if(user.rol_id!==1) {
+      throw new ForbiddenException('Solo el administrador puede finalizar un proyecto');
+    }
+    return this.db.transaction(async client=>{
+      const {rows:projects}=await client.query<{
+        id:number;general_status:string;registration_type:string;
+      }>(
+        'SELECT id,general_status,registration_type FROM project WHERE id=$1 FOR UPDATE',
+        [projectId],
+      );
+      const project=projects[0];
+      if(!project)throw new NotFoundException('Proyecto no encontrado');
+      if(project.general_status!=='ACTIVO'){
+        throw new ConflictException('El proyecto ya está finalizado');
+      }
+
+      const {rows:periods}=await client.query<{
+        record_type:string;approval_status:string;execution_status:string;
+      }>(
+        'SELECT record_type,approval_status,execution_status FROM project_periods WHERE project_id=$1 FOR SHARE',
+        [projectId],
+      );
+      if(!periods.length) {
+        throw new BadRequestException('No puede finalizarse un proyecto sin períodos académicos');
+      }
+      const current=periods.filter(p=>p.record_type==='ACTUAL');
+      const unfinished=current.filter(p=>
+        p.approval_status!=='APROBADO'||p.execution_status!=='CERRADO'
+      );
+      if(unfinished.length) {
+        throw new ConflictException('Existen semestres actuales que aún no están aprobados y cerrados');
+      }
+      if(project.registration_type==='NUEVO' && !current.length){
+        throw new BadRequestException('Debe existir al menos un semestre actual aprobado y cerrado');
+      }
+
+      const {rows:updated}=await client.query(
+        `UPDATE project
+           SET general_status='FINALIZADO',updated_at=NOW()
+         WHERE id=$1 RETURNING id,code,title,general_status,updated_at`,
+        [projectId],
+      );
+      return updated[0];
+    });
+  }
+
   async getReviews(projectId: number, periodId: number, user: PayloadJwt) {
     await this.accessibleProject(projectId,user);
     const period = await this.db.query(
