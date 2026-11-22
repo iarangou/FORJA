@@ -3,20 +3,17 @@ import {useEffect,useState} from "react";
 
 type Letter={id:number;original_filename:string;file_size:number;uploaded_at:string;uploaded_by_name:string};
 interface Props {
-  projectId:string;role:number|null;projectStatus:string;
-  periods:{record_type:string;approval_status:string;execution_status:string}[];
+  projectId:string;periodId:number;role:number|null;recordType:string;approvalStatus:string;executionStatus:string;
 }
-export default function FinalLetterSection({projectId,role,projectStatus,periods}:Props){
+export default function FinalLetterSection({projectId,periodId,role,recordType,approvalStatus,executionStatus}:Props){
   const [letter,setLetter]=useState<Letter|null>(null);
   const [file,setFile]=useState<File|null>(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
   const [loading,setLoading]=useState(true);
-  const base=`/api/projects/${projectId}/final-letter`;
-  const pending=periods.some(p=>p.record_type==="ACTUAL" &&
-    (p.approval_status!=="APROBADO"||p.execution_status!=="CERRADO"));
-  const eligible=periods.length>0&&!pending;
+  const base=`/api/projects/${projectId}/periods/${periodId}/final-letter`;
+  const eligible=recordType==="HISTORICO" || (approvalStatus==="APROBADO"&&executionStatus==="CERRADO");
   const canUpload=(role===1||role===2)&&!letter&&eligible;
   async function refresh(){
     const response=await fetch(base,{cache:"no-store"});
@@ -49,14 +46,14 @@ export default function FinalLetterSection({projectId,role,projectStatus,periods
       const payload=await response.json();
       if(!response.ok)throw new Error(typeof payload.message==="string"?payload.message:"No se pudo cargar la carta");
       await refresh();setFile(null);
-      setMessage("Carta firmada guardada como documento final del proyecto.");
+      setMessage("Carta final firmada guardada para este semestre.");
     }catch(e){setError(e instanceof Error?e.message:"Error al subir");}
     finally{setBusy(false);}
   }
   return <div className="forja-accordion-inner">
     <p className="forja-description">
-      El administrador o monitor incorpora únicamente la carta final firmada por la comunidad en PDF.
-      La carta pertenece al proyecto completo, no a un semestre particular. No se genera ni se firma aquí.
+      El administrador o monitor archiva la carta firmada al final de este semestre, en PDF.
+      Cada semestre tiene su propia carta. Se redacta y firma fuera de FORJA.
     </p>
     {loading&&<p>Consultando carta...</p>}
     {letter&&<div className="forja-note">
@@ -64,7 +61,7 @@ export default function FinalLetterSection({projectId,role,projectStatus,periods
       <p>{letter.original_filename} · {Math.ceil(letter.file_size/1024)} KB · {letter.uploaded_by_name}</p>
       <a className="forja-textbutton" href={`${base}/${letter.id}/download`}>Descargar carta firmada PDF</a>
     </div>}
-    {!loading&&!letter&&<p>Este proyecto todavía no tiene una carta final firmada.</p>}
+    {!loading&&!letter&&<p>Este semestre todavía no tiene una carta final firmada.</p>}
     {!loading&&canUpload&&<form onSubmit={upload} className="forja-form">
       <div className="forja-fields">
         <label className="full">Carta final firmada por la comunidad (.pdf, máximo 20 MB)
@@ -76,8 +73,7 @@ export default function FinalLetterSection({projectId,role,projectStatus,periods
         <button type="submit" disabled={!file||busy}>{busy?"Guardando...":"Guardar carta final firmada"}</button>
       </div>
     </form>}
-    {!loading&&!eligible&&!letter&&<p className="forja-note">La carta final puede archivarse cuando todos los semestres actuales estén cerrados.</p>}
-    {projectStatus==="FINALIZADO"&&<p className="forja-description">Este proyecto está finalizado. Se conserva su documentación.</p>}
+    {!loading&&!eligible&&!letter&&<p className="forja-note">La carta final del semestre actual se archiva después de su cierre.</p>}
     {error&&<p role="alert" className="forja-alert">{error}</p>}
     {message&&<p role="status" className="forja-ok">{message}</p>}
   </div>;
