@@ -251,7 +251,7 @@ export default function ProjectDetailEditor(){
     <div className="forja-heading">
       <span className="forja-eyebrow">{project.code} · {project.registration_type}</span>
       <h1>{project.title}</h1>
-      <p>Consulta y completa los datos de tu proyecto. Los campos solo se pueden editar antes de la aprobación.</p>
+      <p>{historicalEditor?"Completa los datos históricos que conozcas. Los semestres anteriores se archivan sin aprobación.":"Consulta y completa los datos de tu proyecto. Los campos solo se pueden editar antes de la aprobación."}</p>
     </div>
     {message&&<p className="forja-ok" role="status">{message}</p>}
     {error&&<p className="forja-alert" role="alert">{error}</p>}
@@ -377,6 +377,11 @@ export default function ProjectDetailEditor(){
         </>}
       </>}
     </ProjectAccordion>
+    {project.registration_type==="HISTORICO"&&
+      <ProjectAccordion id="history" title="03. Digitalización histórica" open={openSection==="history"} onToggle={()=>toggleSection("history")} summary={`${periods.filter(p=>p.record_type==="HISTORICO").length} semestres anteriores`}>
+        <HistoricalProjectSection projectId={projectId} role={role} registrationType={project.registration_type} projectStatus={project.general_status}
+          periods={periods} onSaved={reload} onSelectPeriod={(id:number)=>{setActiveId(id);setOpenSection("periods");}}/>
+      </ProjectAccordion>}
     <ProjectAccordion id="ethics" title={project.registration_type==="HISTORICO"?"04. Consideraciones éticas":"03. Consideraciones éticas"} open={openSection==="ethics"} onToggle={()=>toggleSection("ethics")}>
       {<>
         <div className="forja-fields">
@@ -395,11 +400,6 @@ export default function ProjectDetailEditor(){
         <div className="forja-actions"><button type="button" disabled={!ethicsEditable||busy} onClick={saveEthics}>Guardar análisis ético</button></div>
       </>}
     </ProjectAccordion>
-    {project.registration_type==="HISTORICO"&&
-      <ProjectAccordion id="history" title="03. Digitalización histórica" open={openSection==="history"} onToggle={()=>toggleSection("history")} summary={`${periods.filter(p=>p.record_type==="HISTORICO").length} semestres anteriores`}>
-        <HistoricalProjectSection projectId={projectId} role={role} registrationType={project.registration_type} projectStatus={project.general_status}
-          periods={periods} onSaved={reload} onSelectPeriod={(id:number)=>{setActiveId(id);setOpenSection("periods");}}/>
-      </ProjectAccordion>}
     {period&&<ProjectAccordion id="evidence" title={project.registration_type==="HISTORICO"?"05. Evidencias del semestre (solo PDF)":"04. Evidencias del semestre (solo PDF)"} open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
       <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
     </ProjectAccordion>}
