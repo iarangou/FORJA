@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_aviso": "EJEMPLO COMPLETAMENTE FICTICIO para pruebas y demostraciones; NO corresponde a un proyecto real de FORJA.",
+  "proyecto": {
+    "titulo": "Puentes Digitales Comunitarios (ejemplo ficticio)",
+    "codigo": "AUTOGENERADO",
+    "tipo": "NUEVO",
+    "problematica": "En un escenario de prueba, algunos participantes carecen de herramientas para realizar trámites digitales.",
+    "objetivo_general": "Acompañar el aprendizaje de habilidades digitales prácticas en una comunidad ficticia.",
+    "objetivos_especificos": [
+      "Introducir uso seguro de correo electrónico",
+      "Practicar trámites digitales simulados"
+    ],
+    "continuacion_de": null,
+    "ods": [
+      4,
+      10
+    ],
+    "comunidad": {
+      "nombre": "Centro Comunitario Ejemplo (ficticio)",
+      "contacto": "Contacto de prueba (sin datos personales)",
+      "tipo": "FORMAL",
+      "ubicacion": "Ubicación ficticia, no georreferenciada"
+    },
+    "territorios": [],
+    "duracion_semestres": 1
+  },
+  "periodo": {
+    "anio": 2027,
+    "semestre": 1,
+    "asignaturas": [
+      "Asignatura demostrativa"
+    ],
+    "profesor_responsable": "Docente de prueba",
+    "cantidad_estudiantes": 12,
+    "fecha_inicio": "2027-02-01",
+    "fecha_fin": "2027-05-31",
+    "presupuesto_COP": 1250000,
+    "actividades": "Cuatro talleres con material de práctica y evaluación agregada.",
+    "resultados": null,
+    "conclusiones": null,
+    "estado": "BORRADOR"
+  },
+  "etica": {
+    "poblacion_externa_predominante": "NINGUNO",
+    "grupo_universitario_predominante": "NINGUNO",
+    "involucra_poblacion_vulnerable": false,
+    "contacto_directo_o_datos_personales": false,
+    "evidencias_identificables": false,
+    "medidas": "No registrar datos personales de beneficiarios; usar materiales simulados.",
+    "requiere_avales": false
+  },
+  "documentos": {
+    "DOC-01": "FORMULARIO_DIGITAL",
+    "DOC-02": "DATOS_DIGITALES",
+    "DOC-03": "BORRADOR",
+    "DOC-04": "NO_APLICA",
+    "DOC-05": "NO_APLICA",
+    "DOC-06": "PENDIENTE",
+    "DOC-07": "PENDIENTE",
+    "DOC-08": "PENDIENTE",
+    "DOC-09": "NO_EMITIDA"
+  },
+  "nota": "No utilizar nombres de personas, organizaciones, teléfonos o correos reales como datos de demostración."
+}
