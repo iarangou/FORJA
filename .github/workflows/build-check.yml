@@ -1,0 +1,45 @@
+name: FORJA - comprobar compilacion
+on:
+  push:
+    branches:
+      - "forja/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: forja_back-end
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: forja_back-end/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Compilar NestJS
+        run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: forja_frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: forja_frontend/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Compilar Next.js
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build
