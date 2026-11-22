@@ -87,6 +87,7 @@ export default function ProjectsPage() {
       {projects.map(p=><article className="forja-panel" key={p.id}>
         <div className="forja-cardhead"><span className="forja-code">{p.code}</span><span>{p.general_status}</span></div>
         <h2>{p.title}</h2>
+        <Link href={`/proyectos/${p.id}`} className="forja-textbutton">Abrir proyecto y editar borrador</Link>
         <p>{p.registration_type==="HISTORICO"?"Registro histórico":"Proyecto nuevo"}</p>
         <button type="button" className="forja-textbutton" onClick={()=>seePeriods(p.id)}>Ver períodos y estados</button>
         {periods[p.id]&&<div className="forja-periods">
