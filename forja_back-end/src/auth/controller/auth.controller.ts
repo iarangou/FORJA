@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Post } from "@nestjs/common";
 import { AuthService } from "../service/auth.service.js";
 import { LoginDto } from "../dto/login.dto.js";
 import { RegisterDto } from "../dto/register.dto.js";
@@ -16,17 +16,17 @@ export class AuthController {
     }
 
     @Post('register')
-    register(@Body() dto: RegisterDto) {
-        return this.authService.register(dto);
+    register(@Body() _dto: RegisterDto) {
+        throw new ForbiddenException('Las cuentas son creadas únicamente por el administrador FORJA');
     }
 
     @Post('verify-email')
-    verifyEmail(@Body() dto: VerifyEmailDto) {
-        return this.authService.verifyEmail(dto);
+    verifyEmail(@Body() _dto: VerifyEmailDto) {
+        throw new ForbiddenException('El registro público de usuarios está deshabilitado');
     }
 
     @Post('resend-verification')
-    resendVerification(@Body() dto: VerificationEmailDto) {
-        return this.authService.resendVerification(dto.email);
+    resendVerification(@Body() _dto: VerificationEmailDto) {
+        throw new ForbiddenException('El registro público de usuarios está deshabilitado');
     }
 }
