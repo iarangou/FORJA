@@ -165,7 +165,7 @@ export default function NewProjectForm() {
           truthful_declaration:form.truthful_declaration,
         });
       }
-      setMessage(`Proyecto ${nextProject.code} y período guardados en BORRADOR. Puedes consultarlo en el listado.`);
+      setMessage(form.registration_type==="HISTORICO" ? `Proyecto ${nextProject.code} y semestre histórico archivados. Puedes completarlos desde el listado, sin aprobación administrativa.` : `Proyecto ${nextProject.code} y período guardados en BORRADOR. Puedes consultarlo en el listado.`);
     }catch(e:unknown){
       setError(e instanceof Error?e.message:"No fue posible guardar el formulario");
     }finally{setLoading(false);}
