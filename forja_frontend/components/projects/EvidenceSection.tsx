@@ -8,9 +8,9 @@ type Evidence={
 };
 interface Props{
   projectId:string;periodId:number;role:number|null;
-  approvalStatus:string;recordType:string;projectStatus:string;
+  approvalStatus:string;recordType:string;projectStatus:string;executionStatus:string;
 }
-export default function EvidenceSection({projectId,periodId,role,approvalStatus,recordType,projectStatus}:Props){
+export default function EvidenceSection({projectId,periodId,role,approvalStatus,recordType,projectStatus,executionStatus}:Props){
   const [items,setItems]=useState<Evidence[]>([]);
   const [file,setFile]=useState<File|null>(null);
   const [busy,setBusy]=useState(false);
@@ -18,7 +18,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
   const base=`/api/projects/${projectId}/periods/${periodId}/evidences`;
-  const canUpload=role===3 && approvalStatus==="APROBADO" && recordType==="ACTUAL" && projectStatus==="ACTIVO";
+  const canUpload=role===3 && approvalStatus==="APROBADO" && recordType==="ACTUAL" && projectStatus==="ACTIVO" && executionStatus!=="CERRADO";
 
   async function refresh(){
     const response=await fetch(base,{cache:"no-store"});
