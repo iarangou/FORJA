@@ -30,7 +30,7 @@
 
 ## Precauciones conocidas
 
-- El registro de evidencia está modelado en SQL, **pero no hay subida de archivos implementada**.
+- Existe carga de evidencias **exclusivamente PDF** vinculadas al semestre aprobado, descarga autenticada y revisión administrativa; falta validación integral en Docker y antimalware antes de producción.
 - El envío a revisión no está condicionado a avales automáticos por tipo de población. El administrador aprueba o devuelve después de revisar la información.
 - El formulario ético es una propuesta basada en el archivo disponible; no afirmar que es un formato institucional oficial definitivo.
 - La cuenta admin se crea manualmente con `npm run bootstrap:admin`; la base nueva no instala usuarios con claves de prueba.
