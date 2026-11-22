@@ -241,7 +241,7 @@ export default function ProjectDetailEditor(){
         </>}
       </>}
     </section>
-    {period&&<EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status}/>}
+    {period&&<EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>}
     {period&&<PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>}
     <section className="forja-panel forja-editor-section">
       <h2>03. Consideraciones éticas</h2>
