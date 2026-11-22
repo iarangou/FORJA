@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../../database/service/database.service.js';
 import { CreateProjectDTO, UpdateProjectDTO } from '../dto/project.dto.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
