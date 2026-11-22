@@ -26,6 +26,9 @@ export default function AdminUsersPage() {
   const [saving,setSaving] = useState(false);
   const [error,setError] = useState("");
   const [success,setSuccess] = useState("");
+  const [courseName,setCourseName] = useState("");
+  const [courses,setCourses] = useState<{id:number;name:string}[]>([]);
+  const [courseBusy,setCourseBusy] = useState(false);
   const [form,setForm] = useState({
     full_name:"Docente de prueba",
     email:"docente.prueba@javerianacali.edu.co",
@@ -63,6 +66,11 @@ export default function AdminUsersPage() {
           setUsers(Array.isArray(usersList)?usersList:[]);
           setFaculties(Array.isArray(facultiesList)?facultiesList:[]);
         }
+        const courseResponse = await fetch("/api/courses",{cache:"no-store"});
+        if(courseResponse.ok){
+          const courseList:unknown=await courseResponse.json();
+          if(active)setCourses(Array.isArray(courseList)?courseList:[]);
+        }
       } catch(e:unknown) {
         if(active)setError(e instanceof Error?e.message:"Error de conexión");
       } finally {
@@ -99,6 +107,33 @@ export default function AdminUsersPage() {
       await refreshUsers();
     }catch(e:unknown){setError(e instanceof Error?e.message:"Error de servidor");}
     finally{setSaving(false);}
+  }
+
+  async function createCourse(event:React.FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    if(courseBusy)return;
+    setCourseBusy(true);setError("");setSuccess("");
+    try {
+      const name=courseName.trim();
+      if(!name)throw new Error("Indica un nombre de asignatura.");
+      const response=await fetch("/api/courses",{
+        method:"POST",credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({name}),
+      });
+      const data=await response.json() as ApiError;
+      if(!response.ok){
+        throw new Error(Array.isArray(data.message)?data.message.join(", "):data.message||"No se pudo guardar la asignatura");
+      }
+      const latest=await fetch("/api/courses",{cache:"no-store"});
+      if(latest.ok){
+        const value:unknown=await latest.json();
+        setCourses(Array.isArray(value)?value:[]);
+      }
+      setCourseName("");
+      setSuccess("Asignatura creada correctamente. Ya está disponible en el formulario de proyectos.");
+    }catch(e:unknown){setError(e instanceof Error?e.message:"Error al registrar asignatura");}
+    finally{setCourseBusy(false);}
   }
 
   return <main className="forja-projects"><div className="forja-shell">
@@ -143,6 +178,24 @@ export default function AdminUsersPage() {
           {success&&<p className="forja-ok" role="status">{success}</p>}
           <div className="forja-actions"><button type="submit" disabled={saving}>{saving?"Creando...":"Crear usuario"}</button></div>
         </form>
+      </section>
+      <section className="forja-panel forja-editor-section">
+        <h2>Asignaturas</h2>
+        <p>Agrega aquí las asignaturas que realmente se vinculen con proyectos FORJA.</p>
+        <form onSubmit={createCourse} className="forja-form">
+          <div className="forja-fields">
+            <label className="full">Nombre de la asignatura
+              <input required maxLength={180} value={courseName}
+                onChange={e=>setCourseName(e.target.value)}
+                placeholder="Ejemplo para pruebas: Taller de competencias digitales"/>
+            </label>
+          </div>
+          <div className="forja-actions">
+            <button type="submit" disabled={courseBusy}>{courseBusy?"Guardando...":"Agregar asignatura"}</button>
+          </div>
+        </form>
+        <p className="forja-description">Asignaturas registradas: {courses.length}</p>
+        {courses.length>0&&<div className="forja-user-list">{courses.map(course=><div className="forja-user-item" key={course.id}>{course.name}</div>)}</div>}
       </section>
       <section className="forja-panel">
         <h2>Usuarios registrados</h2>
