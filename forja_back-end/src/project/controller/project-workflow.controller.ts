@@ -1,11 +1,11 @@
 import {
-  Body, Controller, Get, Param, ParseIntPipe, Post, Put, Req, UseGuards,
+  Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Req, UseGuards,
 } from '@nestjs/common';
 import { ProjectWorkflowService } from '../service/project-workflow.service.js';
 import { AuthGuard } from '../../auth/guard/auth.guard.js';
 import { RolesGuard } from '../../auth/guard/roles.guard.js';
 import { Roles } from '../../shared/decorator/roles.decorator.js';
-import { CreatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
+import { CreatePeriodDto, UpdatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
 import { SaveEthicsDto } from '../dto/ethics.dto.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
 
@@ -33,6 +33,27 @@ export class ProjectWorkflowController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.workflow.createPeriod(projectId,dto,request.user);
+  }
+
+  @Patch(':projectId/periods/:periodId')
+  @Roles(1, 3)
+  updatePeriod(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('periodId', ParseIntPipe) periodId: number,
+    @Body() dto: UpdatePeriodDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.updatePeriod(projectId, periodId, dto, request.user);
+  }
+
+  @Get(':projectId/periods/:periodId/reviews')
+  @Roles(1, 2, 3)
+  getReviews(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('periodId', ParseIntPipe) periodId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.getReviews(projectId, periodId, request.user);
   }
 
   @Get(':projectId/ethics')
