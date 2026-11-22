@@ -42,7 +42,7 @@ export class ProjectController {
   }
 
   @Patch(':id')
-  @Roles(1, 3)
+  @Roles(1, 2, 3)
   updateProject(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateProjectDTO,
