@@ -73,6 +73,8 @@ export default function ProjectDetailEditor(){
   const [reviews,setReviews]=useState<Review[]>([]);
   const [ethics,setEthics]=useState<Ethics|null>(null);
   const [courses,setCourses]=useState<{id:number;name:string}[]>([]);
+  const [faculties,setFaculties]=useState<{id:number;name:string}[]>([]);
+  const [programs,setPrograms]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [role,setRole]=useState<number|null>(null);
   const [busy,setBusy]=useState(false);
   const [openSection,setOpenSection]=useState<string|null>("general");
@@ -107,6 +109,15 @@ export default function ProjectDetailEditor(){
     return ()=>{active=false};
   },[projectId]);
   useEffect(()=>{
+    let alive=true;
+    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs")])
+      .then(async ([f,p])=>{
+        if(f.ok){const data:unknown=await f.json();if(alive)setFaculties(Array.isArray(data)?data:[]);}
+        if(p.ok){const data:unknown=await p.json();if(alive)setPrograms(Array.isArray(data)?data:[]);}
+      }).catch(()=>undefined);
+    return ()=>{alive=false;};
+  },[]);
+  useEffect(()=>{
     if(activeId===null){setReviews([]);return;}
     let active=true;
     requestJSON<Review[]>(`/api/projects/${projectId}/periods/${activeId}/reviews`)
@@ -120,6 +131,10 @@ export default function ProjectDetailEditor(){
     (role===1||role===3)&&period.record_type==="ACTUAL"&&
     ["BORRADOR","DEVUELTO"].includes(period.approval_status));
   const historicalEditor=project?.registration_type==="HISTORICO" && role===2;
+  const historicalPeriod=period?.record_type==="HISTORICO";
+  const canEditPeriod=Boolean(period&&project?.general_status==="ACTIVO"&&(
+    historicalPeriod ? (role===1||role===2) : editable
+  ));
   const generalEditable=Boolean(project&&project.general_status==="ACTIVO"&&
     (role===1||role===3||historicalEditor)&&
     !periods.some(x=>x.record_type==="ACTUAL"&&["EN_REVISION","APROBADO"].includes(x.approval_status)));
@@ -158,21 +173,34 @@ export default function ProjectDetailEditor(){
     }catch(e){setError(e instanceof Error?e.message:"Error al guardar");}finally{setBusy(false);}
   }
   async function savePeriod(){
-    if(!period)return;
+    if(!period||!canEditPeriod)return;
     setBusy(true);setError("");setMessage("");
     try {
-      await requestJSON(`/api/projects/${projectId}/periods/${period.id}`,"PATCH",{
-        ...(period.course_id?{course_id:period.course_id}:{}),
+      const historical=period.record_type==="HISTORICO";
+      const payload={
+        ...(historical?{course_id:period.course_id,faculty_id:period.faculty_id,
+          academic_program_id:period.academic_program_id,
+          historical_teacher_name:period.historical_teacher_name??"",
+          community_population_description:period.community_population_description??"",
+          territory_name:period.territory_name??"",
+          results:period.results??"",conclusions:period.conclusions??"",
+          missing_information:period.missing_information??""}:
+          {...(period.course_id?{course_id:period.course_id}:{})}),
         objectives:period.objectives??"",activities:period.activities??"",
-        ...(period.student_count!==null?{student_count:Number(period.student_count)}:{}),
-        ...(period.budget!==null?{budget:Number(period.budget)}:{}),
+        ...(historical?{student_count:period.student_count,budget:period.budget}:
+          {...(period.student_count!==null?{student_count:Number(period.student_count)}:{}),
+           ...(period.budget!==null?{budget:Number(period.budget)}:{})}),
         ...(period.start_date?{start_date:dateOnly(period.start_date)}:{}),
         ...(period.end_date?{end_date:dateOnly(period.end_date)}:{}),
-        missing_information:period.missing_information??"",
-      });
-      setMessage("Cambios del período guardados.");
+      };
+      const url=historical
+        ?`/api/projects/${projectId}/periods/${period.id}/historical`
+        :`/api/projects/${projectId}/periods/${period.id}`;
+      await requestJSON(url,"PATCH",payload);
+      setMessage(historical?"Semestre histórico archivado sin aprobación administrativa.":"Cambios del semestre guardados.");
       await reload();
-    }catch(e){setError(e instanceof Error?e.message:"Error al guardar período");}finally{setBusy(false);}
+    }catch(e){setError(e instanceof Error?e.message:"Error al guardar período");}
+    finally{setBusy(false);}
   }
   async function saveEthics(){
     if(!ethicsEditable)return;
@@ -241,31 +269,111 @@ export default function ProjectDetailEditor(){
       {historicalEditor&&<p className="forja-description">Completa únicamente lo que aparezca en los documentos antiguos. Puedes dejar vacíos los datos desconocidos y describirlos en «Digitalización histórica».</p>}
       {!generalEditable&&<p className="forja-note">Los datos generales están bloqueados mientras haya períodos actuales en revisión o aprobados.</p>}
     </ProjectAccordion>
-    <ProjectAccordion id="periods" title="02. Períodos académicos" open={openSection==="periods"} onToggle={()=>toggleSection("periods")} summary={period?`${period.academic_year}-${period.academic_semester} · ${period.approval_status}`:"Sin períodos registrados"}>
+    <ProjectAccordion id="periods" title="02. Períodos académicos" open={openSection==="periods"} onToggle={()=>toggleSection("periods")}
+      summary={period?`${period.academic_year}-${period.academic_semester} · ${period.record_type==="HISTORICO"?"ARCHIVADO SIN REVISIÓN":period.approval_status}`:"Sin períodos registrados"}>
       {periods.length===0?<p>No hay períodos para este proyecto.</p>:<>
-        <div className="forja-tabs">{periods.map(p=><button type="button" className={p.id===activeId?"active":""} key={p.id} onClick={()=>setActiveId(p.id)}>{p.academic_year}-{p.academic_semester}</button>)}</div>
-        {period&&<><p className="forja-note"><strong>Estado:</strong> {period.approval_status} · {period.record_type}</p>
+        <div className="forja-tabs">{periods.map(p=><button type="button"
+          className={p.id===activeId?"active":""} key={p.id}
+          onClick={()=>setActiveId(p.id)}>{p.academic_year}-{p.academic_semester}</button>)}</div>
+        {period&&<>
+          <p className="forja-note"><strong>Tipo:</strong> {historicalPeriod?"HISTÓRICO · Registro directo sin revisión del administrador":`ACTUAL · ${period.approval_status}`}</p>
+          {historicalPeriod&&<p className="forja-description">
+            Diligencia los mismos campos académicos del profesor. Los datos que desconozcas pueden quedar vacíos;
+            anota cuáles faltan al final. Solo se aplican validaciones básicas de formato y fechas.
+          </p>}
           <div className="forja-fields">
-            <label>Asignatura<select disabled={!editable||busy} value={period.course_id??""} onChange={e=>updatePeriod("course_id",e.target.value?Number(e.target.value):null)}>
-              <option value="">Seleccionar asignatura</option>
-              {courses.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}
-            </select></label>
-            <label>Número de estudiantes<input type="number" min="0" disabled={!editable||busy} value={period.student_count??""} onChange={e=>updatePeriod("student_count",e.target.value===""?null:Number(e.target.value))}/></label>
-            <label>Presupuesto COP<input type="number" min="0" step="0.01" disabled={!editable||busy} value={period.budget??""} onChange={e=>updatePeriod("budget",e.target.value===""?null:Number(e.target.value))}/></label>
-            <label>Fecha de inicio<input type="date" disabled={!editable||busy} value={dateOnly(period.start_date)} onChange={e=>updatePeriod("start_date",e.target.value)}/></label>
-            <label>Fecha de finalización<input type="date" disabled={!editable||busy} value={dateOnly(period.end_date)} onChange={e=>updatePeriod("end_date",e.target.value)}/></label>
-            <label className="full">Objetivos del período<textarea rows={3} disabled={!editable||busy} value={period.objectives??""} onChange={e=>updatePeriod("objectives",e.target.value)}/></label>
-            <label className="full">Actividades<textarea rows={3} disabled={!editable||busy} value={period.activities??""} onChange={e=>updatePeriod("activities",e.target.value)}/></label>
-            {period.record_type==="HISTORICO"&&<label className="full">Información faltante<textarea rows={3} disabled value={period.missing_information??""}/></label>}
+            {historicalPeriod&&<label>Profesor que ejecutó el semestre (si se conoce)
+              <input maxLength={180} disabled={!canEditPeriod||busy} value={period.historical_teacher_name??""}
+                onChange={e=>updatePeriod("historical_teacher_name",e.target.value)}/>
+            </label>}
+            <label>Asignatura
+              <select disabled={!canEditPeriod||busy} value={period.course_id??""}
+                onChange={e=>updatePeriod("course_id",e.target.value?Number(e.target.value):null)}>
+                <option value="">{historicalPeriod?"Desconocida":"Seleccionar asignatura"}</option>
+                {courses.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </label>
+            <label>Facultad
+              <select disabled={!canEditPeriod||busy} value={period.faculty_id??""}
+                onChange={e=>{
+                  updatePeriod("faculty_id",e.target.value?Number(e.target.value):null);
+                  updatePeriod("academic_program_id",null);
+                }}>
+                <option value="">{historicalPeriod?"Desconocida":"Seleccionar facultad"}</option>
+                {faculties.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </label>
+            <label>Programa o carrera
+              <select disabled={!canEditPeriod||busy} value={period.academic_program_id??""}
+                onChange={e=>updatePeriod("academic_program_id",e.target.value?Number(e.target.value):null)}>
+                <option value="">{historicalPeriod?"Desconocido":"Seleccionar programa"}</option>
+                {programs.filter(p=>!period.faculty_id||p.faculty_id===Number(period.faculty_id))
+                  .map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </label>
+            <label>Número de estudiantes
+              <input type="number" min="0" disabled={!canEditPeriod||busy} value={period.student_count??""}
+                onChange={e=>updatePeriod("student_count",e.target.value===""?null:Number(e.target.value))}/>
+            </label>
+            <label>Presupuesto COP
+              <input type="number" min="0" step="0.01" disabled={!canEditPeriod||busy} value={period.budget??""}
+                onChange={e=>updatePeriod("budget",e.target.value===""?null:Number(e.target.value))}/>
+            </label>
+            <label>Fecha de inicio
+              <input type="date" disabled={!canEditPeriod||busy} value={dateOnly(period.start_date)}
+                onChange={e=>updatePeriod("start_date",e.target.value)}/>
+            </label>
+            <label>Fecha de finalización
+              <input type="date" disabled={!canEditPeriod||busy} value={dateOnly(period.end_date)}
+                onChange={e=>updatePeriod("end_date",e.target.value)}/>
+            </label>
+            <label className="full">Objetivos del período
+              <textarea rows={3} disabled={!canEditPeriod||busy} value={period.objectives??""}
+                onChange={e=>updatePeriod("objectives",e.target.value)}/>
+            </label>
+            <label className="full">Actividades
+              <textarea rows={3} disabled={!canEditPeriod||busy} value={period.activities??""}
+                onChange={e=>updatePeriod("activities",e.target.value)}/>
+            </label>
+            <label className="full">Población participante o beneficiada
+              <textarea rows={2} disabled={!canEditPeriod||busy} value={period.community_population_description??""}
+                onChange={e=>updatePeriod("community_population_description",e.target.value)}/>
+            </label>
+            <label className="full">Territorio o lugar del semestre
+              <input disabled={!canEditPeriod||busy} value={period.territory_name??""}
+                onChange={e=>updatePeriod("territory_name",e.target.value)}/>
+            </label>
+            {historicalPeriod&&<>
+              <label className="full">Resultados obtenidos (si se conocen)
+                <textarea rows={3} disabled={!canEditPeriod||busy} value={period.results??""}
+                  onChange={e=>updatePeriod("results",e.target.value)}/>
+              </label>
+              <label className="full">Conclusiones (si se conocen)
+                <textarea rows={3} disabled={!canEditPeriod||busy} value={period.conclusions??""}
+                  onChange={e=>updatePeriod("conclusions",e.target.value)}/>
+              </label>
+              <label className="full">Información o documentos faltantes
+                <textarea rows={3} disabled={!canEditPeriod||busy} value={period.missing_information??""}
+                  onChange={e=>updatePeriod("missing_information",e.target.value)}/>
+              </label>
+            </>}
           </div>
           <div className="forja-actions">
-            <button type="button" disabled={!editable||busy} onClick={savePeriod}>Guardar cambios del semestre</button>
-            {role===3&&editable&&<button type="button" className="secondary" disabled={busy} onClick={submit}>Enviar a revisión</button>}
+            {canEditPeriod&&<button type="button" disabled={busy} onClick={savePeriod}>
+              {historicalPeriod?"Guardar ficha histórica":"Guardar cambios del semestre"}
+            </button>}
+            {role===3&&editable&&<button type="button" className="secondary" disabled={busy} onClick={submit}>
+              Enviar a revisión
+            </button>}
           </div>
-          <h3>Historial de observaciones</h3>
-          {reviews.length===0?<p>Aún no hay decisiones del administrador.</p>:
-          <div className="forja-reviews">{reviews.map(r=><div key={r.id}><strong>{r.decision}</strong> · {new Date(r.reviewed_at).toLocaleDateString("es-CO")} · {r.reviewer}
-            <p>{r.notes||"Sin observaciones adicionales"}</p></div>)}</div>}
+          {!historicalPeriod&&<>
+            <h3>Historial de observaciones</h3>
+            {reviews.length===0?<p>Aún no hay decisiones del administrador.</p>:
+              <div className="forja-reviews">{reviews.map(r=><div key={r.id}>
+                <strong>{r.decision}</strong> · {new Date(r.reviewed_at).toLocaleDateString("es-CO")} · {r.reviewer}
+                <p>{r.notes||"Sin observaciones adicionales"}</p>
+              </div>)}</div>}
+          </>}
         </>}
       </>}
     </ProjectAccordion>
@@ -290,7 +398,7 @@ export default function ProjectDetailEditor(){
     {project.registration_type==="HISTORICO"&&
       <ProjectAccordion id="history" title="03. Digitalización histórica" open={openSection==="history"} onToggle={()=>toggleSection("history")} summary={`${periods.filter(p=>p.record_type==="HISTORICO").length} semestres anteriores`}>
         <HistoricalProjectSection projectId={projectId} role={role} registrationType={project.registration_type} projectStatus={project.general_status}
-          periods={periods} courses={courses} onSaved={reload}/>
+          periods={periods} onSaved={reload} onSelectPeriod={(id:number)=>{setActiveId(id);setOpenSection("periods");}}/>
       </ProjectAccordion>}
     {period&&<ProjectAccordion id="evidence" title={project.registration_type==="HISTORICO"?"05. Evidencias del semestre (solo PDF)":"04. Evidencias del semestre (solo PDF)"} open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
       <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
