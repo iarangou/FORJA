@@ -4,7 +4,7 @@ import {useParams} from "next/navigation";
 import {Suspense,useEffect,useState} from "react";
 import "@/styles/projects.css";
 
-type ProjectInfo={title:string;code:string;expires_at:string};
+type ProjectInfo={title:string;code:string;academic_year:number;academic_semester:number;expires_at:string};
 type Answer={organization_name:string;relationship_to_project:string;
  objectives_rating:number;usefulness_rating:number;participation_rating:number;
  comments:string;consent_confirmed:boolean};
@@ -53,13 +53,14 @@ function CommunityEvaluationPageContent(){
  return <main className="forja-projects"><div className="forja-shell">
   <div className="forja-heading"><span className="forja-eyebrow">FORJA · EVALUACIÓN COMUNITARIA</span>
    <h1>Tu experiencia con el proyecto</h1>
-   <p>Este formulario se responde una sola vez por proyecto. No necesitas crear una cuenta.</p>
+   <p>Este formulario se responde una sola vez por semestre. No necesitas crear una cuenta.</p>
   </div>
   {done?<section className="forja-panel">
     <h2>¡Gracias por tu participación!</h2>
     <p>Tu evaluación quedó registrada. El enlace ya no podrá utilizarse nuevamente.</p>
    </section>:info&&<section className="forja-panel forja-editor-section">
    <h2>{info.code} · {info.title}</h2>
+   <p className="forja-note"><strong>Semestre evaluado:</strong> {info.academic_year}-{info.academic_semester}</p>
    <p className="forja-description">Valora del 1 (muy bajo) al 5 (muy alto). Estas preguntas son una propuesta para la etapa de pruebas.</p>
    <form className="forja-form" onSubmit={send}>
     <div className="forja-fields">
