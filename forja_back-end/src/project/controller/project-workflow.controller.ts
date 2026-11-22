@@ -5,7 +5,7 @@ import { ProjectWorkflowService } from '../service/project-workflow.service.js';
 import { AuthGuard } from '../../auth/guard/auth.guard.js';
 import { RolesGuard } from '../../auth/guard/roles.guard.js';
 import { Roles } from '../../shared/decorator/roles.decorator.js';
-import { CreatePeriodDto, UpdatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
+import { CreatePeriodDto, UpdatePeriodDto, ReviewPeriodDto, SavePeriodResultsDto } from '../dto/period.dto.js';
 import { SaveEthicsDto } from '../dto/ethics.dto.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
 
@@ -44,6 +44,27 @@ export class ProjectWorkflowController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.workflow.updatePeriod(projectId, periodId, dto, request.user);
+  }
+
+  @Put(':projectId/periods/:periodId/results')
+  @Roles(3)
+  saveResults(
+    @Param('projectId',ParseIntPipe) projectId:number,
+    @Param('periodId',ParseIntPipe) periodId:number,
+    @Body() dto:SavePeriodResultsDto,
+    @Req() request:AuthenticatedRequest,
+  ){
+    return this.workflow.saveResults(projectId,periodId,dto,request.user);
+  }
+
+  @Post(':projectId/periods/:periodId/close')
+  @Roles(1)
+  closePeriod(
+    @Param('projectId',ParseIntPipe) projectId:number,
+    @Param('periodId',ParseIntPipe) periodId:number,
+    @Req() request:AuthenticatedRequest,
+  ){
+    return this.workflow.closePeriod(projectId,periodId,request.user);
   }
 
   @Get(':projectId/periods/:periodId/reviews')
