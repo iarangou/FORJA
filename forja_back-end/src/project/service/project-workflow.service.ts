@@ -200,15 +200,13 @@ export class ProjectWorkflowService {
     if (locked.rows.length) {
       throw new ConflictException('El análisis ético está bloqueado durante la revisión o tras la aprobación');
     }
-    const requiresPermission = dto.involves_vulnerable_population === true;
     const { rows } = await this.db.query(
       `INSERT INTO project_ethics
         (project_id,external_population,university_population,
          external_population_other,university_population_other,
          handles_personal_data,involves_vulnerable_population,identifiable_media,
-         privacy_measures,risk_mitigation,permission_required,
-         permission_document_confirmed,truthful_declaration,notes,updated_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         privacy_measures,risk_mitigation,truthful_declaration,notes,updated_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT (project_id) DO UPDATE SET
          external_population=EXCLUDED.external_population,
          university_population=EXCLUDED.university_population,
@@ -219,21 +217,17 @@ export class ProjectWorkflowService {
          identifiable_media=EXCLUDED.identifiable_media,
          privacy_measures=EXCLUDED.privacy_measures,
          risk_mitigation=EXCLUDED.risk_mitigation,
-         permission_required=EXCLUDED.permission_required,
-         permission_document_confirmed=EXCLUDED.permission_document_confirmed,
          truthful_declaration=EXCLUDED.truthful_declaration,
          notes=EXCLUDED.notes,
          updated_by=EXCLUDED.updated_by, updated_at=NOW()
        RETURNING id,project_id,external_population,university_population,
          handles_personal_data,involves_vulnerable_population,identifiable_media,
-         permission_required,permission_document_confirmed,truthful_declaration,
-         updated_at`,
+         truthful_declaration,updated_at`,
       [projectId,dto.external_population ?? null,dto.university_population ?? null,
         dto.external_population_other ?? null,dto.university_population_other ?? null,
         dto.handles_personal_data ?? null,dto.involves_vulnerable_population ?? null,
         dto.identifiable_media ?? null,dto.privacy_measures ?? null,
-        dto.risk_mitigation ?? null,requiresPermission,
-        dto.permission_document_confirmed ?? false,dto.truthful_declaration ?? false,
+        dto.risk_mitigation ?? null,dto.truthful_declaration ?? false,
         dto.notes ?? null,user.sub],
     );
     return rows[0];
@@ -245,8 +239,7 @@ export class ProjectWorkflowService {
       `SELECT project_id,external_population,university_population,
          external_population_other,university_population_other,handles_personal_data,
          involves_vulnerable_population,identifiable_media,privacy_measures,
-         risk_mitigation,permission_required,permission_document_confirmed,
-         truthful_declaration,notes,requested_at,updated_at
+         risk_mitigation,truthful_declaration,notes,requested_at,updated_at
        FROM project_ethics WHERE project_id=$1`, [projectId],
     );
     return rows[0] ?? null;
@@ -260,8 +253,7 @@ export class ProjectWorkflowService {
     return this.db.transaction(async client => {
       const { rows } = await client.query(
         `SELECT pp.*, p.title,p.general_problem,p.general_objective,p.community_name,
-                e.external_population,e.university_population,e.truthful_declaration,
-                e.permission_required,e.permission_document_confirmed
+                e.external_population,e.university_population,e.truthful_declaration
          FROM project_periods pp JOIN project p ON p.id=pp.project_id
          LEFT JOIN project_ethics e ON e.project_id=p.id
          WHERE pp.id=$1 AND pp.project_id=$2 FOR UPDATE OF pp`,
@@ -292,13 +284,6 @@ export class ProjectWorkflowService {
       if (p.student_count === null) missing.push('Cantidad de estudiantes');
       if (!p.external_population || !p.university_population || !p.truthful_declaration) {
         missing.push('Análisis ético y declaración de veracidad');
-      }
-      if (p.permission_required) {
-        const docs=await client.query(
-          `SELECT 1 FROM project_documents WHERE project_period_id=$1
-           AND document_kind='AVAL_ORGANIZACION' LIMIT 1`,[periodId],
-        );
-        if (!docs.rows.length) missing.push('Aval o permiso institucional');
       }
       if (missing.length) {
         throw new BadRequestException({
