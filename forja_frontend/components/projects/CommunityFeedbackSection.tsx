@@ -10,14 +10,14 @@ type Summary={
  feedback:Feedback|null;
  link:{created_at:string;expires_at:string;used_at:string|null}|null;
 };
-interface Props{projectId:string;role:number|null}
-export default function CommunityFeedbackSection({projectId,role}:Props){
+interface Props{projectId:string;periodId:number;role:number|null;academicYear:number;academicSemester:number}
+export default function CommunityFeedbackSection({projectId,periodId,role,academicYear,academicSemester}:Props){
  const [summary,setSummary]=useState<Summary|null>(null);
  const [issuedUrl,setIssuedUrl]=useState("");
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("");
- const base=`/api/projects/${projectId}/community-feedback`;
+ const base=`/api/projects/${projectId}/periods/${periodId}/community-feedback`;
  useEffect(()=>{
   let active=true;
   fetch(base,{cache:"no-store"}).then(async r=>{
@@ -46,7 +46,7 @@ export default function CommunityFeedbackSection({projectId,role}:Props){
  }
  const feedback=summary?.feedback;
  return <div className="forja-accordion-inner">
-  <p className="forja-description">La comunidad diligencia una evaluación por proyecto mediante un enlace privado. No necesita usuario. Esto es independiente de la carta firmada al cierre de cada semestre.</p>
+  <p className="forja-description">La comunidad diligencia una evaluación para cada semestre mediante un enlace privado. Semestre seleccionado: {academicYear}-{academicSemester}. No necesita usuario. La carta firmada también pertenece al semestre, pero se archiva como PDF independiente.</p>
   {feedback?<div className="forja-user-list">
    <p><strong>Evaluación recibida:</strong> {new Date(feedback.submitted_at).toLocaleDateString("es-CO")}</p>
    <p><strong>Organización:</strong> {feedback.organization_name||"No indicada"}</p>
