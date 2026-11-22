@@ -22,6 +22,9 @@ export class CreatePeriodDto {
   @IsOptional() @IsInt() @Min(1)
   academic_program_id?: number;
 
+  @IsOptional() @IsString() @MaxLength(180)
+  historical_teacher_name?: string;
+
   @IsOptional() @IsString() @MaxLength(5000)
   objectives?: string;
 
@@ -68,6 +71,9 @@ export class UpdatePeriodDto {
 
   @IsOptional() @IsInt() @Min(1)
   academic_program_id?: number;
+
+  @IsOptional() @IsString() @MaxLength(180)
+  historical_teacher_name?: string;
 
   @IsOptional() @IsString() @MaxLength(5000)
   objectives?: string;
