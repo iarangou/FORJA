@@ -12,6 +12,7 @@
 | Períodos | Registro por año-semestre con estado de aprobación independiente; separación actual/histórico |
 | Ética | Formulario de categorías agregadas y medidas de privacidad; almacenamiento inicial por proyecto |
 | Revisión | Profesor solicita aprobación; administrador aprueba/devuelve y guarda historial de decisiones |
+| Ejecución y cierre | Profesor guarda resultados y conclusiones de semestre aprobado; administrador cierra tras comprobar al menos un PDF aprobado y ninguno pendiente |
 | Interfaz | `/proyectos` y `/proyectos/nuevo`; acceso desde login y consulta de períodos |
 | Infraestructura | Migraciones SQL incrementales de desarrollo y Action de comprobación de compilación |
 | Documentación | Especificación asumida, checklist documental, ejemplo ficticio y guía de instalación |
@@ -24,7 +25,7 @@
 - Incorporar múltiples asignaturas/profesores/carreras por período y catálogo definitivo de siete territorios
 - Gestión real de ODS, población beneficiaria y presupuestos pormenorizados en formularios
 - Formulario comunitario de una respuesta por proyecto con enlace/token seguro
-- Resultados, conclusiones, cierre de período y finalización general del proyecto por administrador
+- Finalización **general** del proyecto por administrador (el cierre independiente por semestre ya está implementado)
 - Exportar informes Excel por territorio; permisos de descarga y backups verificados
 - Integración y pruebas con PostgreSQL y Docker, tests de API, revisión de validaciones/seguridad
 
