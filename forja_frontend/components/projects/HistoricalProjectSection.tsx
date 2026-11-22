@@ -8,9 +8,14 @@ type HistoricalPeriod={
   record_type:string;objectives:string|null;activities:string|null;
   course_id:number|null;budget:number|null;student_count:number|null;
   missing_information:string|null;start_date:string|null;end_date:string|null;
+  historical_teacher_name:string|null;faculty_id:number|null;academic_program_id:number|null;
+  community_population_description:string|null;territory_name:string|null;
+  results:string|null;conclusions:string|null;
 };
 type User={id:number;full_name:string;rol_id:number;is_active:boolean};
 type Course={id:number;name:string};
+type Faculty={id:number;name:string};
+type Program={id:number;name:string;faculty_id:number};
 interface Props{
   projectId:string;
   role:number|null;
@@ -24,11 +29,17 @@ type FormState={
   academic_year:string;academic_semester:string;course_id:string;
   objectives:string;activities:string;student_count:string;budget:string;
   start_date:string;end_date:string;missing_information:string;
+  historical_teacher_name:string;faculty_id:string;academic_program_id:string;
+  community_population_description:string;territory_name:string;
+  results:string;conclusions:string;
 };
 const emptyForm:FormState={
   academic_year:"2025",academic_semester:"2",course_id:"",
   objectives:"",activities:"",student_count:"",budget:"",
   start_date:"",end_date:"",missing_information:"",
+  historical_teacher_name:"",faculty_id:"",academic_program_id:"",
+  community_population_description:"",territory_name:"",
+  results:"",conclusions:"",
 };
 const dateOnly=(value:string|null)=>value?.slice(0,10)??"";
 
@@ -38,12 +49,23 @@ export default function HistoricalProjectSection({
   const [form,setForm]=useState<FormState>(emptyForm);
   const [editing,setEditing]=useState<number|null>(null);
   const [users,setUsers]=useState<User[]>([]);
+  const [faculties,setFaculties]=useState<Faculty[]>([]);
+  const [programs,setPrograms]=useState<Program[]>([]);
   const [teacherId,setTeacherId]=useState("");
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
   const active=projectStatus==="ACTIVO";
   const canDigitize=(role===1||role===2)&&active&&registrationType==="HISTORICO";
+
+  useEffect(()=>{
+    if(registrationType!=="HISTORICO")return;
+    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs")])
+      .then(async ([f,p])=>{
+        if(f.ok){const d:unknown=await f.json();setFaculties(Array.isArray(d)?d:[]);}
+        if(p.ok){const d:unknown=await p.json();setPrograms(Array.isArray(d)?d:[]);}
+      }).catch(()=>undefined);
+  },[registrationType]);
 
   useEffect(()=>{
     if(role!==1||registrationType!=="HISTORICO")return;
@@ -68,6 +90,12 @@ export default function HistoricalProjectSection({
       budget:period.budget===null?"":String(period.budget),
       start_date:dateOnly(period.start_date),end_date:dateOnly(period.end_date),
       missing_information:period.missing_information??"",
+      historical_teacher_name:period.historical_teacher_name??"",
+      faculty_id:period.faculty_id?String(period.faculty_id):"",
+      academic_program_id:period.academic_program_id?String(period.academic_program_id):"",
+      community_population_description:period.community_population_description??"",
+      territory_name:period.territory_name??"",
+      results:period.results??"",conclusions:period.conclusions??"",
     });
     setError("");setMessage("");
   }
@@ -83,6 +111,12 @@ export default function HistoricalProjectSection({
           record_type:"HISTORICO",
         }:{}),
         ...(form.course_id?{course_id:Number(form.course_id)}:{}),
+        ...(form.faculty_id?{faculty_id:Number(form.faculty_id)}:{}),
+        ...(form.academic_program_id?{academic_program_id:Number(form.academic_program_id)}:{}),
+        historical_teacher_name:form.historical_teacher_name,
+        community_population_description:form.community_population_description,
+        territory_name:form.territory_name,
+        results:form.results,conclusions:form.conclusions,
         ...(form.student_count?{student_count:Number(form.student_count)}:{}),
         ...(form.budget?{budget:Number(form.budget)}:{}),
         ...(form.start_date?{start_date:form.start_date}:{}),
@@ -139,6 +173,7 @@ export default function HistoricalProjectSection({
       )}</div>}
     {canDigitize&&<>
       <h3>{editing?"Completar un semestre histórico":"Agregar otro semestre histórico"}</h3>
+      <p className="forja-description">Todos los campos académicos son opcionales salvo el año y el semestre. El docente puede escribirse por nombre aunque no tenga usuario activo.</p>
       <form onSubmit={save} className="forja-form">
         <div className="forja-fields">
           <label>Año
@@ -148,6 +183,28 @@ export default function HistoricalProjectSection({
           <label>Semestre
             <select disabled={editing!==null} value={form.academic_semester} onChange={e=>update("academic_semester",e.target.value)}>
               <option value="1">Primero</option><option value="2">Segundo</option>
+            </select>
+          </label>
+          <label>Profesor responsable histórico (si se conoce)
+            <input type="text" maxLength={180} value={form.historical_teacher_name}
+              placeholder="Nombre del profesor del semestre"
+              onChange={e=>update("historical_teacher_name",e.target.value)}/>
+          </label>
+          <label>Facultad (si se conoce)
+            <select value={form.faculty_id} onChange={e=>{
+              update("faculty_id",e.target.value);
+              update("academic_program_id","");
+            }}>
+              <option value="">Desconocida</option>
+              {faculties.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
+          </label>
+          <label>Programa o carrera (si se conoce)
+            <select value={form.academic_program_id}
+              onChange={e=>update("academic_program_id",e.target.value)}>
+              <option value="">Desconocido</option>
+              {programs.filter(p=>!form.faculty_id||p.faculty_id===Number(form.faculty_id))
+                .map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </label>
           <label>Asignatura (si se conoce)
@@ -173,6 +230,20 @@ export default function HistoricalProjectSection({
           </label>
           <label className="full">Actividades documentadas
             <textarea rows={2} value={form.activities} onChange={e=>update("activities",e.target.value)}/>
+          </label>
+          <label className="full">Población participante o beneficiada (si se conoce)
+            <textarea rows={2} value={form.community_population_description}
+              onChange={e=>update("community_population_description",e.target.value)}/>
+          </label>
+          <label className="full">Territorio o lugar del semestre (si se conoce)
+            <input type="text" value={form.territory_name}
+              onChange={e=>update("territory_name",e.target.value)}/>
+          </label>
+          <label className="full">Resultados documentados (si se conocen)
+            <textarea rows={3} value={form.results} onChange={e=>update("results",e.target.value)}/>
+          </label>
+          <label className="full">Conclusiones documentadas (si se conocen)
+            <textarea rows={3} value={form.conclusions} onChange={e=>update("conclusions",e.target.value)}/>
           </label>
           <label className="full">Información o documentos faltantes
             <textarea rows={3} value={form.missing_information} onChange={e=>update("missing_information",e.target.value)}/>
