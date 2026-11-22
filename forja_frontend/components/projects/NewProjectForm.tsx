@@ -5,6 +5,8 @@ import type { FormEvent } from "react";
 import Link from "next/link";
 
 type Course = { id: number; name: string };
+type Faculty = { id:number;name:string };
+type Program = { id:number;name:string;faculty_id:number };
 type CreateResponse = { id: number; code: string; title: string };
 type PeriodResponse = { id: number };
 type ApiFailure = { message?: string | string[]; missing?: string[] };
@@ -53,6 +55,8 @@ const universityOptions: [string,string][] = [
 
 export default function NewProjectForm() {
   const [courses,setCourses]=useState<Course[]>([]);
+  const [faculties,setFaculties]=useState<Faculty[]>([]);
+  const [programs,setPrograms]=useState<Program[]>([]);
   const [loading,setLoading]=useState(false);
   const [message,setMessage]=useState("");
   const [error,setError]=useState("");
@@ -65,6 +69,8 @@ export default function NewProjectForm() {
     registration_type:"NUEVO", duration:"1", academic_year:"2026", academic_semester:"2",
     course_id:"", objectives:"", activities:"", student_count:"",
     budget:"", start_date:"", end_date:"", missing_information:"",
+    historical_teacher_name:"",faculty_id:"",academic_program_id:"",
+    community_population_description:"",territory_name:"",results:"",conclusions:"",
     external_population:"NINGUNO", university_population:"NINGUNO",
     involves_vulnerable_population:false, handles_personal_data:false,
     identifiable_media:false, privacy_measures:"", risk_mitigation:"",
@@ -78,6 +84,13 @@ export default function NewProjectForm() {
       .then(r=>r.ok?r.json():[])
       .then((value:unknown)=>setCourses(Array.isArray(value)?value:[]))
       .catch(()=>setCourses([]));
+  },[]);
+  useEffect(()=>{
+    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs")])
+      .then(async ([f,p])=>{
+        if(f.ok){const v:unknown=await f.json();setFaculties(Array.isArray(v)?v:[]);}
+        if(p.ok){const v:unknown=await p.json();setPrograms(Array.isArray(v)?v:[]);}
+      }).catch(()=>undefined);
   },[]);
   useEffect(()=>{
     fetch("/api/users/me",{credentials:"same-origin"})
@@ -123,6 +136,14 @@ export default function NewProjectForm() {
           academic_semester:Number(form.academic_semester),
           record_type:form.registration_type==="HISTORICO"?"HISTORICO":"ACTUAL",
           ...(form.course_id?{course_id:Number(form.course_id)}:{}),
+          ...(form.faculty_id?{faculty_id:Number(form.faculty_id)}:{}),
+          ...(form.academic_program_id?{academic_program_id:Number(form.academic_program_id)}:{}),
+          ...(form.registration_type==="HISTORICO"?{
+            historical_teacher_name:form.historical_teacher_name,
+            community_population_description:form.community_population_description,
+            territory_name:form.territory_name,
+            results:form.results,conclusions:form.conclusions,
+          }:{}),
           ...(form.student_count?{student_count:Number(form.student_count)}:{}),
           ...(form.budget?{budget:Number(form.budget)}:{}),
           ...(form.start_date?{start_date:form.start_date}:{}),
@@ -219,6 +240,29 @@ export default function NewProjectForm() {
                   <option value="1">Un semestre</option><option value="2">Dos semestres</option>
                 </select>
               </label>
+              {form.registration_type==="HISTORICO"&&<>
+                <label>Docente del semestre (si se conoce)
+                  <input disabled={!!period} value={form.historical_teacher_name}
+                    onChange={e=>change("historical_teacher_name",e.target.value)}/>
+                </label>
+                <label>Facultad (si se conoce)
+                  <select disabled={!!period} value={form.faculty_id} onChange={e=>{
+                    change("faculty_id",e.target.value);
+                    change("academic_program_id","");
+                  }}>
+                    <option value="">Desconocida</option>
+                    {faculties.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </label>
+                <label>Programa o carrera (si se conoce)
+                  <select disabled={!!period} value={form.academic_program_id}
+                    onChange={e=>change("academic_program_id",e.target.value)}>
+                    <option value="">Desconocido</option>
+                    {programs.filter(p=>!form.faculty_id||p.faculty_id===Number(form.faculty_id))
+                      .map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </label>
+              </>}
               <label>Asignatura
                 <select disabled={!!period} value={form.course_id} onChange={e=>change("course_id",e.target.value)}>
                   <option value="">Seleccionar asignatura</option>
@@ -244,6 +288,24 @@ export default function NewProjectForm() {
               <label className="full">Actividades
                 <textarea disabled={!!period} rows={3} value={form.activities} onChange={e=>change("activities",e.target.value)}/>
               </label>
+              {form.registration_type==="HISTORICO"&&<>
+                <label className="full">Población beneficiada (si se conoce)
+                  <textarea disabled={!!period} rows={2} value={form.community_population_description}
+                    onChange={e=>change("community_population_description",e.target.value)}/>
+                </label>
+                <label className="full">Territorio o lugar del semestre (si se conoce)
+                  <input disabled={!!period} value={form.territory_name}
+                    onChange={e=>change("territory_name",e.target.value)}/>
+                </label>
+                <label className="full">Resultados históricos (si se conocen)
+                  <textarea disabled={!!period} rows={2} value={form.results}
+                    onChange={e=>change("results",e.target.value)}/>
+                </label>
+                <label className="full">Conclusiones históricas (si se conocen)
+                  <textarea disabled={!!period} rows={2} value={form.conclusions}
+                    onChange={e=>change("conclusions",e.target.value)}/>
+                </label>
+              </>}
               {form.registration_type==="HISTORICO"&&
                 <label className="full">Información o documentación histórica faltante
                   <textarea disabled={!!period} rows={3} value={form.missing_information} onChange={e=>change("missing_information",e.target.value)}/>
