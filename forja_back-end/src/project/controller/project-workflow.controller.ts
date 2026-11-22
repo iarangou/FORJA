@@ -35,6 +35,17 @@ export class ProjectWorkflowController {
     return this.workflow.createPeriod(projectId,dto,request.user);
   }
 
+  @Patch(':projectId/periods/:periodId/historical')
+  @Roles(1, 2)
+  updateHistoricalPeriod(
+    @Param('projectId',ParseIntPipe) projectId:number,
+    @Param('periodId',ParseIntPipe) periodId:number,
+    @Body() dto:UpdatePeriodDto,
+    @Req() request:AuthenticatedRequest,
+  ){
+    return this.workflow.updateHistoricalPeriod(projectId,periodId,dto,request.user);
+  }
+
   @Patch(':projectId/periods/:periodId')
   @Roles(1, 3)
   updatePeriod(
