@@ -33,3 +33,14 @@
 .forja-textbutton{border:0;background:none;padding:12px 0;color:var(--forja-purple);font-weight:700;cursor:pointer}
 .forja-periods{border-top:1px solid #e7e3ef;padding-top:12px;font-size:12px}
 @media(max-width:700px){.forja-fields,.forja-cards{grid-template-columns:1fr}.forja-panel{padding:22px}.forja-shell{padding:0 17px 50px}}
+
+.forja-editor-section{margin-bottom:22px}
+.forja-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.forja-tabs button{border:1px solid #ded7e8;background:white;color:#673787;border-radius:8px;padding:9px 15px;font-weight:700;cursor:pointer}
+.forja-tabs button.active{background:#673787;color:#fff}
+.forja-reviews{display:grid;gap:12px;margin-top:16px}
+.forja-reviews>div{padding:13px;border:1px solid #ddd7e7;border-radius:9px;background:#faf9fc;font-size:13px}
+.forja-reviews p{margin:8px 0 0;white-space:pre-wrap}
+.forja-perioditem{border-top:1px solid #e7e3ef;padding:12px 0}
+.forja-perioditem label{display:grid;gap:6px;font-size:12px}
+.forja-perioditem textarea{border:1px solid #d0d3dd;border-radius:7px;padding:9px;resize:vertical}
