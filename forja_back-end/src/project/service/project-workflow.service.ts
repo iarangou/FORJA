@@ -74,8 +74,8 @@ export class ProjectWorkflowService {
            (project_id,academic_year,academic_semester,record_type,
             teacher_id,course_id,faculty_id,academic_program_id,objectives,
             activities,budget,student_count,start_date,end_date,
-            community_population_description,territory_name,missing_information)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+            community_population_description,territory_name,missing_information,historical_teacher_name)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
            RETURNING *`,
           [projectId,dto.academic_year,dto.academic_semester,recordType,
             teacher[0]?.id ?? null,dto.course_id ?? null,dto.faculty_id ?? null,
@@ -83,7 +83,8 @@ export class ProjectWorkflowService {
             dto.activities ?? null,dto.budget ?? null,dto.student_count ?? null,
             dto.start_date ?? null,dto.end_date ?? null,
             dto.community_population_description ?? null,
-            dto.territory_name ?? null,dto.missing_information ?? null],
+            dto.territory_name ?? null,dto.missing_information ?? null,
+            recordType==='HISTORICO'?(dto.historical_teacher_name?.trim()||null):null],
         );
         if (dto.course_id) {
           await client.query(
@@ -137,13 +138,18 @@ export class ProjectWorkflowService {
          end_date=COALESCE($8,end_date),
          community_population_description=COALESCE($9,community_population_description),
          territory_name=COALESCE($10,territory_name),
-         missing_information=COALESCE($11,missing_information),
+         missing_information=$11,
+         faculty_id=$12,
+         academic_program_id=$13,
+         historical_teacher_name=$14,
          updated_at=NOW()
          WHERE id=$1 RETURNING *`,
         [periodId,dto.course_id??null,dto.objectives??null,dto.activities??null,
          dto.student_count??null,dto.budget??null,dto.start_date??null,dto.end_date??null,
          dto.community_population_description??null,dto.territory_name??null,
-         dto.missing_information??null],
+         dto.missing_information??null,
+         dto.faculty_id??null,dto.academic_program_id??null,
+         dto.historical_teacher_name?.trim()||null],
       );
       if(dto.course_id!==undefined){
         await client.query('DELETE FROM project_period_courses WHERE project_period_id=$1',[periodId]);
@@ -349,7 +355,7 @@ export class ProjectWorkflowService {
     const { rows } = await this.db.query(
       `SELECT id, project_id, academic_year, academic_semester, record_type,
               teacher_id, course_id, faculty_id, academic_program_id,
-              objectives, activities, budget, student_count, start_date, end_date,
+              historical_teacher_name, objectives, activities, budget, student_count, start_date, end_date,
               community_population_description, territory_name, missing_information,
               approval_status, execution_status, results, conclusions, last_submitted_at
        FROM project_periods WHERE project_id=$1
