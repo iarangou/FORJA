@@ -75,7 +75,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
 
   return <section className="forja-panel forja-editor-section">
     <h2>04. Evidencias del semestre (solo PDF)</h2>
-    <p className="forja-description">Incluye fotografías en el PDF. Para videos, agrega dentro del PDF un enlace a YouTube. Cada documento queda vinculado a este semestre y el administrador lo revisa.</p>
+    <p className="forja-description">Incluye fotografías en el PDF. Para videos, agrega dentro del PDF un enlace a YouTube. Cada PDF se guarda como evidencia nueva de este semestre. Si una evidencia es devuelta, carga un nuevo PDF corregido; se conserva el historial. El administrador revisa cada archivo una sola vez.</p>
     {canUpload&&<form onSubmit={upload} className="forja-form">
       <div className="forja-fields"><label className="full">Documento de evidencia (.pdf, máximo 20 MB)
         <input id={`evidence-file-${periodId}`} type="file" accept=".pdf,application/pdf"
@@ -95,7 +95,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
             {item.review_notes&&<p><strong>Observaciones:</strong> {item.review_notes}</p>}
             <a className="forja-textbutton" href={`${base}/${item.id}/download`}>Descargar PDF</a>
           </div>
-          {role===1&&<div className="forja-evidence-review">
+          {role===1&&item.review_status==="PENDIENTE"&&<div className="forja-evidence-review">
             <label>Observaciones
               <textarea rows={2} value={notes[item.id]??""} onChange={e=>setNotes(v=>({...v,[item.id]:e.target.value}))}/>
             </label>
