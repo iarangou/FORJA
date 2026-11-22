@@ -10,11 +10,12 @@
 | Acceso | Autenticación JWT existente; bloqueo del autorregistro; bootstrap seguro del primer administrador |
 | Permisos | Roles aplicados a rutas de proyectos; profesor ve proyectos propios/asignados, administrador y monitor acceden para su labor |
 | Períodos | Registro por año-semestre con estado de aprobación independiente; separación actual/histórico |
-| Digitalización histórica | Monitor registra y corrige semestres anteriores con datos incompletos, sin aprobación retroactiva; administrador asigna profesor responsable para continuidad del semestre actual |
+| Digitalización histórica | Monitor registra y corrige semestres anteriores con datos incompletos y puede adjuntar evidencias PDF sin revisión retroactiva; administrador asigna profesor responsable para continuidad del semestre actual |
 | Ética | Formulario de categorías agregadas y medidas de privacidad; almacenamiento inicial por proyecto |
 | Revisión | Profesor solicita aprobación; administrador aprueba/devuelve y guarda historial de decisiones |
 | Ejecución y cierre | Profesor guarda resultados y conclusiones de semestre aprobado; administrador cierra tras comprobar al menos un PDF aprobado y ninguno pendiente |
 | Finalización general | Administrador finaliza proyecto únicamente si los períodos actuales están aprobados y cerrados; no elimina el historial |
+| Carta final comunitaria | Administrador o monitor archiva la única carta final firmada en PDF, a nivel de proyecto, una vez cerrados los períodos actuales. No se generan cartas ni se solicitan avales automáticos |
 | Interfaz | `/proyectos` y `/proyectos/nuevo`; acceso desde login y consulta de períodos |
 | Infraestructura | Migraciones SQL incrementales de desarrollo y Action de comprobación de compilación |
 | Documentación | Especificación asumida, checklist documental, ejemplo ficticio y guía de instalación |
@@ -60,3 +61,11 @@ La meta es lograr coherencia entre requisitos, datos, backend y pantallas sin in
 5. Como profesor, crear el período 2026-2, completar sus campos y el análisis ético. Enviarlo a aprobación administrativa por el procedimiento habitual. No modificar los períodos históricos para simular el semestre actual.
 
 **No se deben ejecutar resets de la base para estas pruebas.** La función de asignación de docente no permite reasignar desde la interfaz una vez registrado un período actual. Las reglas especiales para casos históricos excepcionales requieren validación con FORJA antes de producción.
+
+## Documentación al finalizar (MVP)
+
+- En los períodos históricos, el monitor o administrador puede subir evidencias antiguas PDF (máximo 20 MB). No se exigen revisiones retroactivas: el estado de revisión de la tabla documental no representa una aprobación pendiente para esos archivos.
+- Los documentos de ejecución actual siguen el flujo de aprobación del profesor y administrador ya probado.
+- La **carta final firmada por la comunidad** se prepara y firma fuera de FORJA y se archiva una sola vez (PDF, máximo 20 MB). La carga corresponde al administrador o monitor; el profesor autorizado puede consultarla. La carta pertenece al proyecto completo y se guarda reutilizando el almacenamiento privado existente.
+- La carta solo se puede adjuntar cuando no haya períodos actuales sin cerrar. Se permite completar el archivo histórico de proyectos ya finalizados. La función de finalizar proyecto no exige la carta obligatoriamente; si se requiere, FORJA debe confirmar esa política antes de activarla.
+- Aún no hay detección de malware ni validación criptográfica de firmas digitales; el administrador debe verificar el documento. No usar datos personales reales en pruebas locales.
