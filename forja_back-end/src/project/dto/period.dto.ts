@@ -57,3 +57,42 @@ export class ReviewPeriodDto {
   @IsOptional() @IsString() @MaxLength(5000)
   notes?: string;
 }
+
+/** Solo datos del período. Año y semestre no se cambian una vez registrado. */
+export class UpdatePeriodDto {
+  @IsOptional() @IsInt() @Min(1)
+  course_id?: number;
+
+  @IsOptional() @IsInt() @Min(1)
+  faculty_id?: number;
+
+  @IsOptional() @IsInt() @Min(1)
+  academic_program_id?: number;
+
+  @IsOptional() @IsString() @MaxLength(5000)
+  objectives?: string;
+
+  @IsOptional() @IsString() @MaxLength(5000)
+  activities?: string;
+
+  @IsOptional() @IsNumber() @Min(0)
+  budget?: number;
+
+  @IsOptional() @IsInt() @Min(0)
+  student_count?: number;
+
+  @IsOptional() @IsDateString()
+  start_date?: string;
+
+  @IsOptional() @IsDateString()
+  end_date?: string;
+
+  @IsOptional() @IsString() @MaxLength(2000)
+  community_population_description?: string;
+
+  @IsOptional() @IsString() @MaxLength(2000)
+  territory_name?: string;
+
+  @IsOptional() @IsString() @MaxLength(5000)
+  missing_information?: string;
+}
