@@ -35,30 +35,8 @@ export default function LoginPage() {
 
             <LoginForm />
 
-            {/* Invitación al registro */}
             <div className="login-card__note login-card__note--register">
-              <p>¿Aún no tienes una cuenta?</p>
-
-              <Link
-                href="/register"
-                className="login-register__link"
-              >
-                <span>Regístrate aquí</span>
-
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 12h14m-6-6 6 6-6 6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </Link>
+              <p>Si necesitas acceso, solicita al administrador FORJA que cree tu cuenta.</p>
             </div>
           </div>
         </section>
