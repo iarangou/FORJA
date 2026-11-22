@@ -116,8 +116,10 @@ export default function ProjectDetailEditor(){
   const editable=Boolean(project&&period&&project.general_status==="ACTIVO"&&
     (role===1||role===3)&&period.record_type==="ACTUAL"&&
     ["BORRADOR","DEVUELTO"].includes(period.approval_status));
+  const historicalEditor=project?.registration_type==="HISTORICO" && role===2;
   const generalEditable=Boolean(project&&project.general_status==="ACTIVO"&&
-    (role===1||role===3)&&!periods.some(x=>["EN_REVISION","APROBADO"].includes(x.approval_status)));
+    (role===1||role===3||historicalEditor)&&
+    !periods.some(x=>x.record_type==="ACTUAL"&&["EN_REVISION","APROBADO"].includes(x.approval_status)));
   const ethicsEditable=generalEditable;
   const ethicsData:Ethics = ethics ?? {
     external_population:"NINGUNO",university_population:"NINGUNO",
@@ -233,7 +235,8 @@ export default function ProjectDetailEditor(){
         <label className="full">Justificación<textarea disabled={!generalEditable||busy} rows={3} value={project.justification??""} onChange={e=>updateProject("justification",e.target.value)}/></label>
       </div>
       <div className="forja-actions"><button type="button" disabled={!generalEditable||busy} onClick={saveGeneral}>Guardar información general</button></div>
-      {!generalEditable&&<p className="forja-note">Los datos generales están bloqueados mientras haya períodos en revisión o aprobados.</p>}
+      {historicalEditor&&<p className="forja-description">Completa únicamente lo que aparezca en los documentos antiguos. Puedes dejar vacíos los datos desconocidos y describirlos en «Digitalización histórica».</p>}
+      {!generalEditable&&<p className="forja-note">Los datos generales están bloqueados mientras haya períodos actuales en revisión o aprobados.</p>}
     </ProjectAccordion>
     <ProjectAccordion id="periods" title="02. Períodos académicos" open={openSection==="periods"} onToggle={()=>toggleSection("periods")} summary={period?`${period.academic_year}-${period.academic_semester} · ${period.approval_status}`:"Sin períodos registrados"}>
       {periods.length===0?<p>No hay períodos para este proyecto.</p>:<>
@@ -277,6 +280,7 @@ export default function ProjectDetailEditor(){
           <label className="full">Mitigación de riesgos<textarea rows={3} disabled={!ethicsEditable||busy} value={ethicsData.risk_mitigation??""} onChange={e=>updateEthics("risk_mitigation",e.target.value)}/></label>
           <label className="forja-check full"><input disabled={!ethicsEditable||busy} type="checkbox" checked={ethicsData.truthful_declaration} onChange={e=>updateEthics("truthful_declaration",e.target.checked)}/> Declaro que la información es verídica</label>
         </div>
+        {historicalEditor&&<p className="forja-description">Para archivos históricos se registra solo la información disponible. No se exige la declaración de veracidad ni una aprobación retroactiva.</p>}
         <div className="forja-actions"><button type="button" disabled={!ethicsEditable||busy} onClick={saveEthics}>Guardar análisis ético</button></div>
       </>}
     </ProjectAccordion>
