@@ -52,3 +52,25 @@
 .forja-user-item{display:flex;align-items:center;gap:20px;justify-content:space-between;border-bottom:1px solid #e7e3ef;padding:14px 0;font-size:13px;flex-wrap:wrap}
 .forja-user-item p{color:#667085;font-size:12px;margin:6px 0}
 @media(max-width:700px){.forja-nav-actions{gap:10px}.forja-user-item{align-items:flex-start}}
+
+/* Editor de proyectos: acordeones para reducir desplazamiento vertical. */
+.forja-accordion{padding:0;overflow:hidden;margin-bottom:14px}
+.forja-accordion-heading{margin:0!important;font-size:inherit!important}
+.forja-accordion-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;
+  gap:20px;padding:22px 28px;border:0;background:transparent;color:var(--forja-ink);
+  cursor:pointer;font-family:inherit;font-size:18px;font-weight:700}
+.forja-accordion-trigger:hover{background:#faf8fd}
+.forja-accordion-trigger:focus-visible{outline:3px solid var(--forja-purple);outline-offset:-4px}
+.forja-accordion-title{display:flex;flex-direction:column;gap:5px}
+.forja-accordion-title small{font-size:12px;font-weight:500;color:#727587}
+.forja-accordion-chevron{font-size:28px;line-height:1;color:var(--forja-purple);
+  transform:rotate(0deg);transition:transform .18s ease}
+.forja-accordion-chevron.is-open{transform:rotate(180deg)}
+.forja-accordion-body{padding:0 28px 26px;border-top:1px solid #eeebf3}
+.forja-accordion-body[hidden]{display:none!important}
+.forja-accordion-body>.forja-description:first-child{margin-top:18px}
+.forja-accordion-inner{padding-top:17px}
+@media(max-width:700px){
+  .forja-accordion-trigger{padding:18px 20px;font-size:16px}
+  .forja-accordion-body{padding:0 20px 22px}
+}
