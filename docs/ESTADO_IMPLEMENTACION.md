@@ -88,15 +88,21 @@ La meta es lograr coherencia entre requisitos, datos, backend y pantallas sin in
 
 ## Evaluación comunitaria (MVP en pruebas)
 
-- Una única respuesta por **proyecto** (no por semestre), como se acordó para la comunidad. La carta firmada y las evidencias continúan siendo documentos PDF **por semestre**.
+- Una única respuesta por **semestre** para cada proyecto. La carta firmada y las evidencias también corresponden a cada semestre, pero se archivan como PDF independientes.
 - El administrador genera o regenera un enlace privado de un solo uso, con token aleatorio de 256 bits, hash SHA-256 guardado en base de datos y validez de 14 días. Regenerar invalida el enlace anterior. El token completo solamente se muestra al generarlo.
 - La comunidad abre el enlace sin crear cuenta. Puntúa objetivos, utilidad y participación del 1 al 5; puede indicar nombre de organización, relación con el proyecto y comentarios. Se solicita consentimiento explícito. El cuestionario es **propuesto**, no un instrumento oficial suministrado por FORJA.
-- La respuesta se guarda de manera transaccional; la base impide respuestas duplicadas mediante restricción UNIQUE por proyecto. Usuarios autorizados ven resultados en la sección desplegable «Evaluación de la comunidad».
+- La respuesta se guarda de manera transaccional; la base impide respuestas duplicadas mediante restricción UNIQUE por semestre. Usuarios autorizados ven resultados en la sección desplegable «Evaluación de la comunidad».
 - **Migración para bases existentes:** respaldar y ejecutar `Docker/database/migrations/20261122_community_feedback.sql` mediante psql antes de iniciar el módulo. Los archivos de inicialización de PostgreSQL solo se ejecutan al crear una base nueva.
 - Antes de producción: acordar el cuestionario con FORJA, añadir límites de peticiones para proteger el enlace, revisar privacidad y política de conservación de respuestas. Nunca usar información sensible real en las pruebas locales.
 
 ### Prueba sugerida
-1. Como administrador, abrir un proyecto ficticio y desplegar «Evaluación de la comunidad».
+1. Como administrador, abrir un proyecto ficticio, seleccionar un semestre histórico (o un semestre actual ya cerrado) y desplegar «Evaluación de la comunidad del semestre».
 2. Generar enlace y copiarlo; abrirlo en ventana privada sin iniciar sesión.
 3. Diligenciar puntuaciones 1–5 y consentimiento; enviar.
-4. Intentar reutilizar el enlace: debe bloquearse. Volver al administrador: debe mostrarse la respuesta y deshabilitarse la generación de nuevos enlaces.
+4. Intentar reutilizar el enlace: debe bloquearse. Volver al administrador: debe mostrarse la respuesta correspondiente únicamente al semestre seleccionado. Otro semestre del mismo proyecto todavía debe poder recibir su propia evaluación.
+
+### Corrección importante del alcance comunitario
+
+El requisito definitivo indicado por el usuario es: **la comunidad evalúa una vez al finalizar CADA SEMESTRE**, no una sola vez por proyecto. Cada `project_periods.id` tiene su propio token, respuesta, fecha y valoración. Los períodos históricos pueden recuperar sus evaluaciones cuando existan; no requieren aprobación retroactiva. Los semestres actuales solo habilitan la generación del enlace una vez aprobados y cerrados. La carta final firmada también se almacena una vez por semestre en PDF.
+
+El script `20261122_community_feedback.sql` ahora crea tablas `community_period_feedback` y `community_period_feedback_links`. No ejecuta cambios destructivos. Si la versión anterior del script por proyecto llegó a ejecutarse, sus tablas quedan conservadas y sin uso; no se elimina ni traslada automáticamente ninguna respuesta antigua, que requiere una revisión antes de migrarla.
