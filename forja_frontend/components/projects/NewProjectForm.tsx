@@ -86,7 +86,11 @@ export default function NewProjectForm() {
         const data = (await response.json()) as {rol_id?:number};
         return typeof data.rol_id==="number"?data.rol_id:null;
       })
-      .then(setRole)
+      .then(nextRole=>{
+        setRole(nextRole);
+        if(nextRole===2)setForm(current=>({...current,registration_type:"HISTORICO"}));
+        if(nextRole===3)setForm(current=>({...current,registration_type:"NUEVO"}));
+      })
       .catch(()=>setRole(null));
   },[]);
 
@@ -165,8 +169,8 @@ export default function NewProjectForm() {
         </nav>
         <div className="forja-heading">
           <span className="forja-eyebrow">GESTIÓN DE PROYECTOS</span>
-          <h1>Registrar proyecto</h1>
-          <p>Completa la información disponible. El sistema permite guardar primero un borrador; la aprobación ocurre por semestre.</p>
+          <h1>{role===2?"Digitalizar proyecto histórico":"Registrar proyecto"}</h1>
+          <p>{role===2?"Registra únicamente la información histórica disponible. No es necesario inventar datos ni aprobar períodos anteriores.":"Completa la información disponible. El sistema permite guardar primero un borrador; la aprobación ocurre por semestre."}</p>
         </div>
         <form onSubmit={save} className="forja-form">
           <section className="forja-panel">
@@ -174,8 +178,8 @@ export default function NewProjectForm() {
             <div className="forja-fields">
               <label>Tipo de registro
                 <select value={form.registration_type} disabled={!!project} onChange={e=>change("registration_type",e.target.value)}>
-                  <option value="NUEVO">Proyecto nuevo (profesor)</option>
-                  <option value="HISTORICO">Digitalización histórica (monitor)</option>
+                  {role!==2&&<option value="NUEVO">Proyecto nuevo (profesor)</option>}
+                  {role!==3&&<option value="HISTORICO">Digitalización histórica (monitor)</option>}
                 </select>
               </label>
               <label>Título del proyecto *
@@ -273,6 +277,7 @@ export default function NewProjectForm() {
             </div>
             <p className="forja-description">Esta información permite al administrador evaluar el proyecto. No se exige un aval automáticamente por seleccionar una población.</p>
           </section>}
+          {form.registration_type==="HISTORICO"&&<p className="forja-note">Después de guardar, abre el proyecto para agregar más semestres históricos o completar la información faltante.</p>}
           {error&&<p role="alert" className="forja-alert">{error}</p>}
           {message&&<p role="status" className="forja-ok">{message}</p>}
           <div className="forja-actions">
