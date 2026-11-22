@@ -10,6 +10,13 @@ export class CourseService {
         private readonly db: DatabaseService,
     ) { }
 
+    async getAll() {
+        const { rows } = await this.db.query(
+            'SELECT id, name FROM course ORDER BY name ASC'
+        );
+        return rows;
+    }
+
     async create(dto: CourseCreateDto) {
         try {
             await this.db.query(
