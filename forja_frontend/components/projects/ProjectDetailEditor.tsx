@@ -7,6 +7,7 @@ import EvidenceSection from "./EvidenceSection";
 import PeriodResultsSection from "./PeriodResultsSection";
 import ProjectAccordion from "./ProjectAccordion";
 import HistoricalProjectSection from "./HistoricalProjectSection";
+import FinalLetterSection from "./FinalLetterSection";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -299,5 +300,8 @@ export default function ProjectDetailEditor(){
       </div>}
       {project.general_status==="FINALIZADO"&&<p>El proyecto quedó finalizado. Sus registros siguen disponibles para consulta.</p>}
     </ProjectAccordion>}
+    <ProjectAccordion id="letter" title={project.registration_type==="HISTORICO"?"08. Carta final firmada por la comunidad":"07. Carta final firmada por la comunidad"} open={openSection==="letter"} onToggle={()=>toggleSection("letter")}>
+      <FinalLetterSection projectId={projectId} role={role} projectStatus={project.general_status} periods={periods}/>
+    </ProjectAccordion>
   </div></main>;
 }
