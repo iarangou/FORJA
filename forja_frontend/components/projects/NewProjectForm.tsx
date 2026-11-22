@@ -271,7 +271,7 @@ export default function NewProjectForm() {
               </label>
               <label className="forja-check full"><input type="checkbox" checked={form.truthful_declaration} onChange={e=>change("truthful_declaration",e.target.checked)}/> Declaro que la información suministrada es verídica</label>
             </div>
-            {form.involves_vulnerable_population&&<p className="forja-note">Para presentar el período habrá que adjuntar un aval o permiso institucional. La carga de archivos se implementará en la siguiente etapa.</p>}
+            <p className="forja-description">Esta información permite al administrador evaluar el proyecto. No se exige un aval automáticamente por seleccionar una población.</p>
           </section>}
           {error&&<p role="alert" className="forja-alert">{error}</p>}
           {message&&<p role="status" className="forja-ok">{message}</p>}
