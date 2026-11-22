@@ -51,6 +51,12 @@ export class CreatePeriodDto {
 
   @IsOptional() @IsString() @MaxLength(5000)
   missing_information?: string;
+
+  @IsOptional() @IsString() @MaxLength(10000)
+  results?: string;
+
+  @IsOptional() @IsString() @MaxLength(10000)
+  conclusions?: string;
 }
 
 export class ReviewPeriodDto {
@@ -101,6 +107,12 @@ export class UpdatePeriodDto {
 
   @IsOptional() @IsString() @MaxLength(5000)
   missing_information?: string;
+
+  @IsOptional() @IsString() @MaxLength(10000)
+  results?: string;
+
+  @IsOptional() @IsString() @MaxLength(10000)
+  conclusions?: string;
 }
 
 /** Informe de ejecución, editable únicamente por el profesor responsable. */
