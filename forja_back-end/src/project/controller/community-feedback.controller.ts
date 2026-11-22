@@ -48,23 +48,25 @@ export class CommunityFeedbackController {
     return this.feedback.submit(token,dto);
   }
 
-  @Get('project/:projectId')
+  @Get('project/:projectId/periods/:periodId')
   @UseGuards(AuthGuard,RolesGuard)
   @Roles(1,2,3)
   summary(
     @Param('projectId',ParseIntPipe) projectId:number,
+    @Param('periodId',ParseIntPipe) periodId:number,
     @Req() req:AuthenticatedRequest,
   ){
-    return this.feedback.getSummary(projectId,req.user);
+    return this.feedback.getSummary(projectId,periodId,req.user);
   }
 
-  @Post('project/:projectId/link')
+  @Post('project/:projectId/periods/:periodId/link')
   @UseGuards(AuthGuard,RolesGuard)
   @Roles(1)
   createLink(
     @Param('projectId',ParseIntPipe) projectId:number,
+    @Param('periodId',ParseIntPipe) periodId:number,
     @Req() req:AuthenticatedRequest,
   ){
-    return this.feedback.createLink(projectId,req.user);
+    return this.feedback.createLink(projectId,periodId,req.user);
   }
 }
