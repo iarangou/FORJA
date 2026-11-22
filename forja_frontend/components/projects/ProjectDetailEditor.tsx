@@ -6,6 +6,7 @@ import Link from "next/link";
 import EvidenceSection from "./EvidenceSection";
 import PeriodResultsSection from "./PeriodResultsSection";
 import ProjectAccordion from "./ProjectAccordion";
+import HistoricalProjectSection from "./HistoricalProjectSection";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -272,6 +273,11 @@ export default function ProjectDetailEditor(){
         <div className="forja-actions"><button type="button" disabled={!ethicsEditable||busy} onClick={saveEthics}>Guardar análisis ético</button></div>
       </>}
     </ProjectAccordion>
+    {project.registration_type==="HISTORICO"&&
+      <ProjectAccordion id="history" title="03. Digitalización histórica" open={openSection==="history"} onToggle={()=>toggleSection("history")} summary={`${periods.filter(p=>p.record_type==="HISTORICO").length} semestres anteriores`}>
+        <HistoricalProjectSection projectId={projectId} role={role} registrationType={project.registration_type} projectStatus={project.general_status}
+          periods={periods} courses={courses} onSaved={reload}/>
+      </ProjectAccordion>}
     {period&&<ProjectAccordion id="evidence" title="04. Evidencias del semestre (solo PDF)" open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
       <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
     </ProjectAccordion>}
