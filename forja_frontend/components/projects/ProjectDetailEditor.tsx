@@ -23,6 +23,9 @@ type Period = {
   budget:number|null;student_count:number|null;
   start_date:string|null;end_date:string|null;
   missing_information:string|null;
+  historical_teacher_name:string|null;
+  faculty_id:number|null;academic_program_id:number|null;
+  community_population_description:string|null;territory_name:string|null;
   results:string|null;conclusions:string|null;execution_status:string;
 };
 type Review = {id:number;decision:string;notes:string|null;reviewed_at:string;reviewer:string};
