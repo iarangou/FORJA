@@ -131,15 +131,15 @@ export class ProjectWorkflowService {
       }
       const {rows:updated}=await client.query(
         `UPDATE project_periods SET
-         course_id=COALESCE($2,course_id),
-         objectives=COALESCE($3,objectives),
-         activities=COALESCE($4,activities),
-         student_count=COALESCE($5,student_count),
-         budget=COALESCE($6,budget),
-         start_date=COALESCE($7,start_date),
-         end_date=COALESCE($8,end_date),
-         community_population_description=COALESCE($9,community_population_description),
-         territory_name=COALESCE($10,territory_name),
+         course_id=$2,
+         objectives=$3,
+         activities=$4,
+         student_count=$5,
+         budget=$6,
+         start_date=$7,
+         end_date=$8,
+         community_population_description=$9,
+         territory_name=$10,
          missing_information=$11,
          faculty_id=$12,
          academic_program_id=$13,
@@ -149,7 +149,7 @@ export class ProjectWorkflowService {
          updated_at=NOW()
          WHERE id=$1 RETURNING *`,
         [periodId,dto.course_id??null,dto.objectives??null,dto.activities??null,
-         dto.student_count??null,dto.budget??null,dto.start_date??null,dto.end_date??null,
+         dto.student_count??null,dto.budget??null,dto.start_date||null,dto.end_date||null,
          dto.community_population_description??null,dto.territory_name??null,
          dto.missing_information??null,
          dto.faculty_id??null,dto.academic_program_id??null,
@@ -158,8 +158,10 @@ export class ProjectWorkflowService {
       );
       if(dto.course_id!==undefined){
         await client.query('DELETE FROM project_period_courses WHERE project_period_id=$1',[periodId]);
-        await client.query('INSERT INTO project_period_courses(project_period_id,course_id) VALUES($1,$2)',
-          [periodId,dto.course_id]);
+        if(dto.course_id!==null){
+          await client.query('INSERT INTO project_period_courses(project_period_id,course_id) VALUES($1,$2)',
+            [periodId,dto.course_id]);
+        }
       }
       return updated[0];
     });
