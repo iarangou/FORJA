@@ -5,7 +5,7 @@ import {
 import { DatabaseError } from 'pg';
 import { DatabaseService } from '../../database/service/database.service.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
-import { CreatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
+import { CreatePeriodDto, UpdatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
 import { SaveEthicsDto } from '../dto/ethics.dto.js';
 
 @Injectable()
@@ -84,6 +84,90 @@ export class ProjectWorkflowService {
       }
       throw error;
     }
+  }
+
+  async updatePeriod(projectId: number, periodId: number, dto: UpdatePeriodDto, user: PayloadJwt) {
+    const project = await this.accessibleProject(projectId, user);
+    if (project.general_status === 'FINALIZADO') {
+      throw new ConflictException('El proyecto ya está finalizado');
+    }
+    if (user.rol_id === 2) {
+      throw new ForbiddenException('La digitalización de históricos se modifica mediante un flujo separado');
+    }
+    return this.db.transaction(async (client) => {
+      const { rows } = await client.query<{
+        id: number; record_type: string; approval_status: string;
+        teacher_id: number | null; start_date: string | null; end_date: string | null;
+      }>(
+        `SELECT pp.id,pp.record_type,pp.approval_status,pp.teacher_id,
+                pp.start_date,pp.end_date FROM project_periods pp
+         WHERE pp.id=$1 AND pp.project_id=$2 FOR UPDATE`,
+        [periodId, projectId],
+      );
+      const period = rows[0];
+      if (!period) throw new NotFoundException('Período no encontrado');
+      if (period.record_type !== 'ACTUAL' ||
+          !['BORRADOR','DEVUELTO'].includes(period.approval_status)) {
+        throw new ConflictException('Solo se modifican períodos actuales en borrador o devueltos');
+      }
+      if (user.rol_id === 3) {
+        const teacher = await client.query<{ id: number }>(
+          'SELECT id FROM teacher WHERE user_id=$1', [user.sub],
+        );
+        if (!teacher.rows[0] || teacher.rows[0].id !== period.teacher_id) {
+          throw new ForbiddenException('El período pertenece a otro profesor responsable');
+        }
+      }
+      const start = dto.start_date ?? period.start_date;
+      const end = dto.end_date ?? period.end_date;
+      if (start && end && String(end).slice(0,10) < String(start).slice(0,10)) {
+        throw new BadRequestException('La fecha final es anterior a la inicial');
+      }
+      const { rows: updated } = await client.query(
+        `UPDATE project_periods SET
+          course_id=COALESCE($2,course_id),
+          faculty_id=COALESCE($3,faculty_id),
+          academic_program_id=COALESCE($4,academic_program_id),
+          objectives=COALESCE($5,objectives),
+          activities=COALESCE($6,activities),
+          budget=COALESCE($7,budget),
+          student_count=COALESCE($8,student_count),
+          start_date=COALESCE($9,start_date),
+          end_date=COALESCE($10,end_date),
+          community_population_description=COALESCE($11,community_population_description),
+          territory_name=COALESCE($12,territory_name),
+          missing_information=COALESCE($13,missing_information),
+          updated_at=NOW()
+         WHERE id=$1 RETURNING *`,
+        [periodId,dto.course_id??null,dto.faculty_id??null,
+          dto.academic_program_id??null,dto.objectives??null,dto.activities??null,
+          dto.budget??null,dto.student_count??null,dto.start_date??null,
+          dto.end_date??null,dto.community_population_description??null,
+          dto.territory_name??null,dto.missing_information??null],
+      );
+      if (dto.course_id !== undefined) {
+        await client.query('DELETE FROM project_period_courses WHERE project_period_id=$1',[periodId]);
+        await client.query(
+          'INSERT INTO project_period_courses(project_period_id,course_id) VALUES($1,$2)',
+          [periodId,dto.course_id],
+        );
+      }
+      return updated[0];
+    });
+  }
+
+  async getReviews(projectId: number, periodId: number, user: PayloadJwt) {
+    await this.accessibleProject(projectId,user);
+    const period = await this.db.query(
+      'SELECT id FROM project_periods WHERE id=$1 AND project_id=$2',[periodId,projectId],
+    );
+    if (!period.rows[0]) throw new NotFoundException('Período no encontrado');
+    const {rows} = await this.db.query(
+      `SELECT r.id,r.decision,r.notes,r.reviewed_at,u.full_name AS reviewer
+       FROM project_period_reviews r JOIN users u ON u.id=r.reviewer_id
+       WHERE r.project_period_id=$1 ORDER BY r.reviewed_at DESC,r.id DESC`,[periodId],
+    );
+    return rows;
   }
 
   async getPeriods(projectId: number, user: PayloadJwt) {
