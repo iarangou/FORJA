@@ -48,7 +48,7 @@
 
 ### A4. Reglas de guardado
 - **BORRADOR**: permite datos incompletos, excepto título e identidad del autor.
-- **EN_REVISION**: backend exige campos obligatorios, documentos aplicables y análisis ético.
+- **EN_REVISION**: backend exige campos obligatorios del proyecto, del período y análisis ético; **no exige avales automáticos por población seleccionada**.
 - **DEVUELTO**: el profesor puede corregir el período y reenviar; mantener observaciones/historial.
 - **APROBADO**: bloquear cambios de planeación; evidencias y resultados pueden avanzar bajo reglas de revisión.
 - El administrador puede aprobar/devolver cada **período**; se registra quién, cuándo y observaciones.
@@ -62,8 +62,8 @@ El Word disponible trae datos generales y preguntas numeradas **18 y 19**, sin p
 - **Tipo de población externa predominante**: selector de *una* categoría (literal «más predominante» del Word). Lista del documento íntegra: menores; mayores de 65; institucionalizados; discapacidad; LGBTIQ+; víctimas del conflicto; excombatientes; personas enfermas; minorías étnicas; habitantes de calle; migrantes; embarazo; vulnerabilidad socioeconómica; otro; ninguno.
 - **Grupo universitario predominante**: una categoría: estudiantes de la institución, de otras instituciones, trabajadores/colaboradores, personas privadas de libertad, fuerzas armadas/policía, otro, ninguno.
 - **¿Habrá contacto directo con personas o tratamiento de información personal?** sí/no, y medidas de privacidad.
-- **¿Participarán menores o población vulnerable?** sí/no. En caso afirmativo, marcar necesidad de permisos o aval institucional/socio comunitario, y no enviar a aprobación sin adjuntar documento acreditativo.
-- **¿Habrá fotografías, videos o testimonios identificables?** sí/no. En caso afirmativo, gestionar consentimiento/autorización según corresponda.
+- **¿Participarán menores o población vulnerable?** sí/no. La respuesta se guarda como información para que el administrador evalúe el proyecto, **sin exigir aval automáticamente**.
+- **¿Habrá fotografías, videos o testimonios identificables?** sí/no. Se registra esta condición para evaluación del administrador; no se bloquea automáticamente el envío por documentos.
 - **Medidas de confidencialidad, no discriminación y mitigación de riesgos**: campo descriptivo.
 - **Observaciones del profesor** y **declaración de veracidad**: casilla antes de enviar.
 - **Estado**: BORRADOR / EN_REVISION / APROBADO / DEVUELTO (distinto del estado del período). En el MVP se puede dejar la evaluación como datos de borrador mientras se implementa el proceso formal.
@@ -75,7 +75,7 @@ Una respuesta por proyecto mediante un enlace privado con token de alta entropí
 
 ## Flujo administrativo y documentos
 
-Ver `docs/CHECKLIST_DOCUMENTAL_ASUMIDO.md` para requisitos propuestos, condicionales y criterios de devolución. No se considera que un archivo por sí solo pruebe cumplimiento; el administrador debe comprobarlo. La carta firmada no se exige para registrar ni enviar un proyecto.
+Ver `docs/CHECKLIST_DOCUMENTAL_ASUMIDO.md`: el formulario y su análisis ético se presentan al administrador, que aprueba o devuelve el período con observaciones. **No hay requisito automático de aval documental.** La carta firmada no se exige para registrar ni enviar un proyecto.
 
 ## Qué no se debe asumir sin validación
 
