@@ -100,6 +100,41 @@ export class ProjectService {
       return project;
     });
   }
+  async assignResponsibleTeacher(id:number,userId:number,user:PayloadJwt){
+    if(user.rol_id!==1)throw new ForbiddenException('Solo el administrador asigna docentes');
+    return this.db.transaction(async client=>{
+      const {rows:projects}=await client.query<{id:number;registration_type:string;general_status:string}>(
+        'SELECT id,registration_type,general_status FROM project WHERE id=$1 FOR UPDATE',[id],
+      );
+      const project=projects[0];
+      if(!project)throw new NotFoundException('Proyecto no encontrado');
+      if(project.registration_type!=='HISTORICO'||project.general_status!=='ACTIVO'){
+        throw new ConflictException('Solo se asigna el responsable de proyectos históricos activos');
+      }
+      const {rows:teachers}=await client.query<{id:number}>(
+        `SELECT t.id FROM teacher t JOIN users u ON u.id=t.user_id
+         WHERE u.id=$1 AND u.rol_id=3 AND u.is_active=TRUE`,[userId],
+      );
+      if(!teachers[0])throw new BadRequestException('El usuario no es un profesor activo');
+      const {rows:current}=await client.query(
+        `SELECT 1 FROM project_periods WHERE project_id=$1 AND record_type='ACTUAL' LIMIT 1`,[id],
+      );
+      if(current.length){
+        throw new ConflictException('Ya existe un semestre actual; la reasignación de responsable requiere revisión administrativa');
+      }
+      await client.query(
+        'UPDATE project_teacher SET is_responsible=FALSE WHERE project_id=$1 AND is_responsible=TRUE',[id],
+      );
+      await client.query(
+        `INSERT INTO project_teacher(project_id,teacher_id,is_responsible)
+         VALUES($1,$2,TRUE)
+         ON CONFLICT(project_id,teacher_id)
+         DO UPDATE SET is_responsible=TRUE`,[id,teachers[0].id],
+      );
+      return {project_id:id,teacher_user_id:userId,message:'Profesor responsable asignado'};
+    });
+  }
+
   async updateProject(id: number, dto: UpdateProjectDTO, user: PayloadJwt) {
     if (user.rol_id !== 1 && user.rol_id !== 3) {
       throw new ForbiddenException('Solo un profesor responsable o el administrador puede modificar datos generales');
