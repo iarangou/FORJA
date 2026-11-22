@@ -62,6 +62,7 @@ export default function LoginForm() {
       setMessage(
         `Inicio de sesión correcto. Bienvenido, ${response.user.username}.`
       );
+      window.location.assign("/proyectos");
     } catch (error: unknown) {
       setMessageType("error");
 
