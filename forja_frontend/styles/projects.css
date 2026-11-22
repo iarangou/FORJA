@@ -44,3 +44,11 @@
 .forja-perioditem{border-top:1px solid #e7e3ef;padding:12px 0}
 .forja-perioditem label{display:grid;gap:6px;font-size:12px}
 .forja-perioditem textarea{border:1px solid #d0d3dd;border-radius:7px;padding:9px;resize:vertical}
+
+.forja-nav-actions{display:flex;align-items:center;gap:24px}
+.forja-logout{border:1px solid #ded7e8;background:white;color:#673787;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.forja-logout:disabled{opacity:.5;cursor:not-allowed}
+.forja-user-list{display:grid;gap:10px}
+.forja-user-item{display:flex;align-items:center;gap:20px;justify-content:space-between;border-bottom:1px solid #e7e3ef;padding:14px 0;font-size:13px;flex-wrap:wrap}
+.forja-user-item p{color:#667085;font-size:12px;margin:6px 0}
+@media(max-width:700px){.forja-nav-actions{gap:10px}.forja-user-item{align-items:flex-start}}
