@@ -1,0 +1,77 @@
+import {
+  Body, Controller, Get, Param, ParseIntPipe, Post, Put, Req, UseGuards,
+} from '@nestjs/common';
+import { ProjectWorkflowService } from '../service/project-workflow.service.js';
+import { AuthGuard } from '../../auth/guard/auth.guard.js';
+import { RolesGuard } from '../../auth/guard/roles.guard.js';
+import { Roles } from '../../shared/decorator/roles.decorator.js';
+import { CreatePeriodDto, ReviewPeriodDto } from '../dto/period.dto.js';
+import { SaveEthicsDto } from '../dto/ethics.dto.js';
+import type { PayloadJwt } from '../../shared/types/auth.types.js';
+
+interface AuthenticatedRequest { user: PayloadJwt }
+
+@Controller('project')
+@UseGuards(AuthGuard, RolesGuard)
+export class ProjectWorkflowController {
+  constructor(private readonly workflow: ProjectWorkflowService) {}
+
+  @Get(':projectId/periods')
+  @Roles(1, 2, 3)
+  getPeriods(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.getPeriods(projectId,request.user);
+  }
+
+  @Post(':projectId/periods')
+  @Roles(1, 2, 3)
+  createPeriod(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Body() dto: CreatePeriodDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.createPeriod(projectId,dto,request.user);
+  }
+
+  @Get(':projectId/ethics')
+  @Roles(1, 2, 3)
+  getEthics(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.getEthics(projectId,request.user);
+  }
+
+  @Put(':projectId/ethics')
+  @Roles(1, 3)
+  saveEthics(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Body() dto: SaveEthicsDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.saveEthics(projectId,dto,request.user);
+  }
+
+  @Post(':projectId/periods/:periodId/submit')
+  @Roles(3)
+  submitPeriod(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('periodId', ParseIntPipe) periodId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.submitPeriod(projectId,periodId,request.user);
+  }
+
+  @Post(':projectId/periods/:periodId/review')
+  @Roles(1)
+  reviewPeriod(
+    @Param('projectId', ParseIntPipe) projectId: number,
+    @Param('periodId', ParseIntPipe) periodId: number,
+    @Body() dto: ReviewPeriodDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.workflow.reviewPeriod(projectId,periodId,dto,request.user);
+  }
+}
