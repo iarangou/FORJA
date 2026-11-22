@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { CourseService } from "../service/course.service.js";
 import { CourseCreateDto } from "../dto/course.dto.js";
 import { AuthGuard } from "../../auth/guard/auth.guard.js";
@@ -11,6 +11,13 @@ export class CourseController {
     constructor (
         private courseService: CourseService
     ) {}
+
+    @Get()
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(1, 2, 3)
+    getAll() {
+        return this.courseService.getAll();
+    }
 
     @Post("create")
     @UseGuards(AuthGuard, RolesGuard)
