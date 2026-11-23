@@ -4,6 +4,7 @@ import {createWorkbook} from "@/lib/xlsx-export";
 
 type Project={
  id:number;code:string;title:string;registration_type:string;general_status:string;
+ creation_year:number|null;
  external_population:string|null;ods_ids:number[];zone_ids:number[];
  department_ids:number[];academic_program_ids:number[];
  academic_pairs:{department_id:number|null;academic_program_id:number|null}[];
@@ -48,12 +49,14 @@ export async function GET(req:NextRequest){
   const params=req.nextUrl.searchParams;
   const pick=(field:string)=>params.get(field)||"";
   const zone=pick("zone"),ods=pick("ods"),department=pick("department"),
-    program=pick("program"),population=pick("population");
+    program=pick("program"),population=pick("population"),year=pick("year");
   const isId=(value:string)=>!value||/^[1-9][0-9]*$/.test(value);
-  if(![zone,ods,department,program].every(isId)||
+  if(![zone,ods,department,program,year].every(isId)||
+     (year&&(Number(year)<1900||Number(year)>2200))||
      (population&&!Object.hasOwn(externalLabels,population)))
     return NextResponse.json({message:"Filtros inválidos."},{status:400});
   const filtered=projects.filter(p=>
+   (!year||p.creation_year===Number(year))&&
    (!zone||(p.zone_ids??[]).includes(Number(zone)))&&
    (!ods||(p.ods_ids??[]).includes(Number(ods)))&&
    ((!department&&!program)||
@@ -70,7 +73,7 @@ export async function GET(req:NextRequest){
   const byId=(arr:Named[],id:number)=>arr.find(x=>x.id===id)?.name||`Código ${id}`;
   const joined=(ids:number[]|null|undefined,fn:(id:number)=>string)=>(ids??[]).map(fn).join(" | ");
   const projectRows=filtered.map(p=>[
-   p.code,p.title,p.registration_type,p.general_status,
+   p.code,p.title,p.creation_year,p.registration_type,p.general_status,
    joined(p.zone_ids,id=>byId(zones,id)),
    joined(p.ods_ids,id=>`ODS ${id}: ${ODS.find(o=>o.id===id)?.name||"Sin catálogo"}`),
    joined(p.department_ids,id=>byId(departments,id)),
@@ -88,7 +91,7 @@ export async function GET(req:NextRequest){
    p.student_count,p.budget==null?null:Number(p.budget),
   ]);
   const workbook=createWorkbook([
-   {name:"Proyectos",headers:["Código FORJA","Proyecto","Tipo de registro","Estado",
+   {name:"Proyectos",headers:["Código FORJA","Proyecto","Año de inicio","Tipo de registro","Estado",
      "Zonas territoriales","ODS asociados","Departamentos académicos","Carreras",
      "Población externa predominante","Semestres registrados","Estudiantes (suma semestral)"],
     rows:projectRows},
