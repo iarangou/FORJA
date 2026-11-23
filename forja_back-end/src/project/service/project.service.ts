@@ -16,7 +16,11 @@ export class ProjectService {
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
-                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids
+                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
+              ARRAY(SELECT DISTINCT pp.department_id FROM project_periods pp
+                    WHERE pp.project_id=p.id AND pp.department_id IS NOT NULL) AS department_ids,
+              ARRAY(SELECT DISTINCT pp.academic_program_id FROM project_periods pp
+                    WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids
          FROM project p
         WHERE $1::boolean
            OR p.created_by = $2
@@ -37,7 +41,11 @@ export class ProjectService {
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
-                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids
+                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
+              ARRAY(SELECT DISTINCT pp.department_id FROM project_periods pp
+                    WHERE pp.project_id=p.id AND pp.department_id IS NOT NULL) AS department_ids,
+              ARRAY(SELECT DISTINCT pp.academic_program_id FROM project_periods pp
+                    WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids
          FROM project p
         WHERE p.id = $1
           AND ($2::boolean OR p.created_by = $3
