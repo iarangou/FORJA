@@ -12,19 +12,11 @@ type User = {
   registration_status?:"PENDING"|"APPROVED"|"REJECTED";
 };
 type ApiError = { message?: string | string[] };
-function makeTemporaryPassword() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-  const random = new Uint32Array(24);
-  crypto.getRandomValues(random);
-  return Array.from(random, value => alphabet[value % alphabet.length]).join("");
-}
-
 export default function AdminUsersPage() {
   const [role,setRole] = useState<number|null>(null);
   const [users,setUsers] = useState<User[]>([]);
   const [faculties,setFaculties] = useState<Faculty[]>([]);
   const [loading,setLoading] = useState(true);
-  const [saving,setSaving] = useState(false);
   const [error,setError] = useState("");
   const [success,setSuccess] = useState("");
   const [courseName,setCourseName] = useState("");
@@ -33,13 +25,7 @@ export default function AdminUsersPage() {
   const [reviewBusy,setReviewBusy] = useState<number|null>(null);
   const [reviewRoles,setReviewRoles] = useState<Record<number,number>>({});
   const [reviewFaculties,setReviewFaculties] = useState<Record<number,string>>({});
-  const [form,setForm] = useState({
-    full_name:"Docente de prueba",
-    email:"docente.prueba@javerianacali.edu.co",
-    rol_id:3,
-    faculty_id:"",
-    password:"",
-  });
+
 
   async function refreshUsers() {
     const result = await fetch("/api/users",{cache:"no-store"});
@@ -84,34 +70,6 @@ export default function AdminUsersPage() {
     void load();
     return ()=>{active=false;};
   },[]);
-
-  async function submit(event:React.FormEvent<HTMLFormElement>){
-    event.preventDefault();
-    if(saving)return;
-    setError("");setSuccess("");setSaving(true);
-    try{
-      if(form.rol_id===3&&!form.faculty_id)throw new Error("Selecciona una facultad para el profesor.");
-      if(!form.password || form.password.length<12)throw new Error("La contraseña debe tener mínimo 12 caracteres.");
-      const res=await fetch("/api/users",{
-        method:"POST",
-        credentials:"same-origin",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          full_name:form.full_name.trim(),
-          email:form.email.trim().toLowerCase(),
-          rol_id:form.rol_id,
-          is_active:true,
-          password:form.password,
-          ...(form.rol_id===3?{faculty_id:Number(form.faculty_id)}:{}),
-        }),
-      });
-      const data=await res.json() as ApiError;
-      if(!res.ok)throw new Error(Array.isArray(data.message)?data.message.join(", "):data.message||"No se pudo crear el usuario.");
-      setSuccess("Usuario creado. Copia y entrega su contraseña únicamente a la persona que usará la cuenta. En esta etapa todavía no hay cambio obligatorio de contraseña en el primer acceso.");
-      await refreshUsers();
-    }catch(e:unknown){setError(e instanceof Error?e.message:"Error de servidor");}
-    finally{setSaving(false);}
-  }
 
   async function reviewRegistration(userId:number,decision:"APPROVE"|"REJECT"){
     if(reviewBusy!==null)return;
@@ -168,8 +126,8 @@ export default function AdminUsersPage() {
     <nav className="forja-nav"><Link className="forja-brand" href="/proyectos">FORJA</Link><div className="forja-nav-actions"><Link className="forja-nav-action" href="/proyectos">Proyectos</Link><Link className="forja-nav-action" href="/administracion/catalogos">Administrar zonas</Link><LogoutButton/></div></nav>
     <div className="forja-heading">
       <span className="forja-eyebrow">ADMINISTRACIÓN FORJA</span>
-      <h1>Usuarios y roles</h1>
-      <p>Las personas verifican su correo y el administrador decide si activarlas como profesor o monitor. También puedes crear usuarios de prueba manualmente.</p>
+      <h1>Solicitudes y roles</h1>
+      <p>Cada persona crea su cuenta y verifica su correo. Aquí decides quién accede a FORJA, asignándole el rol de profesor o monitor. El administrador no establece contraseñas.</p>
     </div>
     {loading&&<p>Cargando...</p>}
     {error&&<p role="alert" className="forja-alert">{error}</p>}
@@ -208,38 +166,6 @@ export default function AdminUsersPage() {
            </div>)}
           {users.filter(u=>u.registration_status==="PENDING").length===0&&<p>No hay solicitudes pendientes.</p>}
         </div>
-      </section>
-      <section className="forja-panel forja-editor-section">
-        <h2>Crear usuario</h2>
-        <form onSubmit={submit} className="forja-form">
-          <div className="forja-fields">
-            <label>Nombre completo
-              <input required maxLength={180} value={form.full_name} onChange={e=>setForm(v=>({...v,full_name:e.target.value}))}/>
-            </label>
-            <label>Correo institucional
-              <input required type="email" autoComplete="off" value={form.email} onChange={e=>setForm(v=>({...v,email:e.target.value}))}/>
-            </label>
-            <label>Rol
-              <select value={form.rol_id} onChange={e=>setForm(v=>({...v,rol_id:Number(e.target.value)}))}>
-                <option value={3}>Profesor</option>
-                <option value={2}>Monitor (digitalización histórica)</option>
-              </select>
-            </label>
-            {form.rol_id===3&&<label>Facultad del docente
-              <select required value={form.faculty_id} onChange={e=>setForm(v=>({...v,faculty_id:e.target.value}))}>
-                <option value="">Seleccionar</option>
-                {faculties.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-            </label>}
-            <label className="full">Contraseña inicial (mínimo 12 caracteres)
-              <input type="text" minLength={12} required value={form.password} onChange={e=>setForm(v=>({...v,password:e.target.value}))} autoComplete="off" spellCheck={false}/>
-              <button type="button" className="forja-textbutton" onClick={()=>setForm(v=>({...v,password:makeTemporaryPassword()}))}>Generar contraseña aleatoria</button>
-              <small>Evita reutilizar contraseñas. No hagas capturas ni compartas este valor públicamente. La cuenta de prueba es solo local.</small>
-            </label>
-          </div>
-          {success&&<p className="forja-ok" role="status">{success}</p>}
-          <div className="forja-actions"><button type="submit" disabled={saving}>{saving?"Creando...":"Crear usuario"}</button></div>
-        </form>
       </section>
       <section className="forja-panel forja-editor-section">
         <h2>Asignaturas</h2>
