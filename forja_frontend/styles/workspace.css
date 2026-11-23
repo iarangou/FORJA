@@ -131,7 +131,7 @@
 .fw-workflow-selector{display:grid;gap:7px}
 .fw-workflow-selector label{font-size:11px;color:#6d5c7f;font-weight:800}
 .fw-workflow-selector select{min-height:40px;border:1px solid #ded4e8;border-radius:8px;
- font:600 13px inherit;padding:8px 12px;background:#fff;color:#4a2a68}
+ font-family:inherit;font-size:13px;font-weight:600;padding:8px 12px;background:#fff;color:#4a2a68}
 .fw-workflow-status{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 24px}
 .fw-workflow-status strong{background:#f3e9fa;color:#5e3581;border-radius:99px;padding:9px 13px;font-size:12px}
 .fw-workflow-status span{font-size:11px;color:#908499}
