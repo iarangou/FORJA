@@ -9,6 +9,7 @@ import ProjectAccordion from "./ProjectAccordion";
 import HistoricalProjectSection from "./HistoricalProjectSection";
 import FinalLetterSection from "./FinalLetterSection";
 import CommunityFeedbackSection from "./CommunityFeedbackSection";
+import ClassificationPicker from "./ClassificationPicker";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
@@ -77,6 +78,10 @@ export default function ProjectDetailEditor(){
   const [faculties,setFaculties]=useState<{id:number;name:string}[]>([]);
   const [programs,setPrograms]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [role,setRole]=useState<number|null>(null);
+  const [zones,setZones]=useState<{id:number;name:string}[]>([]);
+  const [commitments,setCommitments]=useState<{id:number;name:string}[]>([]);
+  const [selectedZones,setSelectedZones]=useState<number[]>([]);
+  const [selectedCommitments,setSelectedCommitments]=useState<number[]>([]);
   const [busy,setBusy]=useState(false);
   const [openSection,setOpenSection]=useState<string|null>("general");
   function toggleSection(section:string){setOpenSection(current=>current===section?null:section);}
@@ -118,6 +123,18 @@ export default function ProjectDetailEditor(){
       }).catch(()=>undefined);
     return ()=>{alive=false;};
   },[]);
+  useEffect(()=>{
+    let active=true;
+    Promise.all([
+      requestJSON<{id:number;name:string}[]>("/api/project-classifications/zones"),
+      requestJSON<{id:number;name:string}[]>("/api/project-classifications/commitments"),
+      requestJSON<number[]>(`/api/projects/${projectId}/classifications/zones`),
+      requestJSON<number[]>(`/api/projects/${projectId}/classifications/commitments`),
+    ]).then(([z,c,sz,sc])=>{
+      if(active){setZones(z);setCommitments(c);setSelectedZones(sz);setSelectedCommitments(sc);}
+    }).catch(e=>{if(active)setError(e instanceof Error?e.message:"Error cargando zonas y compromisos");});
+    return ()=>{active=false};
+  },[projectId]);
   useEffect(()=>{
     if(activeId===null){setReviews([]);return;}
     let active=true;
@@ -169,6 +186,7 @@ export default function ProjectDetailEditor(){
         community_location:project.community_location??"",
         ...(project.duration?{duration:project.duration}:{}),
       });
+      await requestJSON(`/api/projects/${projectId}/classifications/zones`,"PUT",{ids:selectedZones});
       setMessage("Información general actualizada.");
       await reload();
     }catch(e){setError(e instanceof Error?e.message:"Error al guardar");}finally{setBusy(false);}
@@ -219,6 +237,7 @@ export default function ProjectDetailEditor(){
         risk_mitigation:ethicsData.risk_mitigation??"",
         truthful_declaration:Boolean(ethicsData.truthful_declaration),
       });
+      await requestJSON(`/api/projects/${projectId}/classifications/commitments`,"PUT",{ids:selectedCommitments});
       setMessage("Análisis ético guardado.");
       await reload();
     }catch(e){setError(e instanceof Error?e.message:"Error al guardar análisis ético");}finally{setBusy(false);}
@@ -264,6 +283,12 @@ export default function ProjectDetailEditor(){
         <label>Comunidad<input disabled={!generalEditable||busy} value={project.community_name??""} onChange={e=>updateProject("community_name",e.target.value)}/></label>
         <label>Contacto<input disabled={!generalEditable||busy} value={project.community_contact??""} onChange={e=>updateProject("community_contact",e.target.value)}/></label>
         <label>Ubicación<input disabled={!generalEditable||busy} value={project.community_location??""} onChange={e=>updateProject("community_location",e.target.value)}/></label>
+        <div className="full">
+          <ClassificationPicker title="Zonas territoriales identificadas por FORJA"
+            items={zones} selected={selectedZones} onChange={setSelectedZones}
+            disabled={!generalEditable||busy}/>
+          <p className="forja-description">Selecciona todas las zonas en las que se desarrolla el proyecto. Estos datos permiten filtrar reportes.</p>
+        </div>
         <label className="full">Problemática<textarea disabled={!generalEditable||busy} rows={3} value={project.general_problem??""} onChange={e=>updateProject("general_problem",e.target.value)}/></label>
         <label className="full">Objetivo general<textarea disabled={!generalEditable||busy} rows={3} value={project.general_objective??""} onChange={e=>updateProject("general_objective",e.target.value)}/></label>
         <label className="full">Justificación<textarea disabled={!generalEditable||busy} rows={3} value={project.justification??""} onChange={e=>updateProject("justification",e.target.value)}/></label>
@@ -388,6 +413,12 @@ export default function ProjectDetailEditor(){
     <ProjectAccordion id="ethics" title={project.registration_type==="HISTORICO"?"04. Consideraciones éticas":"03. Consideraciones éticas"} open={openSection==="ethics"} onToggle={()=>toggleSection("ethics")}>
       {<>
         <div className="forja-fields">
+          <div className="full">
+            <ClassificationPicker title="Compromisos de sostenibilidad asociados al proyecto"
+              items={commitments} selected={selectedCommitments} onChange={setSelectedCommitments}
+              disabled={!ethicsEditable||busy}/>
+            <p className="forja-description">Puedes seleccionar varios compromisos. Esta clasificación permite filtrar proyectos e informes, y es distinta de los ODS.</p>
+          </div>
           <label>Población externa predominante<select disabled={!ethicsEditable||busy} value={ethicsData.external_population??"NINGUNO"} onChange={e=>updateEthics("external_population",e.target.value)}>
             {externalCategories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
           <label>Grupo universitario<select disabled={!ethicsEditable||busy} value={ethicsData.university_population??"NINGUNO"} onChange={e=>updateEthics("university_population",e.target.value)}>
