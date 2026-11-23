@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer, { type Transporter } from 'nodemailer';
 
 @Injectable()
 export class MailService {
   private readonly transporter: Transporter;
+  private readonly logger=new Logger(MailService.name);
 
   constructor(private readonly config: ConfigService) {
     this.transporter = nodemailer.createTransport({
@@ -19,6 +20,16 @@ export class MailService {
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {
+    if(this.config.get<string>('VERIFICATION_LOG_CODES')==='true' &&
+       this.config.get<string>('NODE_ENV')==='development'){
+      // Únicamente para el entorno de pruebas local, nunca producción.
+      this.logger.warn(`Código de prueba para ${email}: ${code}`);
+      return;
+    }
+    if(!this.config.get<string>('SMTP_HOST')||
+       !this.config.get<string>('SMTP_FROM')){
+      throw new ServiceUnavailableException('Falta configurar el correo de verificación');
+    }
     await this.transporter.sendMail({
       from: this.config.getOrThrow<string>('SMTP_FROM'),
       to: email,
