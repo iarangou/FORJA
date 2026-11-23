@@ -131,6 +131,7 @@ export default function AdminUsersPage() {
     </div>
     {loading&&<p>Cargando...</p>}
     {error&&<p role="alert" className="forja-alert">{error}</p>}
+    {success&&<p role="status" className="forja-ok">{success}</p>}
     {!loading&&role!==1&&<p role="alert" className="forja-alert">Solo los administradores pueden administrar usuarios.</p>}
     {!loading&&role===1&&<>
       <section className="forja-panel forja-editor-section">
