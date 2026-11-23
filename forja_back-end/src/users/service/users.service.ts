@@ -51,7 +51,7 @@ export class UsersService {
             registration_status:string;
         }>(
             `SELECT id, username, password_hash, email, rol_id, is_active,registration_status FROM users 
-                WHERE username = $1 LIMIT 1`,
+                WHERE username = $1 OR LOWER(email) = LOWER($1) LIMIT 1`,
             [username],
         );
 
