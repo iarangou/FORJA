@@ -10,12 +10,14 @@ import HistoricalProjectSection from "./HistoricalProjectSection";
 import FinalLetterSection from "./FinalLetterSection";
 import CommunityFeedbackSection from "./CommunityFeedbackSection";
 import ClassificationPicker from "./ClassificationPicker";
+import {ODS} from "@/lib/ods";
 
 type Project = {
   id:number; code:string; title:string; general_problem:string|null;
   general_objective:string|null; justification:string|null;
   community_name:string|null; community_contact:string|null;
   community_location:string|null; duration:number|null;
+  ods_ids:number[];
   general_status:string; registration_type:string;
 };
 type Period = {
@@ -26,7 +28,7 @@ type Period = {
   start_date:string|null;end_date:string|null;
   missing_information:string|null;
   historical_teacher_name:string|null;
-  faculty_id:number|null;academic_program_id:number|null;
+  faculty_id:number|null;department_id:number|null;academic_program_id:number|null;
   community_population_description:string|null;territory_name:string|null;
   results:string|null;conclusions:string|null;execution_status:string;
 };
@@ -77,11 +79,12 @@ export default function ProjectDetailEditor(){
   const [courses,setCourses]=useState<{id:number;name:string}[]>([]);
   const [faculties,setFaculties]=useState<{id:number;name:string}[]>([]);
   const [programs,setPrograms]=useState<{id:number;name:string;faculty_id:number}[]>([]);
+  const [departments,setDepartments]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [role,setRole]=useState<number|null>(null);
   const [zones,setZones]=useState<{id:number;name:string}[]>([]);
-  const [commitments,setCommitments]=useState<{id:number;name:string}[]>([]);
+
   const [selectedZones,setSelectedZones]=useState<number[]>([]);
-  const [selectedCommitments,setSelectedCommitments]=useState<number[]>([]);
+  const [selectedODS,setSelectedODS]=useState<number[]>([]);
   const [busy,setBusy]=useState(false);
   const [openSection,setOpenSection]=useState<string|null>("general");
   function toggleSection(section:string){setOpenSection(current=>current===section?null:section);}
@@ -96,7 +99,7 @@ export default function ProjectDetailEditor(){
       requestJSON<{rol_id:number}>("/api/users/me"),
       requestJSON<{id:number;name:string}[]>("/api/courses").catch(()=>[]),
     ]);
-    setProject(p);setPeriods(pe);setEthics(e);setRole(user.rol_id);setCourses(c);
+    setProject(p);setPeriods(pe);setEthics(e);setRole(user.rol_id);setCourses(c);setSelectedODS(p.ods_ids??[]);
     setActiveId(current=>current!==null&&pe.some(x=>x.id===current)?current:(pe[0]?.id??null));
   }
   useEffect(()=>{
@@ -109,17 +112,18 @@ export default function ProjectDetailEditor(){
       requestJSON<{id:number;name:string}[]>("/api/courses").catch(()=>[]),
     ]).then(([p,pe,e,user,c])=>{
       if(!active)return;
-      setProject(p);setPeriods(pe);setEthics(e);setRole(user.rol_id);setCourses(c);
+      setProject(p);setPeriods(pe);setEthics(e);setRole(user.rol_id);setCourses(c);setSelectedODS(p.ods_ids??[]);
       setActiveId(pe[0]?.id??null);
     }).catch(e=>{if(active)setError(e instanceof Error?e.message:"No se pudo abrir el proyecto");});
     return ()=>{active=false};
   },[projectId]);
   useEffect(()=>{
     let alive=true;
-    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs")])
-      .then(async ([f,p])=>{
+    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs"),fetch("/api/faculty/departments")])
+      .then(async ([f,p,d])=>{
         if(f.ok){const data:unknown=await f.json();if(alive)setFaculties(Array.isArray(data)?data:[]);}
         if(p.ok){const data:unknown=await p.json();if(alive)setPrograms(Array.isArray(data)?data:[]);}
+        if(d.ok){const data:unknown=await d.json();if(alive)setDepartments(Array.isArray(data)?data:[]);}
       }).catch(()=>undefined);
     return ()=>{alive=false;};
   },[]);
@@ -127,11 +131,9 @@ export default function ProjectDetailEditor(){
     let active=true;
     Promise.all([
       requestJSON<{id:number;name:string}[]>("/api/project-classifications/zones"),
-      requestJSON<{id:number;name:string}[]>("/api/project-classifications/commitments"),
       requestJSON<number[]>(`/api/projects/${projectId}/classifications/zones`),
-      requestJSON<number[]>(`/api/projects/${projectId}/classifications/commitments`),
-    ]).then(([z,c,sz,sc])=>{
-      if(active){setZones(z);setCommitments(c);setSelectedZones(sz);setSelectedCommitments(sc);}
+    ]).then(([z,sz])=>{
+      if(active){setZones(z);setSelectedZones(sz);}
     }).catch(e=>{if(active)setError(e instanceof Error?e.message:"Error cargando zonas y compromisos");});
     return ()=>{active=false};
   },[projectId]);
@@ -197,13 +199,14 @@ export default function ProjectDetailEditor(){
     try {
       const historical=period.record_type==="HISTORICO";
       const payload={
-        ...(historical?{course_id:period.course_id,faculty_id:period.faculty_id,
+        ...(historical?{course_id:period.course_id,faculty_id:period.faculty_id,department_id:period.department_id,
           academic_program_id:period.academic_program_id,
           historical_teacher_name:period.historical_teacher_name??"",
           results:period.results??"",conclusions:period.conclusions??"",
           missing_information:period.missing_information??""}:
           {...(period.course_id?{course_id:period.course_id}:{}),
            ...(period.faculty_id?{faculty_id:period.faculty_id}:{}),
+           ...(period.department_id?{department_id:period.department_id}:{}),
            ...(period.academic_program_id?{academic_program_id:period.academic_program_id}:{})}),
         community_population_description:period.community_population_description??"",
         territory_name:period.territory_name??"",
@@ -227,6 +230,7 @@ export default function ProjectDetailEditor(){
     if(!ethicsEditable)return;
     setBusy(true);setError("");setMessage("");
     try {
+      await requestJSON(`/api/projects/${projectId}`,"PATCH",{ods_ids:selectedODS});
       await requestJSON(`/api/projects/${projectId}/ethics`,"PUT",{
         external_population:ethicsData.external_population??"NINGUNO",
         university_population:ethicsData.university_population??"NINGUNO",
@@ -237,7 +241,6 @@ export default function ProjectDetailEditor(){
         risk_mitigation:ethicsData.risk_mitigation??"",
         truthful_declaration:Boolean(ethicsData.truthful_declaration),
       });
-      await requestJSON(`/api/projects/${projectId}/classifications/commitments`,"PUT",{ids:selectedCommitments});
       setMessage("Análisis ético guardado.");
       await reload();
     }catch(e){setError(e instanceof Error?e.message:"Error al guardar análisis ético");}finally{setBusy(false);}
@@ -324,11 +327,19 @@ export default function ProjectDetailEditor(){
             <label>Facultad
               <select disabled={!canEditPeriod||busy} value={period.faculty_id??""}
                 onChange={e=>{
-                  updatePeriod("faculty_id",e.target.value?Number(e.target.value):null);
-                  updatePeriod("academic_program_id",null);
+                  const facultyId=e.target.value?Number(e.target.value):null;
+                  setPeriods(current=>current.map(p=>p.id===activeId?{...p,faculty_id:facultyId,department_id:null,academic_program_id:null}:p));
                 }}>
                 <option value="">{historicalPeriod?"Desconocida":"Seleccionar facultad"}</option>
                 {faculties.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </label>
+            <label>Departamento académico de los estudiantes
+              <select disabled={!canEditPeriod||busy} value={period.department_id??""}
+                onChange={e=>updatePeriod("department_id",e.target.value?Number(e.target.value):null)}>
+                <option value="">Seleccionar departamento</option>
+                {departments.filter(d=>!period.faculty_id||d.faculty_id===period.faculty_id).map(d=>
+                  <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </label>
             <label>Programa o carrera
@@ -414,10 +425,10 @@ export default function ProjectDetailEditor(){
       {<>
         <div className="forja-fields">
           <div className="full">
-            <ClassificationPicker title="Compromisos de sostenibilidad asociados al proyecto"
-              items={commitments} selected={selectedCommitments} onChange={setSelectedCommitments}
+            <ClassificationPicker title="Objetivos de Desarrollo Sostenible (ODS)"
+              items={ODS} selected={selectedODS} onChange={setSelectedODS}
               disabled={!ethicsEditable||busy}/>
-            <p className="forja-description">Puedes seleccionar varios compromisos. Esta clasificación permite filtrar proyectos e informes, y es distinta de los ODS.</p>
+            <p className="forja-description">Selecciona los ODS relacionados con el proyecto. Puedes elegir varios y usarlos en los filtros de reportes.</p>
           </div>
           <label>Población externa predominante<select disabled={!ethicsEditable||busy} value={ethicsData.external_population??"NINGUNO"} onChange={e=>updateEthics("external_population",e.target.value)}>
             {externalCategories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
