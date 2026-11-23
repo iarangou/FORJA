@@ -8,6 +8,7 @@ import LogoutButton from "@/components/auth/LogoutButton";
 type Project = {
   id: number; code: string; title: string;
   registration_type: string; general_status: string;
+  zone_ids:number[];commitment_ids:number[];
 };
 type Period = {
   id:number; academic_year:number; academic_semester:number;
@@ -22,6 +23,10 @@ export default function ProjectsPage() {
   const [notes,setNotes] = useState<Record<number,string>>({});
   const [working,setWorking] = useState<number|null>(null);
   const [loading,setLoading] = useState(true);
+  const [zones,setZones]=useState<{id:number;name:string}[]>([]);
+  const [commitments,setCommitments]=useState<{id:number;name:string}[]>([]);
+  const [zoneFilter,setZoneFilter]=useState("");
+  const [commitmentFilter,setCommitmentFilter]=useState("");
   const [error,setError] = useState("");
   const [message,setMessage] = useState("");
 
@@ -40,6 +45,20 @@ export default function ProjectsPage() {
     }).finally(()=>{if(mounted)setLoading(false);});
     return ()=>{mounted=false;};
   },[]);
+
+  useEffect(()=>{
+    Promise.all([
+      fetch("/api/project-classifications/zones"),
+      fetch("/api/project-classifications/commitments"),
+    ]).then(async ([a,b])=>{
+      if(a.ok){const data:unknown=await a.json();setZones(Array.isArray(data)?data:[]);}
+      if(b.ok){const data:unknown=await b.json();setCommitments(Array.isArray(data)?data:[]);}
+    }).catch(()=>undefined);
+  },[]);
+  const filteredProjects=projects.filter(p=>
+    (!zoneFilter||(p.zone_ids??[]).includes(Number(zoneFilter)))&&
+    (!commitmentFilter||(p.commitment_ids??[]).includes(Number(commitmentFilter)))
+  );
 
   async function seePeriods(id:number) {
     try {
@@ -74,18 +93,36 @@ export default function ProjectsPage() {
   }
 
   return <main className="forja-projects"><div className="forja-shell">
-    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<Link href="/administracion/usuarios">Gestionar usuarios</Link>}<LogoutButton/></div></nav>
+    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<Link href="/administracion/usuarios">Gestionar usuarios</Link><Link href="/administracion/catalogos">Zonas y compromisos</Link>}<LogoutButton/></div></nav>
     <div className="forja-heading"><span className="forja-eyebrow">PLATAFORMA FORJA</span>
       <h1>Proyectos registrados</h1>
       <p>Consulta proyectos y aprobaciones por semestre. Los permisos se comprueban en el servidor.</p>
     </div>
     <div className="forja-actions"><Link className="forja-button" href="/proyectos/nuevo">+ Registrar proyecto</Link></div>
+    <div className="forja-panel">
+      <h2>Filtrar proyectos</h2>
+      <div className="forja-fields">
+        <label>Zona territorial
+          <select value={zoneFilter} onChange={e=>setZoneFilter(e.target.value)}>
+            <option value="">Todas las zonas</option>
+            {zones.map(z=><option value={z.id} key={z.id}>{z.name}</option>)}
+          </select>
+        </label>
+        <label>Compromiso de sostenibilidad
+          <select value={commitmentFilter} onChange={e=>setCommitmentFilter(e.target.value)}>
+            <option value="">Todos los compromisos</option>
+            {commitments.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}
+          </select>
+        </label>
+      </div>
+      <p className="forja-description">{filteredProjects.length} proyectos coinciden con los filtros seleccionados.</p>
+    </div>
     {loading&&<p>Cargando proyectos...</p>}
     {error&&<p className="forja-alert" role="alert">{error} {error.includes("sesión")&&<Link href="/login">Iniciar sesión</Link>}</p>}
     {message&&<p className="forja-ok" role="status">{message}</p>}
     {!loading&&!error&&projects.length===0&&<div className="forja-panel"><h2>No hay proyectos para mostrar</h2><p>Crea un borrador para empezar.</p></div>}
     <div className="forja-cards">
-      {projects.map(p=><article className="forja-panel" key={p.id}>
+      {filteredProjects.map(p=><article className="forja-panel" key={p.id}>
         <div className="forja-cardhead"><span className="forja-code">{p.code}</span><span>{p.general_status}</span></div>
         <h2>{p.title}</h2>
         <Link href={`/proyectos/${p.id}`} className="forja-textbutton">Abrir proyecto y editar borrador</Link>
