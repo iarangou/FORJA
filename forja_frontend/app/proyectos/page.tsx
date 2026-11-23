@@ -8,7 +8,7 @@ import {ODS} from "@/lib/ods";
 import {EXTERNAL_POPULATION_OPTIONS} from "@/lib/external-population";
 
 type Project = {
-  id: number; code: string; title: string;
+  id: number; code: string; title: string; creation_year:number;
   registration_type: string; general_status: string;
   zone_ids:number[];ods_ids:number[];
   department_ids:number[];academic_program_ids:number[];
@@ -32,6 +32,7 @@ export default function ProjectsPage() {
   const [departments,setDepartments]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [programs,setPrograms]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [zoneFilter,setZoneFilter]=useState("");
+  const [yearFilter,setYearFilter]=useState("");
   const [odsFilter,setOdsFilter]=useState("");
   const [departmentFilter,setDepartmentFilter]=useState("");
   const [programFilter,setProgramFilter]=useState("");
@@ -67,7 +68,9 @@ export default function ProjectsPage() {
       if(p.ok){const data:unknown=await p.json();setPrograms(Array.isArray(data)?data:[]);}
     }).catch(()=>undefined);
   },[]);
+  const availableYears=Array.from(new Set(projects.map(p=>p.creation_year).filter(y=>Number.isInteger(y)))).sort((a,b)=>b-a);
   const filteredProjects=projects.filter(p=>
+    (!yearFilter||p.creation_year===Number(yearFilter))&&
     (!zoneFilter||(p.zone_ids??[]).includes(Number(zoneFilter)))&&
     (!odsFilter||(p.ods_ids??[]).includes(Number(odsFilter)))&&
     ((!departmentFilter&&!programFilter)||
@@ -82,6 +85,7 @@ export default function ProjectsPage() {
     if(profile?.rol_id!==1||exporting)return;
     setError("");setExporting(true);
     const params=new URLSearchParams();
+    if(yearFilter)params.set("year",yearFilter);
     if(zoneFilter)params.set("zone",zoneFilter);
     if(odsFilter)params.set("ods",odsFilter);
     if(departmentFilter)params.set("department",departmentFilter);
@@ -147,6 +151,12 @@ export default function ProjectsPage() {
     <div className="forja-panel">
       <h2>Filtrar proyectos</h2>
       <div className="forja-fields">
+        <label>Año de inicio del proyecto
+          <select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}>
+            <option value="">Todos los años</option>
+            {availableYears.map(y=><option key={y} value={y}>{y}</option>)}
+          </select>
+        </label>
         <label>Zona territorial
           <select value={zoneFilter} onChange={e=>setZoneFilter(e.target.value)}>
             <option value="">Todas las zonas</option>
