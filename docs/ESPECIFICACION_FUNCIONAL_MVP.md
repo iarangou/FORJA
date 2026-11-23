@@ -13,7 +13,7 @@
 5. El administrador es quien marca el proyecto **finalizado**. El estado general del proyecto no sustituye el estado de aprobación de cada período.
 6. Evidencias y resultados pertenecen a un período. El administrador revisa las evidencias; si se reemplaza un archivo aprobado, debe quedar nuevamente **pendiente de revisión**.
 7. La **carta final firmada** se redacta y firma **fuera** del sistema; solo se almacena y consulta la versión final firmada. No hay editor de cartas ni versiones de borradores.
-8. El formulario comunitario se diligencia **una sola vez por proyecto** como hipótesis consistente con la reunión; si FORJA necesita uno por período, debe revisarse expresamente. No usar el código público del proyecto como mecanismo de autenticación: enlace con token aleatorio, de uso limitado.
+8. El formulario comunitario se diligencia **una sola vez por semestre académico del proyecto**, conforme al requisito confirmado. Cada período tiene su evaluación y carta firmada independientes. No usar el código público del proyecto como mecanismo de autenticación: enlace con token aleatorio, de uso limitado.
 9. Los territorios (7), ODS y población se guardan como catálogos o relaciones; deben permitir exportar Excel por territorio. **Los nombres exactos de los siete territorios no están confirmados:** no inventarlos ni asignarlos en producción.
 10. Datos sensibles de participantes y beneficiarios: evitar listas nominativas innecesarias. El análisis ético registra **categorías agregadas**, no la pertenencia o condición de personas identificables.
 
@@ -26,15 +26,15 @@
 - **¿Continúa un proyecto previo?**: sí/no. Si sí, referencia por código o ID existente (opcional para históricos incompletos).
 - **Problemática** y **justificación**: texto libre. Problemática requerida **al enviar a revisión**, no en borrador.
 - **Objetivo general**, **objetivos específicos** y **actividades**: textos. Obligatorios al enviar a revisión del período.
-- **ODS**: selección múltiple entre 17 objetivos, con opción de no asignar mientras sea borrador.
+- **ODS**: desplegable de selección múltiple entre los 17 Objetivos de Desarrollo Sostenible; campo del proyecto que también se utiliza en filtros. No existe un catálogo adicional de once compromisos.
 
 ### A2. Participantes y contexto institucional
-- **Facultad/instituto**, **departamento**, **programa/carrera**, **asignatura(s)**: catálogos; varias asignaturas/carreras por período.
+- **Facultad/instituto**, **departamento académico de los estudiantes**, **programa/carrera**, **asignatura(s)**: catálogos desplegables. La versión actual admite un programa principal por período; está pendiente formalizar varias carreras simultáneas.
 - **Docente(s)**: relación con usuarios profesores; uno responsable por período.
 - **Número de estudiantes por período**: entero no negativo, obligatorio antes de enviar.
 - **Nombres individuales de estudiantes**: **no recopilar en MVP** salvo exigencia posterior y autorización.
 - **Organización/comunidad**: nombre, formal/informal, ubicación, contacto, correo/teléfono opcionales.
-- **Territorio(s)**: catálogo de siete, nombres sujetos a confirmación.
+- **Zona(s) territorial(es)**: desplegable de selección múltiple que utiliza un catálogo de siete zonas FORJA, nombres oficiales por confirmar. No confundir con departamento académico.
 - **Población beneficiaria**: tipo, descripción y **cantidad estimada**; varios tipos posibles.
 
 ### A3. Planeación por semestre
