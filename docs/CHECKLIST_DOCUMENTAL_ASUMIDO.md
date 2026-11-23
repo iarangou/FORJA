@@ -1,37 +1,49 @@
-# FORJA — Lista de verificación documental (propuesta de desarrollo)
+# FORJA — Checklist documental por semestre
 
-> **Supuestos:** no hay acceso a un inventario oficial de formatos. Estos requisitos se usan como checklist inicial configurable; **no se deben publicar como política institucional sin validación**.
+**Finalidad:** hoja de apoyo para probar el flujo de documentos y seguimiento. **No es una política institucional formal**; distingue condiciones que valida el código de requisitos todavía sujetos a aprobación de FORJA.
 
-| Código | Documento / requisito | Momento | Regla propuesta | Quién lo carga |
-|---|---|---|---|---|
-| DOC-01 | Formulario general del proyecto completo | Enviar semestre actual a revisión | Obligatorio (datos almacenados en sistema) | Profesor |
-| DOC-02 | Plan del período: objetivos, actividades, fechas, estudiantes, presupuesto | Enviar semestre a revisión | Obligatorio como campos; archivo de apoyo opcional | Profesor |
-| DOC-03 | Análisis previo de consideraciones éticas | Enviar primer semestre actual | Obligatorio como formulario digital | Profesor |
-| DOC-04 | Aval de organización / permiso institucional | No es requisito automático de envío | No se exige por seleccionar población vulnerable; cualquier solicitud excepcional la evalúa el administrador | No aplica por defecto |
-| DOC-05 | Autorización de uso de imagen/testimonio | Publicación externa de material identificable, si corresponde | Debe revisarse según normas aplicables, **no forma parte del bloqueo automático de aprobación del período** | Según corresponda |
-| DOC-06 | Evidencias de ejecución (solo PDF; fotos incrustadas, enlace al video en el propio PDF) | Durante ejecución y cierre | Al menos una evidencia válida antes del cierre del período (supuesto) | Profesor |
-| DOC-07 | Resultados y conclusiones | Cierre del período | Obligatorio antes del cierre; es registro digital | Profesor |
-| DOC-08 | Evaluación de la comunidad | Cierre de proyecto o antes, según flujo | Una respuesta por proyecto, mediante enlace controlado | Comunidad |
-| DOC-09 | Carta final firmada | Cuando FORJA emita carta | Se almacena **solo archivo final firmado**; no bloquea creación del proyecto | Administrador |
+## Registro y revisión del semestre
 
-## Lista de revisión del administrador
+| Elemento | En dónde se registra | Responsable | Regla técnica actual |
+| --- | --- | --- | --- |
+| Proyecto, código y comunidad | Información general | Profesor; monitor si histórico | Código asignado automáticamente; datos básicos obligatorios para envío actual. |
+| Año y semestre, asignatura, facultad/departamento/carrera | Períodos académicos | Profesor; monitor histórico | Un período académico único por proyecto; una carrera principal por semestre. |
+| Objetivos, actividades, fechas, presupuesto, número de estudiantes | Período académico | Profesor; monitor histórico | Para períodos actuales, campos exigidos al enviar a revisión; histórico admite faltantes. |
+| Zonas territoriales y ODS | Información general / Consideraciones éticas | Profesor; monitor histórico | Zonas del catálogo administrable; 17 ODS sin catálogo adicional. |
+| Población externa predominante, población universitaria, veracidad | Consideraciones éticas | Profesor; monitor histórico | Formulario digital; las categorías orientan revisión, sin aval automático por categoría. |
+| Envío y decisión de aprobación | Período académico | Profesor envía; administrador revisa | Estados separados por semestre: BORRADOR, EN_REVISION, DEVUELTO, APROBADO; observaciones en devolución. |
 
-- [ ] Existe proyecto y código único
-- [ ] Período académico correcto y sin duplicados
-- [ ] Docente responsable y asignatura(s) informados
-- [ ] Comunidad y territorio(s) descritos (si están disponibles)
-- [ ] Objetivos, actividades, presupuesto y cantidad de estudiantes presentes
-- [ ] Análisis ético completado, con coherencia respecto a la población
-- [ ] Información de población y análisis ético revisada; el administrador puede aprobar o devolver con observaciones. Sin exigencia automática de avales
-- [ ] Evidencias válidas, si se revisa ejecución o cierre
-- [ ] No hay archivos que revelen datos personales innecesarios
-- [ ] Observaciones registradas si se devuelve el período
-- [ ] La decisión de aprobación/devolución queda guardada con fecha y administrador
+## Ejecución y cierre del período
 
-## Históricos
+| Elemento | Momento | Responsable | Condición del sistema |
+| --- | --- | --- | --- |
+| Evidencias de ejecución | Período actual aprobado y sin cerrar | Profesor | PDF máximo 20 MB; administrador aprueba o devuelve cada evidencia. |
+| Evidencias históricas disponibles | Digitalización de un período anterior | Monitor / Admin | Se archivan sin revisión retrospectiva. Puede haber documentos faltantes. |
+| Resultados y conclusiones | Durante o al finalizar período actual | Profesor | Obligatorios para que el administrador pueda cerrar. |
+| Cierre de período actual | Al completar los requisitos | Administrador | Período aprobado, resultados y conclusiones, al menos **un PDF aprobado**, ninguno pendiente de revisión. |
+| Carta final **firmada** | Después del cierre de cada período actual; históricos cuando exista | Administrador / Monitor | Un PDF final **por semestre**; se redacta y firma **fuera** de FORJA. No bloquea la creación ni el envío inicial del semestre. |
+| Evaluación de la comunidad | Al finalizar cada semestre; períodos históricos con documentación disponible | Comunidad mediante enlace del admin | **Una evaluación por semestre**, no una por proyecto. Token privado de un uso; formulario institucional de 19 preguntas. |
+| Finalización definitiva del proyecto | Cuando termine de ejecutarse | Administrador | Acción independiente del cierre de cada semestre; verifica que no haya semestres actuales pendientes. |
 
-El monitor puede **guardar sin documentos** cuando no existen registros disponibles. Se marca el período como `HISTORICO`, se registran los campos conocidos y se escribe la lista de faltantes, **sin inventar datos ni marcar evidencia como aprobada**. El semestre actual lo ingresa el profesor y sigue el flujo habitual de aprobación.
+## Revisión sugerida del administrador
 
-## Seguridad y almacenamiento
+- [ ] Código FORJA correcto y proyecto no duplicado.
+- [ ] Semestre seleccionado y profesor responsable correctos.
+- [ ] Si es histórico, no se exige aprobación retroactiva y se anotaron los datos/documentos faltantes.
+- [ ] Si es actual, se revisaron objetivos, actividades, presupuesto, estudiantes y consideraciones éticas.
+- [ ] En caso de devolución, se registraron observaciones.
+- [ ] Para cierre, hay resultados, conclusiones y evidencias aprobadas.
+- [ ] La carta PDF está asociada al **semestre correcto**, no al proyecto entero.
+- [ ] La evaluación comunitaria está asociada al mismo semestre (flujo separado del PDF).
+- [ ] Se respetan los permisos de lectura y descarga de información personal o archivos.
+- [ ] Antes de un reporte, se comprueban zonas, ODS y población externa predominante.
 
-Validar firma PDF, MIME, extensión y tamaño; restringir permisos por rol, almacenar archivos fuera del árbol público de Next.js, escanear contenido malicioso, almacenar rutas o claves seguras y ofrecer respaldos. Una lista en el frontend **no sustituye controles de backend**.
+## Aspectos no implementados como obligación automática
+
+- **Avales especiales por población vulnerable**: el sistema no los exige automáticamente al seleccionar una población. Su pertinencia debe establecerse con FORJA y con la normativa aplicable.
+- **Antivirus del PDF**: se valida extensión, MIME, firma inicial y límite de tamaño; falta análisis de contenido malicioso.
+- **Versionado de evidencias**: un PDF ya revisado no puede reabrirse; ante corrección se carga un PDF nuevo. No existe versionado completo.
+- **Aprobación de evaluaciones comunitarias**: el enlace evita dobles respuestas, pero no constituye verificación institucional de la identidad de quien responde.
+- **Retención y tratamiento de datos**: requieren lineamientos institucionales antes de recolectar información real.
+
+Para probar: [Manual del MVP](COMO_PROBAR_MVP.md). Para reglas y arquitectura: [Especificación funcional](ESPECIFICACION_FUNCIONAL_MVP.md).
