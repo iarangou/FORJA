@@ -10,6 +10,7 @@ type Project = {
   id: number; code: string; title: string;
   registration_type: string; general_status: string;
   zone_ids:number[];ods_ids:number[];
+  department_ids:number[];academic_program_ids:number[];
 };
 type Period = {
   id:number; academic_year:number; academic_semester:number;
@@ -25,8 +26,12 @@ export default function ProjectsPage() {
   const [working,setWorking] = useState<number|null>(null);
   const [loading,setLoading] = useState(true);
   const [zones,setZones]=useState<{id:number;name:string}[]>([]);
+  const [departments,setDepartments]=useState<{id:number;name:string;faculty_id:number}[]>([]);
+  const [programs,setPrograms]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [zoneFilter,setZoneFilter]=useState("");
   const [odsFilter,setOdsFilter]=useState("");
+  const [departmentFilter,setDepartmentFilter]=useState("");
+  const [programFilter,setProgramFilter]=useState("");
   const [error,setError] = useState("");
   const [message,setMessage] = useState("");
 
@@ -47,13 +52,21 @@ export default function ProjectsPage() {
   },[]);
 
   useEffect(()=>{
-    fetch("/api/project-classifications/zones").then(async a=>{
+    Promise.all([
+      fetch("/api/project-classifications/zones"),
+      fetch("/api/faculty/departments"),
+      fetch("/api/faculty/programs"),
+    ]).then(async ([a,d,p])=>{
       if(a.ok){const data:unknown=await a.json();setZones(Array.isArray(data)?data:[]);}
+      if(d.ok){const data:unknown=await d.json();setDepartments(Array.isArray(data)?data:[]);}
+      if(p.ok){const data:unknown=await p.json();setPrograms(Array.isArray(data)?data:[]);}
     }).catch(()=>undefined);
   },[]);
   const filteredProjects=projects.filter(p=>
     (!zoneFilter||(p.zone_ids??[]).includes(Number(zoneFilter)))&&
-    (!odsFilter||(p.ods_ids??[]).includes(Number(odsFilter)))
+    (!odsFilter||(p.ods_ids??[]).includes(Number(odsFilter)))&&
+    (!departmentFilter||(p.department_ids??[]).includes(Number(departmentFilter)))&&
+    (!programFilter||(p.academic_program_ids??[]).includes(Number(programFilter)))
   );
 
   async function seePeriods(id:number) {
@@ -102,6 +115,18 @@ export default function ProjectsPage() {
           <select value={zoneFilter} onChange={e=>setZoneFilter(e.target.value)}>
             <option value="">Todas las zonas</option>
             {zones.map(z=><option value={z.id} key={z.id}>{z.name}</option>)}
+          </select>
+        </label>
+        <label>Departamento académico
+          <select value={departmentFilter} onChange={e=>setDepartmentFilter(e.target.value)}>
+            <option value="">Todos los departamentos</option>
+            {departments.map(d=><option value={d.id} key={d.id}>{d.name}</option>)}
+          </select>
+        </label>
+        <label>Programa o carrera
+          <select value={programFilter} onChange={e=>setProgramFilter(e.target.value)}>
+            <option value="">Todas las carreras</option>
+            {programs.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}
           </select>
         </label>
         <label>Objetivo de Desarrollo Sostenible (ODS)
