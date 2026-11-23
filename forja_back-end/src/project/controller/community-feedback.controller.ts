@@ -1,7 +1,7 @@
 import {
   Body, Controller, Get, Param, ParseIntPipe, Post, Req, UseGuards,
 } from '@nestjs/common';
-import { IsBoolean, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { AuthGuard } from '../../auth/guard/auth.guard.js';
 import { RolesGuard } from '../../auth/guard/roles.guard.js';
 import { Roles } from '../../shared/decorator/roles.decorator.js';
@@ -9,23 +9,59 @@ import type { PayloadJwt } from '../../shared/types/auth.types.js';
 import { CommunityFeedbackService } from '../service/community-feedback.service.js';
 
 class CommunityAnswerDto {
-  @IsOptional() @IsString() @MaxLength(200)
-  organization_name?:string;
+  @IsString() @MaxLength(180)
+  respondent_name:string;
 
-  @IsOptional() @IsString() @MaxLength(300)
-  relationship_to_project?:string;
+  @IsString() @MaxLength(300)
+  contact_details:string;
 
-  @IsInt() @Min(1) @Max(5)
-  objectives_rating:number;
+  @IsIn(['SOCIO_COMUNITARIO','ALIADO_INSTITUCIONAL'])
+  respondent_type:'SOCIO_COMUNITARIO'|'ALIADO_INSTITUCIONAL';
 
-  @IsInt() @Min(1) @Max(5)
-  usefulness_rating:number;
+  @IsString() @MaxLength(500)
+  organization_location:string;
 
-  @IsInt() @Min(1) @Max(5)
-  participation_rating:number;
+  @IsString() @MaxLength(300)
+  teacher_or_course:string;
+
+  @IsString() @MaxLength(300)
+  project_identification:string;
+
+  @IsString() @MaxLength(3000)
+  addressed_problem:string;
+
+  @IsString() @MaxLength(500)
+  student_participation:string;
+
+  @IsString() @MaxLength(500)
+  community_participation:string;
+
+  @IsString() @MaxLength(5000)
+  meetings_activities:string;
+
+  @IsString() @MaxLength(5000)
+  achievements_products:string;
+
+  @IsString() @MaxLength(5000)
+  impact_benefits:string;
+
+  @IsObject()
+  likert:Record<string,number>;
+
+  @IsIn(['salud_bienestar','desarrollo_humano','habitat','cultura_creacion','industria_biotecnologia'])
+  action_line:string;
+
+  @IsString() @MaxLength(5000)
+  obstacles:string;
+
+  @IsString() @MaxLength(5000)
+  continuity_actions:string;
+
+  @IsString() @MaxLength(5000)
+  other_projects:string;
 
   @IsOptional() @IsString() @MaxLength(3000)
-  comments?:string;
+  additional_comments?:string;
 
   @IsBoolean()
   consent_confirmed:boolean;
