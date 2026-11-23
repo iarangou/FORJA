@@ -6,11 +6,13 @@ type Project={
  id:number;code:string;title:string;registration_type:string;general_status:string;
  external_population:string|null;ods_ids:number[];zone_ids:number[];
  department_ids:number[];academic_program_ids:number[];
+ academic_pairs:{department_id:number|null;academic_program_id:number|null}[];
 };
 type Period={
  project_id:number;academic_year:number;academic_semester:number;
  record_type:string;approval_status:string;execution_status:string;
- student_count:number|null;budget:number|null;
+ student_count:number|null;budget:number|string|null;
+ department_id:number|null;academic_program_id:number|null;
  faculty_name:string|null;department_name:string|null;academic_program_name:string|null;
 };
 type Named={id:number;name:string};
@@ -54,12 +56,17 @@ export async function GET(req:NextRequest){
   const filtered=projects.filter(p=>
    (!zone||(p.zone_ids??[]).includes(Number(zone)))&&
    (!ods||(p.ods_ids??[]).includes(Number(ods)))&&
-   (!department||(p.department_ids??[]).includes(Number(department)))&&
-   (!program||(p.academic_program_ids??[]).includes(Number(program)))&&
+   ((!department&&!program)||
+    (p.academic_pairs??[]).some(a=>
+     (!department||a.department_id===Number(department))&&
+     (!program||a.academic_program_id===Number(program))
+    ))&&
    (!population||p.external_population===population)
   );
   const allowed=new Set(filtered.map(p=>p.id));
-  const filteredPeriods=periods.filter(p=>allowed.has(p.project_id));
+  const filteredPeriods=periods.filter(p=>allowed.has(p.project_id)&&
+   (!department||p.department_id===Number(department))&&
+   (!program||p.academic_program_id===Number(program)));
   const byId=(arr:Named[],id:number)=>arr.find(x=>x.id===id)?.name||`Código ${id}`;
   const joined=(ids:number[]|null|undefined,fn:(id:number)=>string)=>(ids??[]).map(fn).join(" | ");
   const projectRows=filtered.map(p=>[
@@ -78,7 +85,7 @@ export async function GET(req:NextRequest){
    codeById.get(p.project_id)||"",`${p.academic_year}-${p.academic_semester}`,
    p.record_type,p.approval_status,p.execution_status,
    p.faculty_name||"",p.department_name||"",p.academic_program_name||"",
-   p.student_count,p.budget,
+   p.student_count,p.budget==null?null:Number(p.budget),
   ]);
   const workbook=createWorkbook([
    {name:"Proyectos",headers:["Código FORJA","Proyecto","Tipo de registro","Estado",
