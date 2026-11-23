@@ -72,14 +72,14 @@ export class ProjectWorkflowService {
         const { rows } = await client.query(
           `INSERT INTO project_periods
            (project_id,academic_year,academic_semester,record_type,
-            teacher_id,course_id,faculty_id,academic_program_id,objectives,
+            teacher_id,course_id,faculty_id,academic_program_id,department_id,objectives,
             activities,budget,student_count,start_date,end_date,
             community_population_description,territory_name,missing_information,historical_teacher_name,results,conclusions)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
            RETURNING *`,
           [projectId,dto.academic_year,dto.academic_semester,recordType,
             teacher[0]?.id ?? null,dto.course_id ?? null,dto.faculty_id ?? null,
-            dto.academic_program_id ?? null,dto.objectives ?? null,
+            dto.academic_program_id ?? null,dto.department_id ?? null,dto.objectives ?? null,
             dto.activities ?? null,dto.budget ?? null,dto.student_count ?? null,
             dto.start_date ?? null,dto.end_date ?? null,
             dto.community_population_description ?? null,
@@ -144,6 +144,7 @@ export class ProjectWorkflowService {
          faculty_id=$12,
          academic_program_id=$13,
          historical_teacher_name=$14,
+         department_id=$17,
          results=$15,
          conclusions=$16,
          updated_at=NOW()
@@ -154,7 +155,8 @@ export class ProjectWorkflowService {
          dto.missing_information??null,
          dto.faculty_id??null,dto.academic_program_id??null,
          dto.historical_teacher_name?.trim()||null,
-         dto.results?.trim()||null,dto.conclusions?.trim()||null],
+         dto.results?.trim()||null,dto.conclusions?.trim()||null,
+         dto.department_id??null],
       );
       if(dto.course_id!==undefined){
         await client.query('DELETE FROM project_period_courses WHERE project_period_id=$1',[periodId]);
@@ -208,6 +210,7 @@ export class ProjectWorkflowService {
         `UPDATE project_periods SET
           course_id=COALESCE($2,course_id),
           faculty_id=COALESCE($3,faculty_id),
+          department_id=COALESCE($14,department_id),
           academic_program_id=COALESCE($4,academic_program_id),
           objectives=COALESCE($5,objectives),
           activities=COALESCE($6,activities),
@@ -224,7 +227,8 @@ export class ProjectWorkflowService {
           dto.academic_program_id??null,dto.objectives??null,dto.activities??null,
           dto.budget??null,dto.student_count??null,dto.start_date??null,
           dto.end_date??null,dto.community_population_description??null,
-          dto.territory_name??null,dto.missing_information??null],
+          dto.territory_name??null,dto.missing_information??null,
+          dto.department_id??null],
       );
       if (dto.course_id !== undefined) {
         await client.query('DELETE FROM project_period_courses WHERE project_period_id=$1',[periodId]);
@@ -361,7 +365,7 @@ export class ProjectWorkflowService {
     await this.accessibleProject(projectId,user);
     const { rows } = await this.db.query(
       `SELECT id, project_id, academic_year, academic_semester, record_type,
-              teacher_id, course_id, faculty_id, academic_program_id,
+              teacher_id, course_id, faculty_id, academic_program_id, department_id,
               historical_teacher_name, objectives, activities, budget, student_count, start_date, end_date,
               community_population_description, territory_name, missing_information,
               approval_status, execution_status, results, conclusions, last_submitted_at
