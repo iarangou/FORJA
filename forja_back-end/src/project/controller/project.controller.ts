@@ -58,7 +58,7 @@ export class ProjectController {
   }
 
   @Post()
-  @Roles(1, 2, 3)
+  @Roles(2, 3)
   createProject(
     @Body() dto: CreateProjectDTO,
     @Req() request: AuthenticatedRequest,
