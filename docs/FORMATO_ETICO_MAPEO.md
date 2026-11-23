@@ -69,3 +69,29 @@ El documento señala que cuando el proyecto involucre población vulnerable debe
 Este documento NO incluye varios campos definidos en requisitos FORJA: problemática, objetivos, actividades, presupuesto, ODS, territorios, evidencias, observaciones de aprobación, resultados y conclusiones. Deben desarrollarse en otros módulos/formularios.
 
 El flujo funcional previsto del sistema es: borrador → solicitud de revisión → aprobación/devolución por período → ejecución/evidencias → resultados y cierre, con soporte para digitalización de históricos incompletos por monitores. Las reglas exactas de cuándo se exige el análisis ético aún deben validarse con FORJA.
+
+
+## 6. Estado implementado en FORJA (noviembre de 2026)
+
+**Este apartado describe la implementación posterior; no modifica ni completa las preguntas que realmente aparecían en el documento de origen.**
+
+El Word aportado contenía las preguntas numeradas 18 y 19 sobre poblaciones. El sistema implementó un formulario digital de consideraciones éticas **basado parcialmente** en esos campos, junto con preguntas adicionales de protección de información, medios identificables, medidas de privacidad y veracidad. No debe presentarse como transcripción íntegra o como formato oficial aprobado.
+
+| Campo de la plataforma | Dónde se guarda | Alcance |
+| --- | --- | --- |
+| Población externa predominante (una categoría) | `project_ethics.external_population` | Se elige en «Consideraciones éticas»; **también es filtro de proyectos y exportación Excel**. |
+| Población universitaria predominante | `project_ethics.university_population` | Una categoría. |
+| Tratamiento de datos, vulnerabilidad, medios identificables y medidas de privacidad | `project_ethics` | Información para revisión administrativa, sin exigencia automática de avales por categoría. |
+| ODS | `project.ods_ids` | Lista múltiple de los **17 Objetivos de Desarrollo Sostenible**. Se muestran en «Consideraciones éticas», pero pertenecen al proyecto. |
+| Zona territorial institucional | `project_territories` y `forja_territories` | Desplegable múltiple de **siete zonas aún pendientes de denominación oficial** en «Información general». |
+| Facultad, departamento académico, carrera | `project_periods` y catálogos académicos | Datos **por semestre**. El sistema admite por ahora una carrera principal por período. |
+
+**Distinciones importantes:**
+
+- La zona territorial FORJA **no** es el departamento académico de los estudiantes.
+- La selección de población externa se refiere a una **categoría predominante** y no equivale a contar beneficiarios únicos.
+- Los campos éticos se guardan principalmente **por proyecto** y pueden bloquearse cuando un semestre actual está aprobado o en revisión; no existe todavía un historial independiente de análisis éticos por semestre.
+- Los monitores pueden registrar el análisis ético de un proyecto histórico con datos parciales, sin inventar información.
+- Las validaciones de ética y los avisos de privacidad deben revisarse institucionalmente antes de tratar datos reales.
+
+Para el comportamiento de los formularios: [Especificación funcional](ESPECIFICACION_FUNCIONAL_MVP.md). Para las pruebas de roles: [Manual de pruebas](COMO_PROBAR_MVP.md).
