@@ -12,6 +12,7 @@ type Project = {
   registration_type: string; general_status: string;
   zone_ids:number[];ods_ids:number[];
   department_ids:number[];academic_program_ids:number[];
+  academic_pairs:{department_id:number|null;academic_program_id:number|null}[];
   external_population:string|null;
 };
 type Period = {
@@ -69,8 +70,11 @@ export default function ProjectsPage() {
   const filteredProjects=projects.filter(p=>
     (!zoneFilter||(p.zone_ids??[]).includes(Number(zoneFilter)))&&
     (!odsFilter||(p.ods_ids??[]).includes(Number(odsFilter)))&&
-    (!departmentFilter||(p.department_ids??[]).includes(Number(departmentFilter)))&&
-    (!programFilter||(p.academic_program_ids??[]).includes(Number(programFilter)))&&
+    ((!departmentFilter&&!programFilter)||
+      (p.academic_pairs??[]).some(a=>
+        (!departmentFilter||a.department_id===Number(departmentFilter))&&
+        (!programFilter||a.academic_program_id===Number(programFilter))
+      ))&&
     (!populationFilter||p.external_population===populationFilter)
   );
 
