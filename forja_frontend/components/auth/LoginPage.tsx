@@ -36,7 +36,8 @@ export default function LoginPage() {
             <LoginForm />
 
             <div className="login-card__note login-card__note--register">
-              <p>Si necesitas acceso, solicita al administrador FORJA que cree tu cuenta.</p>
+              <p>¿Todavía no tienes cuenta? Regístrate con tu correo institucional; después el administrador aprobará tu acceso.</p>
+              <Link href="/register" className="register-login__button">Crear cuenta <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </section>
