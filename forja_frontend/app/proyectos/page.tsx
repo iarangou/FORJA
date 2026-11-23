@@ -93,7 +93,7 @@ export default function ProjectsPage() {
   }
 
   return <main className="forja-projects"><div className="forja-shell">
-    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<Link href="/administracion/usuarios">Gestionar usuarios</Link><Link href="/administracion/catalogos">Zonas y compromisos</Link>}<LogoutButton/></div></nav>
+    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<><Link href="/administracion/usuarios">Gestionar usuarios</Link><Link href="/administracion/catalogos">Zonas y compromisos</Link></>}<LogoutButton/></div></nav>
     <div className="forja-heading"><span className="forja-eyebrow">PLATAFORMA FORJA</span>
       <h1>Proyectos registrados</h1>
       <p>Consulta proyectos y aprobaciones por semestre. Los permisos se comprueban en el servidor.</p>
