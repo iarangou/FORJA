@@ -21,6 +21,20 @@ export class FacultyService {
         return rows;
     }
 
+    async getDepartments() {
+        const { rows } = await this.db.query(
+          'SELECT id,name,faculty_id FROM department ORDER BY name'
+        );
+        return rows;
+    }
+
+    async getPrograms() {
+        const { rows } = await this.db.query(
+          'SELECT id,name,faculty_id FROM academic_programs ORDER BY name'
+        );
+        return rows;
+    }
+
     async create(dto: FacultyCreateDto) {
         // pendiente
     }

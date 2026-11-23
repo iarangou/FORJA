@@ -1,355 +1,150 @@
-﻿# Endpoints de FORJA
+# FORJA — API NestJS (backend)
+
+Backend de la plataforma FORJA, desarrollado en **NestJS 12**, TypeScript, PostgreSQL 17 y almacenamiento privado local de documentos PDF. Esta guía refleja los **controladores presentes en la rama de desarrollo**; no documenta endpoints antiguos eliminados.
+
+**Inicio recomendado:** usar Docker Compose desde `FORJA/Docker` y la plantilla `.env.dev.example`, como se indica en el [README principal](../README.md).
 
 ## Roles
 
-| ID | Rol | Permisos en estos módulos |
+| ID | Rol | Responsabilidad |
 | --- | --- | --- |
-| 1 | `admin` — Administrador | Administra usuarios, edita su perfil y consulta facultades y programas. |
-| 2 | `evaluator` — Evaluador | Consulta y edita su perfil, y consulta facultades y programas. |
-| 3 | `teacher` — Profesor | Consulta y edita su perfil y facultad, y consulta facultades y programas. |
+| `1` | `admin` | Usuarios, revisión/aprobación, cierre/finalización, catálogos, cartas, enlaces comunitarios e informes administrativos. |
+| `2` | `monitor` | Digitalización de períodos históricos con información parcial; archiva archivos existentes sin aprobación retrospectiva. |
+| `3` | `teacher` | Proyectos/períodos actuales, edición y envío a revisión, evidencias y resultados. |
 
-## Flujo de registro
+Las rutas privadas requieren cabecera `Authorization: Bearer <access_token>`. Next.js actúa como proxy con una cookie de sesión HTTP-only; desde el navegador se usan las rutas `/api/...`.
 
-1. Envía los datos a `POST /auth/register`. Se envía un código al correo.
-2. Confirma el código en `POST /auth/verify-email`. Se crea la cuenta como profesor, pendiente de aprobación.
-3. El administrador activa la cuenta desde `POST /users/update` con el `id` del usuario e `is_active: true`.
-4. Inicia sesión en `POST /auth/login` para obtener el token.
+**Registro de profesores:** no existe `POST /auth/register`, ni `/auth/verify-email` ni `/auth/resend-verification` en NestJS. El administrador crea cuentas a través de `POST /users/create`. No hay administrador predeterminado ni contraseña `12345678`. Para la primera cuenta se usa `scripts/bootstrap-admin.mjs`.
 
-## Cuenta del administrador
+## Variables y arranque
 
-Para iniciar sesión como administrador, envía estos datos a `POST /auth/login`:
+Docker configura en backend: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS` y `FORJA_UPLOAD_DIR`. Las variables deben estar en `Docker/.env.dev` (no versionadas), con secretos distintos por instalación.
 
-```json
-{
-  "username": "admin",
-  "password": "12345678"
-}
-```
+~~~powershell
+cd Docker
+Copy-Item .env.dev.example .env.dev   # Solo primera instalación
+# Editar .env.dev y establecer secretos propios.
+docker compose -p forja-dev --env-file .env.dev -f compose.dev.yml up -d --build
+~~~
 
-## Cómo enviar las peticiones
+Ejemplo para iniciar sesión en la **API**:
 
-Los datos se envían en el cuerpo como JSON. Usa estos encabezados:
-
-```http
+~~~http
+POST /auth/login
 Content-Type: application/json
-Authorization: Bearer <access_token>
-```
 
-El token se obtiene al iniciar sesión. Las rutas de **auth** y `GET /faculty` son públicas; las demás necesitan el token de una cuenta activa. Las consultas `GET` no llevan cuerpo.
+{"username":"usuario_local","password":"contraseña_configurada"}
+~~~
 
-Las respuestas correctas usan `200` para `GET` y `PATCH`, y `201` para `POST`. Los datos de los ejemplos son ilustrativos.
+La respuesta incluye `access_token` y los datos básicos del usuario. La API utiliza la contraseña almacenada con hash; nunca se deben subir credenciales reales a GitHub.
 
-## Auth
+## Endpoints implementados
 
-### POST `/auth/register`
+### Autenticación, usuarios y catálogos
 
-Inicia el registro y envía un código al correo. La cuenta se crea al verificarlo.
+| Método y ruta NestJS | Acceso | Uso |
+| --- | --- | --- |
+| `POST /auth/login` | Público | Obtener JWT con usuario y contraseña. |
+| `GET /users/me` | Autenticado | Consultar perfil propio. |
+| `PATCH /users/me` | Autenticado | Actualizar nombre y, si es profesor, facultad. |
+| `GET /users`, `GET /users/:id` | Admin | Consultar usuarios. |
+| `POST /users/create` | Admin | Crear usuario profesor, monitor o administrador. |
+| `POST /users/update`, `POST /users/delete` | Admin | Editar/retirar usuarios según restricciones de la base. |
+| `GET /faculty`, `GET /faculty/departments`, `GET /faculty/programs` | Público | Catálogos de la Pontificia Universidad Javeriana Cali incluidos en la base de datos local. |
+| `GET /course` | Admin / Monitor / Profesor | Listado de asignaturas. |
+| `POST /course/create` | Admin | Crear asignatura del catálogo. |
+| `GET /academic-programs` | Admin / Monitor / Profesor | Consultar programas académicos. |
 
-**Recibe:**
+Al crear un profesor mediante `/users/create` se requiere `faculty_id`. El backend valida correos del dominio javerianacali.edu.co; utilizar únicamente direcciones y personas autorizadas en entornos reales.
 
-```json
-{
-  "email": "ana@javerianacali.edu.co",
-  "full_name": "Ana Pérez",
-  "password": "una-clave-segura",
-  "faculty_id": 2
-}
-```
+### Proyectos y períodos
 
-El `username` se genera con la parte del correo anterior a `@`: en este caso, `ana`.
+Todos los endpoints siguientes comienzan por `/project`:
 
-**Devuelve:**
+| Método + sufijo | Acceso | Acción |
+| --- | --- | --- |
+| `GET /`, `GET /:id` | 1, 2, 3 con controles de acceso | Listar/consultar proyectos visibles. |
+| `POST /`, `PATCH /:id` | 1, 2, 3 según flujo | Crear/editar proyecto, incluyendo los 17 `ods_ids`. |
+| `POST /:id/responsible-teacher` | Admin | Asignar profesor para continuar proyecto histórico activo. |
+| `GET /:projectId/periods`, `POST /:projectId/periods` | 1, 2, 3 según flujo | Consultar y registrar semestres. |
+| `PATCH /:projectId/periods/:periodId` | Admin / Profesor | Editar semestre actual editable. |
+| `PATCH /:projectId/periods/:periodId/historical` | Admin / Monitor | Completar semestre histórico sin aprobación retroactiva. |
+| `GET /:projectId/ethics`, `PUT /:projectId/ethics` | 1, 2, 3 según flujo | Consideraciones éticas y población externa predominante. |
+| `POST /:projectId/periods/:periodId/submit` | Profesor | Solicitar revisión del semestre actual. |
+| `POST /:projectId/periods/:periodId/review` | Admin | Aprobar/devolver semestre en revisión; dejar observaciones. |
+| `GET /:projectId/periods/:periodId/reviews` | 1, 2, 3 | Ver historial de decisiones. |
+| `PUT /:projectId/periods/:periodId/results` | Profesor | Guardar resultados y conclusiones. |
+| `POST /:projectId/periods/:periodId/close` | Admin | Cerrar semestre actual aprobado con resultados y evidencia revisada. |
+| `POST /:projectId/finalize` | Admin | Marcar finalización definitiva del proyecto. |
+| `GET /report-periods` | Admin | Datos no nominativos de períodos para exportar Excel. |
 
-```json
-{
-  "message": "Registro pendiente. Introduce el código de verificación",
-  "expires_in": 600
-}
-```
+Un proyecto puede continuar o reactivarse en varios semestres y conserva su código. **El administrador aprueba y cierra semestres por separado**. El monitor solo digitaliza historia; el semestre vigente se somete a revisión normal.
 
-El código llega por correo y dura 10 minutos. `expires_in` se expresa en segundos.
+### Evidencias y cartas firmadas
 
-### POST `/auth/verify-email`
+Prefijo de evidencias: `/project/:projectId/periods/:periodId/evidences`.
 
-Verifica el código y crea la cuenta como profesor, con la facultad elegida. Queda pendiente de aprobación del administrador.
+| Método | Acceso | Uso |
+| --- | --- | --- |
+| `GET /` | Roles autorizados | Listar evidencias del período. |
+| `POST /` | Profesor (período actual aprobado y abierto) / Admin o Monitor (histórico) | Enviar `multipart/form-data` con campo `file`, PDF máximo 20 MB. |
+| `GET /:evidenceId/download` | Roles autorizados | Descargar PDF. |
+| `POST /:evidenceId/review` | Admin | Aprobar o devolver evidencia actual; una evidencia ya revisada no se puede revisar de nuevo. |
 
-**Recibe:**
+Prefijo de carta: `/project/:projectId/periods/:periodId/final-letter`.
 
-```json
-{
-  "email": "ana@javerianacali.edu.co",
-  "code": "012345"
-}
-```
+| Método | Acceso | Uso |
+| --- | --- | --- |
+| `GET /` | Roles autorizados | Consultar la única carta final del período. |
+| `POST /` | Admin / Monitor | Archivar PDF final firmado de máximo 20 MB, **una carta por semestre**. Un período actual debe estar cerrado y aprobado; el histórico se archiva sin cierre retroactivo. |
+| `GET /:letterId/download` | Roles autorizados | Descargar carta. |
 
-**Devuelve:**
+**No hay generador ni editor de cartas dentro de FORJA:** la carta se redacta y firma fuera del sistema y se sube la versión definitiva.
 
-```json
-{
-  "message": "Correo verificado. Cuenta creada y pendiente de aprobación del administrador"
-}
-```
+### Zonas y ODS
 
-El administrador activa la cuenta desde `/users/update` con `is_active: true`.
+Prefijo `/project-classifications`:
 
-### POST `/auth/resend-verification`
+| Método | Acceso | Uso |
+| --- | --- | --- |
+| `GET /zones` | 1, 2, 3 | Consultar zonas territoriales. |
+| `POST /zones` | Admin | Agregar nombre de zona al catálogo. |
+| `GET /project/:projectId/zones` | 1, 2, 3 según proyecto | Consultar zonas asignadas. |
+| `PUT /project/:projectId/zones` | 1, 2, 3 según proyecto | Reemplazar la selección; cuerpo `{"ids":[1,2]}`. |
 
-Envía un nuevo código para un registro pendiente y reemplaza el anterior.
+Los **17 ODS** se guardan en `project.ods_ids` (valores 1–17); **no hay** un catálogo independiente de once compromisos de sostenibilidad. Los nombres de las siete zonas FORJA se deben cargar cuando la institución los confirme.
 
-**Recibe:**
+### Evaluación comunitaria institucional
 
-```json
-{
-  "email": "ana@javerianacali.edu.co"
-}
-```
+Prefijo `/community-feedback`:
 
-**Devuelve:**
+| Método y ruta | Acceso | Uso |
+| --- | --- | --- |
+| `GET /form/:token` | Público con token | Verificar enlace y recuperar código del proyecto y semestre. |
+| `POST /form/:token` | Público con token | Enviar cuestionario institucional de 19 preguntas, incluyendo 14 afirmaciones Likert y autorización de almacenamiento. |
+| `GET /project/:projectId/periods/:periodId` | 1, 2, 3 según proyecto | Consultar evaluación del **semestre seleccionado**. |
+| `POST /project/:projectId/periods/:periodId/link` | Admin | Generar/regenerar enlace privado de un uso y vigencia de 14 días. |
 
-```json
-{
-  "message": "Se generó un nuevo código de verificación",
-  "expires_in": 600
-}
-```
+Las respuestas están en `community_period_feedback` con restricción **única por período**, y los hashes de token en `community_period_feedback_links`. El token completo no se guarda en la BD. `form_version` permite distinguir pruebas anteriores (`MVP_2026`) y el instrumento institucional (`INSTITUCIONAL_2026`).
 
-### POST `/auth/login`
+### Excel para administradores
 
-Inicia sesión con el nombre de usuario y la contraseña.
+La exportación `GET /api/projects/export` es una **ruta de Next.js**, no un controlador NestJS. Comprueba rol administrador y reúne `GET /project`, `GET /project/report-periods` y catálogos.
 
-**Recibe:**
+Filtros admitidos: `year`, `zone`, `ods`, `department`, `program` y `population`. El archivo `.xlsx` contiene dos hojas: **Proyectos** y **Semestres**, sin datos personales de contacto. El año es de **inicio del proyecto**, calculado con la fecha de inicio y el semestre más antiguo; cuando no se conocen, se toma como referencia el registro en el sistema.
 
-```json
-{
-  "username": "ana",
-  "password": "una-clave-segura"
-}
-```
+## Base de datos
 
-**Devuelve:**
+Esquema en `Docker/database/init/`; actualizaciones incrementales para bases existentes en `Docker/database/migrations/`.
 
-```json
-{
-  "access_token": "<token>",
-  "user": {
-    "id": 7,
-    "username": "ana",
-    "rol": 3
-  }
-}
-```
-
-Usa `access_token` en el encabezado `Authorization` de las siguientes peticiones. Aquí `rol` es el ID del rol.
-
-## Users
-
-### GET `/users`
-
-**Acceso:** administrador. Devuelve la lista de usuarios. No recibe cuerpo.
-
-**Devuelve:**
-
-```json
-[
-  {
-    "id": 7,
-    "username": "ana",
-    "email": "ana@javerianacali.edu.co",
-    "full_name": "Ana Pérez",
-    "rol_id": 3,
-    "rol": "teacher",
-    "is_active": true,
-    "last_login_at": null,
-    "created_at": "2026-11-12T14:00:00.000Z",
-    "updated_at": "2026-11-12T14:00:00.000Z"
-  }
-]
-```
-
-`rol_id` es el ID del rol y `rol` es su nombre. `last_login_at` indica el último inicio de sesión; puede ser `null`.
-
-### GET `/users/:id`
-
-**Acceso:** administrador. Consulta un usuario con el ID de la ruta, por ejemplo: `/users/7`. No recibe cuerpo.
-
-**Devuelve:** un objeto con los mismos campos del usuario mostrado en `GET /users`, sin el arreglo exterior.
-
-### GET `/users/me`
-
-**Acceso:** cualquier rol. Consulta el perfil de quien envía el token. No recibe cuerpo ni ID.
-
-**Devuelve:**
-
-```json
-{
-  "id": 7,
-  "username": "ana",
-  "full_name": "Ana Pérez",
-  "email": "ana@javerianacali.edu.co",
-  "rol_id": 3,
-  "faculty_id": 2,
-  "faculty_name": "Ingeniería y Ciencias"
-}
-```
-
-Los datos de facultad pueden ser `null` cuando no hay una facultad asociada al perfil.
-
-### PATCH `/users/me`
-
-**Acceso:** cualquier rol. Actualiza el nombre propio y, para profesores, su facultad. Envía los campos que quieras cambiar.
-
-**Recibe:**
-
-```json
-{
-  "full_name": "Ana María Pérez",
-  "faculty_id": 2
-}
-```
-
-**Devuelve:**
-
-```json
-{
-  "message": "Perfil actualizado exitosamente.",
-  "user": {
-    "id": 7,
-    "username": "ana",
-    "full_name": "Ana María Pérez",
-    "email": "ana@javerianacali.edu.co",
-    "rol_id": 3,
-    "faculty_id": 2,
-    "faculty_name": "Ingeniería y Ciencias"
-  }
-}
-```
-
-### POST `/users/create`
-
-**Acceso:** administrador. Crea una cuenta directamente, sin verificación por correo. `faculty_id` se envía al crear profesores; para los otros roles se omite.
-
-**Recibe:**
-
-```json
-{
-  "email": "ana@javerianacali.edu.co",
-  "full_name": "Ana Pérez",
-  "password": "una-clave-segura",
-  "rol_id": 3,
-  "is_active": true,
-  "faculty_id": 2
-}
-```
-
-**Devuelve:**
-
-```json
-{
-  "message": "Usuario creado exitosamente.",
-  "user": {
-    "id": 7,
-    "username": "ana",
-    "email": "ana@javerianacali.edu.co",
-    "full_name": "Ana Pérez",
-    "rol_id": 3,
-    "is_active": true,
-    "created_at": "2026-11-12T14:00:00.000Z",
-    "updated_at": "2026-11-12T14:00:00.000Z"
-  }
-}
-```
-
-### POST `/users/update`
-
-**Acceso:** administrador. Actualiza un usuario. Envía su `id` y los campos que quieras cambiar: `full_name`, `rol_id`, `is_active` o `faculty_id` (para profesores).
-
-**Recibe, por ejemplo, para aprobar una cuenta:**
-
-```json
-{
-  "id": 7,
-  "is_active": true
-}
-```
-
-**Devuelve:**
-
-```json
-{
-  "message": "Usuario actualizado exitosamente.",
-  "user": {
-    "id": 7,
-    "username": "ana",
-    "email": "ana@javerianacali.edu.co",
-    "full_name": "Ana Pérez",
-    "rol_id": 3,
-    "is_active": true,
-    "last_login_at": null,
-    "created_at": "2026-11-12T14:00:00.000Z",
-    "updated_at": "2026-11-12T15:00:00.000Z"
-  }
-}
-```
-
-Con `is_active: false` se desactiva la cuenta. Los campos omitidos conservan su valor.
-
-### POST `/users/delete`
-
-**Acceso:** administrador. Elimina el usuario indicado.
-
-**Recibe:**
-
-```json
-{
-  "id": 7
-}
-```
-
-**Devuelve:**
-
-```json
-{
-  "message": "Usuario eliminado exitosamente."
-}
-```
-
-## Faculty
-
-### GET `/faculty`
-
-**Acceso:** público, sin token. Consulta las facultades para elegir una durante el registro. No recibe cuerpo.
-
-**Devuelve:**
-
-```json
-[
-  {
-    "id": 2,
-    "name": "Ingeniería y Ciencias",
-    "code": "FIC"
-  }
-]
-```
-
-La ruta del módulo `faculty` es `/faculty`. Actualmente solo está habilitada la consulta.
-
-## Academic programs
-
-### GET `/academic-programs`
-
-**Acceso:** administrador, evaluador o profesor. Consulta los programas académicos junto con el nombre de su facultad. No recibe cuerpo.
-
-**Devuelve:**
-
-```json
-[
-  {
-    "id": 9,
-    "name": "Ingeniería de Sistemas y Computación",
-    "snies_code": "1042",
-    "faculty_name": "Ingeniería y Ciencias"
-  }
-]
-```
-
-La ruta del módulo `academic_programs` es `/academic-programs`. Actualmente solo está habilitada la consulta.
+**Jamás reinicializar PostgreSQL para aplicar una migración en una instalación con datos.** Respaldar primero y ejecutar cada migración pertinente; consultar el [README raíz](../README.md#base-de-datos-y-persistencia). El directorio de documentos `FORJA_UPLOAD_DIR` también requiere respaldo y permisos adecuados.
+
+## Pendiente de validar antes de producción
+
+- Autorización y conservación de datos personales de quienes responden la evaluación.
+- Protección contra abuso del formulario público (límites por IP/tasa de envío).
+- Verificación antivirus de PDF, HTTPS y auditoría de permisos.
+- Reglas institucionales de catálogos y soporte de varias carreras simultáneas por semestre.
+- Pruebas de integración, despliegue seguro y recuperación de fallos.
+
+Para el recorrido guiado: [Cómo probar el MVP](../docs/COMO_PROBAR_MVP.md).

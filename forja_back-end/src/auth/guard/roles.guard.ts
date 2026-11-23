@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { PayloadJwt, RoleId } from '../../shared/types/auth.types.ts';
+import type { PayloadJwt, RoleId } from '../../shared/types/auth.types.js';
 import { ROLES_KEY } from '../../shared/decorator/roles.decorator.js';
 
 interface RequestHttp {
