@@ -27,8 +27,8 @@ export class ProjectClassificationsController {
   constructor(private readonly svc:ProjectClassificationsService){}
 
   private kind(input:string):ClassificationKind{
-    if(input!=='zones'&&input!=='commitments')
-      throw new BadRequestException('Catálogo desconocido');
+    if(input!=='zones')
+      throw new BadRequestException('Solo se administra el catálogo de zonas; los ODS son fijos');
     return input;
   }
 
