@@ -165,3 +165,10 @@ Fuente: `form_comunidad.pdf` compartido por el equipo (representa el Microsoft F
 - El archivo se genera mediante Open XML comprimido en el backend de Next (sin dependencias npm nuevas), con encabezados, autofiltros y la primera fila inmovilizada. Las cadenas del usuario se serializan como texto de Excel, no fórmulas.
 - En la cabecera de `/proyectos`, `/administracion/usuarios` y `/administracion/catalogos` se normalizaron tamaño, altura, relleno y bordes de las acciones y el botón de salida. Es adaptable a móvil.
 - **Pendiente de prueba manual en Docker:** aplicar dos filtros, descargar el archivo, abrir con Excel/LibreOffice y comprobar hojas y conteos; revisar filtros individuales como población externa vacía; comprobar que docentes/monitores no pueden invocar la exportación.
+
+## Filtro de año de inicio del proyecto (23/11/2026)
+
+- El listado de proyectos incorpora el desplegable **Año de inicio del proyecto**. Se llena con los años disponibles en los proyectos que el usuario puede consultar, en orden descendente.
+- Para evitar confundir la **digitalización de un proyecto antiguo** con su creación original, el año se calcula con el valor más antiguo entre la fecha de inicio general (`project.start_date`) y el año del primer semestre asociado (`project_periods.academic_year`). Solo si ambos faltan se recurre al año de registro en FORJA (`project.created_at`). Es un año **estimado de inicio** cuando los datos históricos estén incompletos; no asegura la fecha real de constitución del proyecto.
+- El administrador puede combinar este filtro con los demás, y la ruta de exportación `/api/projects/export` acepta `year`, valida su formato, aplica el filtro en el servidor y añade la columna **Año de inicio** en la hoja «Proyectos».
+- No requiere migración de base de datos. Se requiere reconstruir frontend/backend y comprobar la coincidencia entre los proyectos mostrados y los exportados.
