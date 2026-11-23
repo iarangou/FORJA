@@ -12,8 +12,7 @@ export async function POST(request: NextRequest) {
       typeof body.full_name !== "string" ||
       typeof body.email !== "string" ||
       typeof body.password !== "string" ||
-      !Number.isInteger(body.faculty_id) ||
-      body.faculty_id < 1
+      body.password.length < 12
     ) {
       return NextResponse.json(
         { message: "Revisa los datos del formulario." },
@@ -30,7 +29,6 @@ export async function POST(request: NextRequest) {
         full_name: body.full_name,
         email: body.email,
         password: body.password,
-        faculty_id: body.faculty_id,
       }),
       cache: "no-store",
     });
