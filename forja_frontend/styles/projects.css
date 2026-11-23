@@ -114,3 +114,25 @@
 .forja-likert-options{grid-template-columns:1fr}
 .forja-likert-options label{flex-direction:row;text-align:left;padding:8px}
 }
+
+/* Navegación administrativa uniforme; primera marca sin selector :first-child. */
+.forja-nav>.forja-brand{font-size:24px;font-weight:800;color:var(--forja-purple);line-height:1.15;flex-shrink:0}
+.forja-nav-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px}
+.forja-nav-actions>a.forja-nav-action,.forja-nav-actions>.forja-logout{
+  box-sizing:border-box;appearance:none;display:inline-flex;align-items:center;justify-content:center;
+  min-height:40px;padding:10px 13px;border:1px solid #ded7e8;border-radius:9px;
+  background:#fff;color:var(--forja-purple);font-family:inherit;font-size:13px;
+  font-weight:700;line-height:1.25;text-decoration:none;white-space:nowrap;cursor:pointer;
+}
+.forja-nav-actions>a.forja-nav-action:hover,.forja-nav-actions>.forja-logout:hover{background:#f5eef9;border-color:#a389be}
+.forja-nav-actions>a.forja-nav-action:focus-visible,.forja-nav-actions>.forja-logout:focus-visible{outline:2px solid var(--forja-purple);outline-offset:2px}
+.forja-filter-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:18px}
+.forja-filter-footer .forja-description{margin:0}
+.forja-export-button{border:0;background:var(--forja-purple);color:white;padding:12px 16px;border-radius:8px;font:700 13px Arial,Helvetica,sans-serif;cursor:pointer}
+.forja-export-button:hover{background:#51256c}
+.forja-export-button:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:700px){
+ .forja-nav{height:auto;min-height:78px;padding:14px 0;align-items:flex-start;flex-wrap:wrap}
+ .forja-nav-actions{width:100%;justify-content:flex-start}
+ .forja-nav-actions>a.forja-nav-action,.forja-nav-actions>.forja-logout{font-size:12px}
+}
