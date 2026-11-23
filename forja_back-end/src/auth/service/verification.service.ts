@@ -5,7 +5,6 @@ import { RedisService } from '../../redis/service/redis.service.js';
 import { MailService } from '../../mail/service/mail.service.js';
 
 export interface PendingRegistration {
-  faculty_id: number;
   email: string;
   username: string;
   full_name: string;
@@ -67,7 +66,6 @@ export class VerificationService {
     const record: StoredRegistration = {
       id, email: data.email.trim().toLowerCase(), username: data.username,
       full_name: data.full_name, password_hash: data.password_hash,
-      faculty_id: data.faculty_id,
       hash: this.hash(id, code), attempts: 0,
     };
 
