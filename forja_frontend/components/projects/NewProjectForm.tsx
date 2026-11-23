@@ -122,6 +122,10 @@ export default function NewProjectForm() {
 
   async function save(event:FormEvent<HTMLFormElement>){
     event.preventDefault();
+    if(role!==2&&role!==3){
+      setError("Solo profesores y monitores pueden registrar proyectos.");
+      return;
+    }
     if(loading)return;
     setLoading(true);setError("");setMessage("");
     try {
@@ -209,6 +213,17 @@ export default function NewProjectForm() {
     setActiveStep(id);
     document.getElementById(`fw-create-${id}`)?.scrollIntoView({behavior:"smooth",block:"start"});
   }
+  if(role===null)return <main className="forja-projects"><div className="forja-shell">
+    <p className="forja-note">Verificando permisos para registrar proyectos...</p>
+  </div></main>;
+  if(role!==2&&role!==3)return <main className="forja-projects"><div className="forja-shell">
+    <div className="forja-heading">
+      <span className="forja-eyebrow">ADMINISTRACIÓN Y SEGUIMIENTO</span>
+      <h1>Registro restringido</h1>
+      <p>El administrador revisa, aprueba y gestiona proyectos existentes. Únicamente los profesores registran proyectos nuevos y los monitores digitalizan históricos.</p>
+      <Link href="/proyectos" className="forja-button">Volver a proyectos</Link>
+    </div>
+  </div></main>;
   return (
     <main className="forja-projects">
       <div className="forja-shell">
