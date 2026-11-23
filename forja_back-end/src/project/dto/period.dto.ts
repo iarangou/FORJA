@@ -20,6 +20,9 @@ export class CreatePeriodDto {
   faculty_id?: number;
 
   @IsOptional() @IsInt() @Min(1)
+  department_id?: number;
+
+  @IsOptional() @IsInt() @Min(1)
   academic_program_id?: number;
 
   @IsOptional() @IsString() @MaxLength(180)
@@ -74,6 +77,9 @@ export class UpdatePeriodDto {
 
   @IsOptional() @IsInt() @Min(1)
   faculty_id?: number;
+
+  @IsOptional() @IsInt() @Min(1)
+  department_id?: number;
 
   @IsOptional() @IsInt() @Min(1)
   academic_program_id?: number;
