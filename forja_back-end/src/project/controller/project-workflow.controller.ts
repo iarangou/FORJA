@@ -26,7 +26,7 @@ export class ProjectWorkflowController {
   }
 
   @Post(':projectId/periods')
-  @Roles(1, 2, 3)
+  @Roles(2, 3)
   createPeriod(
     @Param('projectId', ParseIntPipe) projectId: number,
     @Body() dto: CreatePeriodDto,
