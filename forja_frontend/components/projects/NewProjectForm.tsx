@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import ClassificationPicker from "./ClassificationPicker";
+import {ODS} from "@/lib/ods";
 
 type Course = { id: number; name: string };
 type Faculty = { id:number;name:string };
@@ -58,11 +59,12 @@ export default function NewProjectForm() {
   const [courses,setCourses]=useState<Course[]>([]);
   const [faculties,setFaculties]=useState<Faculty[]>([]);
   const [programs,setPrograms]=useState<Program[]>([]);
+  const [departments,setDepartments]=useState<{id:number;name:string;faculty_id:number}[]>([]);
   const [loading,setLoading]=useState(false);
   const [zones,setZones]=useState<{id:number;name:string}[]>([]);
-  const [commitments,setCommitments]=useState<{id:number;name:string}[]>([]);
+
   const [selectedZones,setSelectedZones]=useState<number[]>([]);
-  const [selectedCommitments,setSelectedCommitments]=useState<number[]>([]);
+  const [selectedODS,setSelectedODS]=useState<number[]>([]);
   const [message,setMessage]=useState("");
   const [error,setError]=useState("");
   const [project,setProject]=useState<CreateResponse|null>(null);
@@ -74,7 +76,7 @@ export default function NewProjectForm() {
     registration_type:"NUEVO", duration:"1", academic_year:"2026", academic_semester:"2",
     course_id:"", objectives:"", activities:"", student_count:"",
     budget:"", start_date:"", end_date:"", missing_information:"",
-    historical_teacher_name:"",faculty_id:"",academic_program_id:"",
+    historical_teacher_name:"",faculty_id:"",department_id:"",academic_program_id:"",
     community_population_description:"",territory_name:"",results:"",conclusions:"",
     external_population:"NINGUNO", university_population:"NINGUNO",
     involves_vulnerable_population:false, handles_personal_data:false,
@@ -85,13 +87,8 @@ export default function NewProjectForm() {
     setForm(current=>({...current,[field]:value}));
   }
   useEffect(()=>{
-    Promise.all([
-      fetch("/api/project-classifications/zones"),
-      fetch("/api/project-classifications/commitments"),
-    ]).then(async ([a,b])=>{
-      if(a.ok){const v:unknown=await a.json();setZones(Array.isArray(v)?v:[]);}
-      if(b.ok){const v:unknown=await b.json();setCommitments(Array.isArray(v)?v:[]);}
-    }).catch(()=>undefined);
+    fetch("/api/project-classifications/zones")
+      .then(async a=>{if(a.ok){const v:unknown=await a.json();setZones(Array.isArray(v)?v:[]);}}).catch(()=>undefined);
   },[]);
   useEffect(()=>{
     fetch("/api/courses",{credentials:"same-origin"})
@@ -100,10 +97,11 @@ export default function NewProjectForm() {
       .catch(()=>setCourses([]));
   },[]);
   useEffect(()=>{
-    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs")])
-      .then(async ([f,p])=>{
+    Promise.all([fetch("/api/faculty"),fetch("/api/faculty/programs"),fetch("/api/faculty/departments")])
+      .then(async ([f,p,d])=>{
         if(f.ok){const v:unknown=await f.json();setFaculties(Array.isArray(v)?v:[]);}
         if(p.ok){const v:unknown=await p.json();setPrograms(Array.isArray(v)?v:[]);}
+        if(d.ok){const v:unknown=await d.json();setDepartments(Array.isArray(v)?v:[]);}
       }).catch(()=>undefined);
   },[]);
   useEffect(()=>{
@@ -136,6 +134,7 @@ export default function NewProjectForm() {
           community_contact:form.community_contact || undefined,
           community_location:form.community_location || undefined,
           registration_type:form.registration_type,
+          ods_ids:selectedODS,
           duration:Number(form.duration),
           ...(form.start_date?{start_date:form.start_date}:{}),
           ...(form.end_date?{end_date:form.end_date}:{}),
@@ -151,6 +150,7 @@ export default function NewProjectForm() {
           record_type:form.registration_type==="HISTORICO"?"HISTORICO":"ACTUAL",
           ...(form.course_id?{course_id:Number(form.course_id)}:{}),
           ...(form.faculty_id?{faculty_id:Number(form.faculty_id)}:{}),
+          ...(form.department_id?{department_id:Number(form.department_id)}:{}),
           ...(form.academic_program_id?{academic_program_id:Number(form.academic_program_id)}:{}),
           ...(form.registration_type==="HISTORICO"?{
             historical_teacher_name:form.historical_teacher_name,
@@ -169,7 +169,6 @@ export default function NewProjectForm() {
       }
       // Las clasificaciones pertenecen al proyecto, no a un semestre.
       await jsonRequest(`/api/projects/${nextProject.id}/classifications/zones`,"PUT",{ids:selectedZones});
-      await jsonRequest(`/api/projects/${nextProject.id}/classifications/commitments`,"PUT",{ids:selectedCommitments});
       if(form.registration_type==="NUEVO"){
         await jsonRequest(`/api/projects/${nextProject.id}/ethics`,"PUT",{
           external_population:form.external_population,
@@ -267,13 +266,22 @@ export default function NewProjectForm() {
                   <input disabled={!!period} value={form.historical_teacher_name}
                     onChange={e=>change("historical_teacher_name",e.target.value)}/>
                 </label>
+              </>}
+              <>
                 <label>Facultad (si se conoce)
                   <select disabled={!!period} value={form.faculty_id} onChange={e=>{
-                    change("faculty_id",e.target.value);
-                    change("academic_program_id","");
+                    setForm(current=>({...current,faculty_id:e.target.value,department_id:"",academic_program_id:""}));
                   }}>
                     <option value="">Desconocida</option>
                     {faculties.map(f=><option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </label>
+                <label>Departamento académico de los estudiantes (si se conoce)
+                  <select disabled={!!period} value={form.department_id}
+                    onChange={e=>change("department_id",e.target.value)}>
+                    <option value="">Seleccionar departamento</option>
+                    {departments.filter(d=>!form.faculty_id||d.faculty_id===Number(form.faculty_id))
+                      .map(d=><option key={d.id} value={d.id}>{d.name}</option>)}
                   </select>
                 </label>
                 <label>Programa o carrera (si se conoce)
@@ -335,16 +343,16 @@ export default function NewProjectForm() {
             </div>
           </section>
           {form.registration_type==="HISTORICO"&&<section className="forja-panel">
-            <h2>03. Compromisos de sostenibilidad</h2>
-            <ClassificationPicker title="Compromisos de sostenibilidad asociados"
-              items={commitments} selected={selectedCommitments} onChange={setSelectedCommitments}
+            <h2>03. Objetivos de Desarrollo Sostenible</h2>
+            <ClassificationPicker title="ODS asociados al proyecto"
+              items={ODS} selected={selectedODS} onChange={setSelectedODS}
               disabled={!!project}/>
-            <p className="forja-description">Para proyectos antiguos puedes dejar el campo vacío si no se conocen los compromisos.</p>
+            <p className="forja-description">En registros históricos, deja esta selección vacía si los ODS originales se desconocen.</p>
           </section>}
           {form.registration_type==="NUEVO"&&<section className="forja-panel">
             <h2>03. Consideraciones éticas</h2>
-            <ClassificationPicker title="Compromisos de sostenibilidad asociados al proyecto"
-              items={commitments} selected={selectedCommitments} onChange={setSelectedCommitments}
+            <ClassificationPicker title="Objetivos de Desarrollo Sostenible (ODS) asociados"
+              items={ODS} selected={selectedODS} onChange={setSelectedODS}
               disabled={!!project}/>
 
             <p className="forja-description">Preguntas iniciales propuestas a partir del formato recibido. No sustituyen una revisión ética institucional.</p>
