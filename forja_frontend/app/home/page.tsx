@@ -1,9 +1,10 @@
+import {Suspense} from "react";
 import Link from "next/link";
 import WorkspaceShell from "@/components/navigation/WorkspaceShell";
 import "@/styles/projects.css";
 
 export default function HomePage(){
- return <WorkspaceShell>
+ return <Suspense fallback={<div role="status">Cargando FORJA...</div>}><WorkspaceShell>
   <main className="forja-projects"><div className="forja-shell">
    <div className="forja-heading"><span className="forja-eyebrow">BIENVENIDO A FORJA</span>
     <h1>Tu espacio de proyectos<span style={{color:"#f39120"}}>.</span></h1>
@@ -16,5 +17,5 @@ export default function HomePage(){
      <Link href="/proyectos/nuevo" className="forja-button">Registrar</Link></section>
    </div>
   </div></main>
- </WorkspaceShell>;
+ </WorkspaceShell></Suspense>;
 }
