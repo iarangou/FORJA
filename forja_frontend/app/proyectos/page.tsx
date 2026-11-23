@@ -147,9 +147,19 @@ export default function ProjectsPage() {
       <h1>Proyectos registrados</h1>
       <p>Consulta proyectos y aprobaciones por semestre. Los permisos se comprueban en el servidor.</p>
     </div>
-    <div className="forja-actions"><Link className="forja-button" href="/proyectos/nuevo">+ Registrar proyecto</Link></div>
-    <div className="forja-panel">
-      <h2>Filtrar proyectos</h2>
+    {(profile?.rol_id===2||profile?.rol_id===3)&&<div className="forja-actions"><Link className="forja-button" href="/proyectos/nuevo">+ Registrar proyecto</Link></div>}
+    <div className="fw-project-summary" aria-label="Resumen de proyectos">
+      <div><span>Proyectos disponibles</span><strong>{projects.length}</strong></div>
+      <div><span>Proyectos activos</span><strong>{projects.filter(p=>p.general_status==="ACTIVO").length}</strong></div>
+      <div><span>Proyectos finalizados</span><strong>{projects.filter(p=>p.general_status==="FINALIZADO").length}</strong></div>
+      <div><span>Resultado del filtro</span><strong>{filteredProjects.length}</strong></div>
+    </div>
+    <div className="forja-panel fw-filters-panel">
+      <div className="fw-filters-title"><h2>Encuentra un proyecto</h2>
+       <button type="button" onClick={()=>{
+        setYearFilter("");setZoneFilter("");setDepartmentFilter("");setProgramFilter("");setOdsFilter("");setPopulationFilter("");
+       }} className="fw-clear-filters">Limpiar filtros</button>
+      </div>
       <div className="forja-fields">
         <label>Año de inicio del proyecto
           <select value={yearFilter} onChange={e=>setYearFilter(e.target.value)}>
@@ -200,10 +210,10 @@ export default function ProjectsPage() {
     {loading&&<p>Cargando proyectos...</p>}
     {error&&<p className="forja-alert" role="alert">{error} {error.includes("sesión")&&<Link href="/login">Iniciar sesión</Link>}</p>}
     {message&&<p className="forja-ok" role="status">{message}</p>}
-    {!loading&&!error&&projects.length===0&&<div className="forja-panel"><h2>No hay proyectos para mostrar</h2><p>Crea un borrador para empezar.</p></div>}
-    <div className="forja-cards">
-      {filteredProjects.map(p=><article className="forja-panel" key={p.id}>
-        <div className="forja-cardhead"><span className="forja-code">{p.code}</span><span>{p.general_status}</span></div>
+    {!loading&&!error&&projects.length===0&&<div className="forja-panel"><h2>No hay proyectos para mostrar</h2><p>{profile?.rol_id===1?"Los profesores y monitores registran proyectos; aquí puedes consultar y revisarlos.":"Registra un proyecto para empezar."}</p></div>}
+    <div className="forja-cards fw-project-list">
+      {filteredProjects.map(p=><article className="forja-panel fw-project-card" key={p.id}>
+        <div className="forja-cardhead"><span className="forja-code">{p.code}</span><span className={p.general_status==="ACTIVO"?"fw-status-active":"fw-status-finalized"}>{p.general_status}</span></div>
         <h2>{p.title}</h2>
         <Link href={`/proyectos/${p.id}`} className="forja-textbutton">Abrir proyecto y editar borrador</Link>
         <p>{p.registration_type==="HISTORICO"?"Registro histórico":"Proyecto nuevo"}</p>

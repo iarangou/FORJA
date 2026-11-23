@@ -3,7 +3,6 @@ export interface RegisterData {
   full_name: string;
   email: string;
   password: string;
-  faculty_id: number;
 }
 
 export interface RegisterResponse {

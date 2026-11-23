@@ -31,6 +31,9 @@ export class ProjectWorkflowService {
   }
 
   async createPeriod(projectId: number, dto: CreatePeriodDto, user: PayloadJwt) {
+    if (user.rol_id !== 2 && user.rol_id !== 3) {
+      throw new ForbiddenException('Solo profesores y monitores pueden registrar semestres');
+    }
     const project = await this.accessibleProject(projectId, user);
     if (project.general_status === 'FINALIZADO') {
       throw new ConflictException('El proyecto está finalizado');

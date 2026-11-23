@@ -5,10 +5,13 @@ import { AuthController } from './controller/auth.controller.js';
 import { AuthService } from './service/auth.service.js';
 import { AuthGuard } from './guard/auth.guard.js';
 import { UsersModule } from '../users/users.module.js';
+import { VerificationService } from './service/verification.service.js';
+import { RedisModule } from '../redis/redis.module.js';
+import { MailModule } from '../mail/mail.module.js';
 
 @Module({
   imports: [
-    UsersModule,
+    UsersModule, RedisModule, MailModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -26,7 +29,7 @@ import { UsersModule } from '../users/users.module.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
+  providers: [AuthService, AuthGuard, VerificationService],
   exports: [AuthService],
 })
 export class AuthModule {}

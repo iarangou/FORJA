@@ -35,15 +35,16 @@ export class AuthGuard implements CanActivate {
       username: string;
       rol_id: number;
       is_active: boolean;
+      registration_status:string;
     }>(
-      `SELECT u.id, u.username, u.rol_id, u.is_active FROM users u
+      `SELECT u.id, u.username, u.rol_id, u.is_active,u.registration_status FROM users u
        WHERE u.id = $1`,
       [payload.sub],
     );
 
     const user = rows[0];
 
-    if(!user || !user.is_active) {
+    if(!user || !user.is_active || user.registration_status!=='APPROVED') {
       throw new UnauthorizedException('Usuario inactivo o inexistente');
     }
 

@@ -5,7 +5,6 @@ import { DatabaseService } from "../../database/service/database.service.js";
 import { UserCreateDto, UserDeleteDto, UserUpdateDto, UserProfileUpdateDto } from "../dto/users.dto.js";
 
 interface RegistrationData {
-    faculty_id: number;
     email: string;
     username: string;
     full_name: string;
@@ -49,9 +48,10 @@ export class UsersService {
             email: string;
             rol_id: number;
             is_active: boolean;
+            registration_status:string;
         }>(
-            `SELECT id, username, password_hash, email, rol_id, is_active FROM users 
-                WHERE username = $1 LIMIT 1`,
+            `SELECT id, username, password_hash, email, rol_id, is_active,registration_status FROM users 
+                WHERE username = $1 OR LOWER(email) = LOWER($1) LIMIT 1`,
             [username],
         );
 
@@ -65,29 +65,60 @@ export class UsersService {
         );
     }
 
-    async createVerified(data: RegistrationData) {
-        await this.assertFacultyExists(data.faculty_id);
-        try {
-            await this.db.transaction(async (client) => {
-            const { rows } = await client.query<{ id: number; rol_id: number }>(
-                `INSERT INTO users (username, email, full_name, password_hash)
-                 VALUES ($1, $2, $3, $4) RETURNING id, rol_id`,
-                [data.username, data.email, data.full_name, data.password_hash],
+    async createVerified(data:RegistrationData) {
+        try{
+            return await this.db.query(
+                `INSERT INTO users (username,email,full_name,password_hash,rol_id,is_active,registration_status)
+                 VALUES ($1,$2,$3,$4,3,FALSE,'PENDING') RETURNING id`,
+                [data.username,data.email,data.full_name,data.password_hash],
             );
-            if (rows[0].rol_id === 3) {
-                await client.query('INSERT INTO teacher (user_id, faculty_id) VALUES ($1, $2)', [rows[0].id, data.faculty_id]);
-            }
-            });
-        } catch (error: unknown) {
+        }catch(error:unknown){
             this.handleDatabaseError(error);
         }
+    }
+
+    async reviewRegistration(id:number,decision:'APPROVE'|'REJECT',rolId?:number,facultyId?:number) {
+        if(decision==='APPROVE'&&![2,3].includes(rolId??0)){
+            throw new BadRequestException('Selecciona Profesor o Monitor antes de aprobar');
+        }
+        if(decision==='APPROVE'&&rolId===3&&(!Number.isInteger(facultyId)||!facultyId)){
+            throw new BadRequestException('El profesor necesita una facultad');
+        }
+        return this.db.transaction(async client=>{
+            const {rows}=await client.query<{id:number;registration_status:string}>(
+                "SELECT id,registration_status FROM users WHERE id=$1 FOR UPDATE",[id],
+            );
+            if(!rows[0])throw new NotFoundException('Usuario no encontrado');
+            if(rows[0].registration_status!=='PENDING')
+                throw new ConflictException('La solicitud ya fue revisada');
+            if(decision==='REJECT'){
+                await client.query(
+                    "UPDATE users SET registration_status='REJECTED',is_active=FALSE,updated_at=NOW() WHERE id=$1",
+                    [id],
+                );
+                return {message:'Solicitud rechazada'};
+            }
+            if(rolId===3){
+                const {rows:faculty}=await client.query('SELECT id FROM faculty WHERE id=$1',[facultyId]);
+                if(!faculty[0])throw new BadRequestException('La facultad seleccionada no existe');
+                await client.query(
+                    'INSERT INTO teacher(user_id,faculty_id) VALUES($1,$2) ON CONFLICT(user_id) DO UPDATE SET faculty_id=EXCLUDED.faculty_id',
+                    [id,facultyId],
+                );
+            }
+            await client.query(
+                "UPDATE users SET rol_id=$2,registration_status='APPROVED',is_active=TRUE,updated_at=NOW() WHERE id=$1",
+                [id,rolId],
+            );
+            return {message:'Cuenta activada correctamente'};
+        });
     }
 
     async getAll() {
         const { rows } = await this.db.query(
             `
             SELECT u.id, u.username, u.email, u.full_name, u.rol_id,
-                   r.name AS rol, u.is_active, u.last_login_at,
+                   r.name AS rol, u.is_active,u.registration_status,u.last_login_at,
                    u.created_at, u.updated_at
             FROM users u
             INNER JOIN rol r ON r.id = u.rol_id

@@ -3,7 +3,7 @@ import type { PayloadJwt } from "../../shared/types/auth.types.js";
 import { AuthGuard } from "../../auth/guard/auth.guard.js";
 import { RolesGuard } from "../../auth/guard/roles.guard.js";
 import { Roles } from "../../shared/decorator/roles.decorator.js";
-import { UserCreateDto, UserDeleteDto, UserUpdateDto, UserProfileUpdateDto } from "../dto/users.dto.js";
+import { UserCreateDto, UserDeleteDto, UserUpdateDto, UserProfileUpdateDto, ReviewRegistrationDto } from "../dto/users.dto.js";
 import { UsersService } from "../service/users.service.js";
 
 @Controller("users/")
@@ -31,18 +31,21 @@ export class UsersController {
         return this.usersService.updateProfile(request.user.sub, dto);
     }
 
+    @Post(":id/registration-review")
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(1)
+    reviewRegistration(
+        @Param("id",ParseIntPipe) id:number,
+        @Body() dto:ReviewRegistrationDto,
+    ){
+        return this.usersService.reviewRegistration(id,dto.decision,dto.rol_id,dto.faculty_id);
+    }
+
     @Get(":id")
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(1)
     getById(@Param("id", ParseIntPipe) id: number) {
         return this.usersService.getById(id);
-    }
-
-    @Post("create")
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(1)
-    create(@Body() dto: UserCreateDto) {
-        return this.usersService.create(dto);
     }
 
     @Post("update")

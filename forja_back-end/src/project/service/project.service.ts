@@ -102,6 +102,9 @@ export class ProjectService {
   }
 
   async createProject(dto: CreateProjectDTO, user: PayloadJwt) {
+    if (user.rol_id !== 2 && user.rol_id !== 3) {
+      throw new ForbiddenException('Solo profesores y monitores pueden registrar proyectos');
+    }
     if (dto.start_date && dto.end_date && dto.end_date < dto.start_date) {
       throw new BadRequestException('La fecha final no puede ser anterior a la inicial');
     }
