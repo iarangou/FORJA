@@ -19,6 +19,12 @@ export class ProjectController {
     return this.projectService.getAll(request.user);
   }
 
+  @Get('report-periods')
+  @Roles(1)
+  getReportPeriods(@Req() request:AuthenticatedRequest){
+    return this.projectService.getReportPeriods(request.user);
+  }
+
   @Get(':id')
   @Roles(1, 2, 3)
   getById(
