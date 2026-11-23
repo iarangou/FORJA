@@ -137,7 +137,7 @@ export default function AdminUsersPage() {
   }
 
   return <main className="forja-projects"><div className="forja-shell">
-    <nav className="forja-nav"><Link href="/proyectos">← Proyectos</Link><LogoutButton/></nav>
+    <nav className="forja-nav"><Link className="forja-brand" href="/proyectos">FORJA</Link><div className="forja-nav-actions"><Link className="forja-nav-action" href="/proyectos">Proyectos</Link><Link className="forja-nav-action" href="/administracion/catalogos">Administrar zonas</Link><LogoutButton/></div></nav>
     <div className="forja-heading">
       <span className="forja-eyebrow">ADMINISTRACIÓN FORJA</span>
       <h1>Usuarios y roles</h1>
