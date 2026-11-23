@@ -15,6 +15,7 @@ export class ProjectService {
       `SELECT p.id, p.code, p.title, p.general_problem, p.general_objective,
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
+              pe.external_population,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
                     WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
               ARRAY(SELECT DISTINCT pp.department_id FROM project_periods pp
@@ -22,6 +23,7 @@ export class ProjectService {
               ARRAY(SELECT DISTINCT pp.academic_program_id FROM project_periods pp
                     WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids
          FROM project p
+         LEFT JOIN project_ethics pe ON pe.project_id=p.id
         WHERE $1::boolean
            OR p.created_by = $2
            OR EXISTS (
@@ -35,11 +37,33 @@ export class ProjectService {
     return rows;
   }
 
+  async getReportPeriods(user: PayloadJwt) {
+    if(user.rol_id!==1){
+      throw new ForbiddenException('Solo el administrador puede exportar reportes');
+    }
+    const {rows}=await this.db.query(
+      `SELECT pp.project_id,pp.academic_year,pp.academic_semester,
+              pp.record_type,pp.approval_status,pp.execution_status,
+              pp.student_count,pp.budget,pp.faculty_id,pp.department_id,
+              pp.academic_program_id,
+              f.name AS faculty_name,d.name AS department_name,
+              ap.name AS academic_program_name
+       FROM project_periods pp
+       JOIN project p ON p.id=pp.project_id
+       LEFT JOIN faculty f ON f.id=pp.faculty_id
+       LEFT JOIN department d ON d.id=pp.department_id
+       LEFT JOIN academic_programs ap ON ap.id=pp.academic_program_id
+       ORDER BY p.id,pp.academic_year,pp.academic_semester`,
+    );
+    return rows;
+  }
+
   async getById(id: number, user: PayloadJwt) {
     const { rows } = await this.db.query(
       `SELECT p.id, p.code, p.title, p.general_problem, p.general_objective,
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
+              pe.external_population,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
                     WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
               ARRAY(SELECT DISTINCT pp.department_id FROM project_periods pp
@@ -47,6 +71,7 @@ export class ProjectService {
               ARRAY(SELECT DISTINCT pp.academic_program_id FROM project_periods pp
                     WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids
          FROM project p
+         LEFT JOIN project_ethics pe ON pe.project_id=p.id
         WHERE p.id = $1
           AND ($2::boolean OR p.created_by = $3
             OR EXISTS (
