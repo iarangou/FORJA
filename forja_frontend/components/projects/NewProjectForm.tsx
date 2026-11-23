@@ -66,6 +66,7 @@ export default function NewProjectForm() {
   const [selectedZones,setSelectedZones]=useState<number[]>([]);
   const [selectedODS,setSelectedODS]=useState<number[]>([]);
   const [message,setMessage]=useState("");
+  const [activeStep,setActiveStep]=useState("general");
   const [error,setError]=useState("");
   const [project,setProject]=useState<CreateResponse|null>(null);
   const [period,setPeriod]=useState<PeriodResponse|null>(null);
@@ -198,6 +199,16 @@ export default function NewProjectForm() {
     finally{setLoading(false);}
   }
 
+  const steps=[
+    {id:"general",number:"01",title:"Información general",hint:"Proyecto y comunidad"},
+    {id:"period",number:"02",title:"Período académico",hint:"Profesor, carrera y actividades"},
+    {id:"ethics",number:"03",title:form.registration_type==="HISTORICO"?"ODS del proyecto":"Consideraciones éticas",hint:"Población y ODS"},
+    {id:"save",number:"04",title:"Guardar y continuar",hint:project?"Registro guardado":"Confirmar la información"},
+  ];
+  function navigateTo(id:string){
+    setActiveStep(id);
+    document.getElementById(`fw-create-${id}`)?.scrollIntoView({behavior:"smooth",block:"start"});
+  }
   return (
     <main className="forja-projects">
       <div className="forja-shell">
@@ -209,8 +220,26 @@ export default function NewProjectForm() {
           <h1>{role===2?"Digitalizar proyecto histórico":"Registrar proyecto"}</h1>
           <p>{role===2?"Registra únicamente la información histórica disponible. No es necesario inventar datos ni aprobar períodos anteriores.":"Completa la información disponible. El sistema permite guardar primero un borrador; la aprobación ocurre por semestre."}</p>
         </div>
-        <form onSubmit={save} className="forja-form">
-          <section className="forja-panel">
+        <div className="fw-create-layout">
+          <aside className="fw-creation-steps" aria-label="Etapas del registro">
+            <p className="fw-steps-label">REGISTRO DEL PROYECTO</p>
+            <h2>Completa tu proyecto</h2>
+            <ol>
+              {steps.map(step=><li key={step.id}>
+                <button type="button" aria-current={activeStep===step.id?"step":undefined}
+                  className={`fw-creation-step${activeStep===step.id?" fw-creation-step--active":""}`}
+                  onClick={()=>navigateTo(step.id)}>
+                  <span className="fw-step-number">{step.number}</span>
+                  <span className="fw-step-copy"><strong>{step.title}</strong><small>{step.hint}</small></span>
+                  {project&&step.id==="general"&&<span className="fw-step-check" aria-label="Guardado">✓</span>}
+                </button>
+              </li>)}
+            </ol>
+            <p className="fw-step-help">Puedes consultar las etapas en cualquier orden. Los datos se guardan cuando presionas «Guardar borrador».</p>
+          </aside>
+          <form onSubmit={save} className="forja-form fw-create-form">
+          <section id="fw-create-general" className="forja-panel fw-create-section">
+
             <h2>01. Información general</h2>
             <div className="forja-fields">
               <label>Tipo de registro
@@ -245,7 +274,7 @@ export default function NewProjectForm() {
             </div>
             {project && <p className="forja-note">Código asignado: <strong>{project.code}</strong>. Los datos generales ya están guardados; su edición estará disponible en una etapa posterior.</p>}
           </section>
-          <section className="forja-panel">
+          <section id="fw-create-period" className="forja-panel fw-create-section">
             <h2>02. Período académico</h2>
             <div className="forja-fields">
               <label>Año
@@ -340,14 +369,14 @@ export default function NewProjectForm() {
                 </label>}
             </div>
           </section>
-          {form.registration_type==="HISTORICO"&&<section className="forja-panel">
+          {form.registration_type==="HISTORICO"&&<section id="fw-create-ethics" className="forja-panel fw-create-section">
             <h2>03. Objetivos de Desarrollo Sostenible</h2>
             <ClassificationPicker title="ODS asociados al proyecto"
               items={ODS} selected={selectedODS} onChange={setSelectedODS}
               disabled={!!project}/>
             <p className="forja-description">En registros históricos, deja esta selección vacía si los ODS originales se desconocen.</p>
           </section>}
-          {form.registration_type==="NUEVO"&&<section className="forja-panel">
+          {form.registration_type==="NUEVO"&&<section id="fw-create-ethics" className="forja-panel fw-create-section">
             <h2>03. Consideraciones éticas</h2>
             <ClassificationPicker title="Objetivos de Desarrollo Sostenible (ODS) asociados"
               items={ODS} selected={selectedODS} onChange={setSelectedODS}
@@ -381,12 +410,13 @@ export default function NewProjectForm() {
           {form.registration_type==="HISTORICO"&&<p className="forja-note">Después de guardar, abre el proyecto para agregar más semestres históricos o completar la información faltante.</p>}
           {error&&<p role="alert" className="forja-alert">{error}</p>}
           {message&&<p role="status" className="forja-ok">{message}</p>}
-          <div className="forja-actions">
+          <div id="fw-create-save" className="forja-actions fw-create-save">
             <button type="submit" disabled={loading}>{loading?"Guardando...":"Guardar borrador"}</button>
             {project&&period&&role===3&&form.registration_type==="NUEVO"&&
               <button className="secondary" type="button" disabled={loading} onClick={submit}>Enviar período a revisión</button>}
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </main>
   );
