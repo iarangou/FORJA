@@ -10,7 +10,7 @@ type Item={href:string;label:string;icon:string;roles:number[]};
 const navigation:Item[]=[
  {href:"/home",label:"Inicio",icon:"⌂",roles:[1,2,3]},
  {href:"/proyectos",label:"Todos los proyectos",icon:"▦",roles:[1,2,3]},
- {href:"/proyectos/nuevo",label:"Registrar proyecto",icon:"＋",roles:[1,2,3]},
+ {href:"/proyectos/nuevo",label:"Registrar proyecto",icon:"＋",roles:[2,3]},
  {href:"/administracion/usuarios",label:"Usuarios y solicitudes",icon:"♙",roles:[1]},
  {href:"/administracion/catalogos",label:"Zonas territoriales",icon:"◇",roles:[1]},
 ];
