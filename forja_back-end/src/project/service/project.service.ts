@@ -16,9 +16,7 @@ export class ProjectService {
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
-                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
-              ARRAY(SELECT pc.commitment_id FROM project_sustainability_commitments pc
-                    WHERE pc.project_id=p.id ORDER BY pc.commitment_id) AS commitment_ids
+                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids
          FROM project p
         WHERE $1::boolean
            OR p.created_by = $2
@@ -39,9 +37,7 @@ export class ProjectService {
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
-                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
-              ARRAY(SELECT pc.commitment_id FROM project_sustainability_commitments pc
-                    WHERE pc.project_id=p.id ORDER BY pc.commitment_id) AS commitment_ids
+                    WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids
          FROM project p
         WHERE p.id = $1
           AND ($2::boolean OR p.created_by = $3
