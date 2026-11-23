@@ -15,6 +15,11 @@ export class ProjectService {
       `SELECT p.id, p.code, p.title, p.general_problem, p.general_objective,
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
+              LEAST(
+                EXTRACT(YEAR FROM p.start_date)::int,
+                (SELECT MIN(pp.academic_year)
+                 FROM project_periods pp WHERE pp.project_id=p.id)
+              ) AS creation_year,
               pe.external_population,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
                     WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
@@ -66,6 +71,11 @@ export class ProjectService {
       `SELECT p.id, p.code, p.title, p.general_problem, p.general_objective,
               p.registration_type, p.general_status, p.justification, p.community_name, p.community_contact, p.community_location, p.ods_ids, p.prior_project_id, p.duration, p.start_date,
               p.end_date, p.created_by, p.created_at, p.updated_at,
+              LEAST(
+                EXTRACT(YEAR FROM p.start_date)::int,
+                (SELECT MIN(pp.academic_year)
+                 FROM project_periods pp WHERE pp.project_id=p.id)
+              ) AS creation_year,
               pe.external_population,
               ARRAY(SELECT pt.territory_id FROM project_territories pt
                     WHERE pt.project_id=p.id ORDER BY pt.territory_id) AS zone_ids,
