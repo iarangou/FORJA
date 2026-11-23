@@ -1,3 +1,57 @@
+# Estado de implementación de FORJA — resumen vigente
+
+**Actualizado: 23 de noviembre de 2026 · Rama:** `forja/primera-etapa-backend`. Este documento conserva más abajo un **historial cronológico** de decisiones de desarrollo. Ante diferencias, tomar como referencia este resumen, [la especificación funcional](ESPECIFICACION_FUNCIONAL_MVP.md) y el código vigente. **Compilación exitosa no equivale a validación de seguridad ni producción.**
+
+## Módulos incorporados al MVP de pruebas
+
+| Módulo | Estado conocido |
+| --- | --- |
+| Identidad y roles | Administrador crea profesores/monitores; login con JWT y permisos. Sin autorregistro público y sin usuarios/contraseñas predeterminados. |
+| Proyectos y semestres | Código único persistente por proyecto; períodos independientes; aprobación/devolución por administrador. |
+| Históricos | Monitor digitaliza períodos anteriores con datos parciales. Profesor puede continuar un proyecto histórico activo asignado por administrador. |
+| Formularios | Información general, períodos y consideraciones éticas; 17 ODS, zonas territoriales, población externa y catálogos de facultad, departamento y carrera. |
+| Evidencias y cartas | Evidencias PDF por semestre, revisión en períodos actuales, carta final firmada por semestre almacenada en PDF separado. |
+| Evaluación comunitaria | Formulario institucional de 19 preguntas, matriz de 14 afirmaciones y token privado de una respuesta **por semestre**. |
+| Listado y reportes | Filtros combinables por **año de inicio**, zona, departamento académico, carrera, ODS y población externa; exportación **XLSX de 2 hojas** para administrador. |
+| Interfaz administrativa | Barra de navegación uniformada en proyectos, gestión de usuarios y zonas. |
+| Colaboración | Plantilla `Docker/.env.dev.example`; guía para clonar, levantar Docker y crear administrador sin compartir credenciales. |
+
+**Probado manualmente durante el desarrollo:** flujos principales de proyectos, histórico→actual, evaluación comunitaria y acceso administrativo. **Por verificar en cada equipo:** creación desde base limpia, migraciones, exportación XLSX, consistencia completa de filtros y permisos de acceso mediante casos de prueba automatizados.
+
+## Decisiones de modelado que deben conservarse
+
+1. **Una evaluación de comunidad POR SEMESTRE**, no por proyecto. También hay **una carta final firmada PDF POR SEMESTRE**.
+2. Los compromisos mencionados en levantamiento son los **17 ODS**, no un catálogo adicional de once compromisos.
+3. Una zona territorial FORJA es un ámbito institucional por proyecto, **no** el departamento académico del alumnado. Los nombres oficiales de las siete zonas aún no han sido facilitados.
+4. Los datos académicos principales y la cantidad de estudiantes se guardan por semestre. Los totales de estudiantes son **suma por período**, no personas únicas.
+5. Año de inicio para filtro/exportación: usar la fecha de inicio del proyecto o su período más antiguo; si faltan ambos, año de registro en sistema como aproximación.
+6. Los proyectos históricos conservan períodos anteriores sin revisiones retroactivas; el semestre actual sí se aprueba por el flujo normal.
+7. No reinicializar ni eliminar bases de datos y archivos existentes para aplicar migraciones. Los nuevos cambios de código no actualizan automáticamente los esquemas existentes.
+
+## Requisitos y riesgos pendientes
+
+- Confirmar nombres de las siete zonas FORJA y revisar catálogos académicos con fuentes oficiales.
+- Validar aviso de privacidad, retención, acceso y seguridad de datos personales de las comunidades.
+- Modelar carreras múltiples simultáneas por período y desglose de estudiantes cuando la institución lo solicite.
+- Completar mediciones de beneficiarios por categorías, si se confirman como exigencia de los reportes.
+- Incorporar análisis de archivos maliciosos, límites al formulario público, recuperación de contraseñas y auditoría.
+- Probar respaldo/restauración, despliegue seguro HTTPS y pruebas automatizadas end-to-end.
+
+## Lecturas recomendadas
+
+- [README raíz](../README.md) — arquitectura general, Docker, migraciones y guía de documentos.
+- [Instalación compañeros](INSTALACION_COMPANEROS.md) — configuración nueva con secretos propios.
+- [Cómo probar](COMO_PROBAR_MVP.md) — recorrido completo de MVP y Excel.
+- [Especificación funcional](ESPECIFICACION_FUNCIONAL_MVP.md) — reglas, campos y pendientes.
+- [Backend](../forja_back-end/README.md) — endpoints reales.
+- [Frontend](../forja_frontend/README.md) — páginas y componentes actuales.
+
+---
+
+## Historial de implementación y notas anteriores
+
+Las secciones que siguen documentan la evolución del proyecto. Algunas decisiones o listas de pendientes fueron **corregidas después**; no deben tratarse automáticamente como requisitos vigentes.
+
 # FORJA — Estado del desarrollo (22 de noviembre de 2026)
 
 > Este documento distingue código implementado, flujo pendiente y supuestos. El hecho de que exista un endpoint no implica que haya sido probado con datos reales ni que el proceso institucional esté validado.
