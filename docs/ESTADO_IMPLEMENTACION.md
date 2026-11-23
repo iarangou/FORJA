@@ -128,3 +128,12 @@ El script `20261122_community_feedback.sql` ahora crea tablas `community_period_
 - El listado `/proyectos` permite filtrar por **zona, ODS, departamento académico y carrera** mediante campos desplegables, usando las relaciones existentes y nuevas.
 - La sección `/administracion/catalogos` permite registrar las zonas territoriales reales. Los 17 ODS se muestran como lista fija de referencia y no necesitan configuración administrativa.
 - La migración corregida es **no destructiva**, aunque debe hacerse un respaldo y aplicarse antes de reconstruir backend/frontend. Los cambios aún necesitan prueba funcional en Docker para confirmar persistencia de selecciones y filtros.
+
+## Referencias oficiales académicas y formulario comunitario institucional
+
+- Departamentos de Javeriana Cali: https://www.javerianacali.edu.co/facultades-y-departamentos
+- Oferta institucional de pregrados: https://www.javerianacali.edu.co/programas/carreras
+- El seed actual de `faculty`, `department` y `academic_programs` corresponde a los departamentos y carreras publicados por la universidad al revisar estas referencias el 23 de noviembre de 2026. Los desplegables de FORJA consultan esas tablas (no un catálogo paralelo).
+- **Formulario original usado por la comunidad:** https://forms.cloud.microsoft/r/G80nKymrML
+- El contenido de ese Microsoft Forms todavía **no ha podido inspeccionarse desde las herramientas disponibles**; no afirmar que las tres preguntas de calificación 1–5 propuestas para el MVP coinciden con el cuestionario institucional. **Pendiente:** obtener capturas completas o exportación de todas las preguntas, opciones, instrucciones y secciones condicionales, y solo entonces sustituir el cuestionario provisional en frontend/backend.
+- Mantener inalterada la regla confirmada de **una evaluación comunitaria por semestre**, incluso al adaptar el cuestionario institucional. Preservar los datos de prueba previamente guardados y diseñar una migración compatible en vez de descartar respuestas.
