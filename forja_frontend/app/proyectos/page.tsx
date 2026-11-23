@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import "@/styles/projects.css";
 import LogoutButton from "@/components/auth/LogoutButton";
+import {ODS} from "@/lib/ods";
 
 type Project = {
   id: number; code: string; title: string;
   registration_type: string; general_status: string;
-  zone_ids:number[];commitment_ids:number[];
+  zone_ids:number[];ods_ids:number[];
 };
 type Period = {
   id:number; academic_year:number; academic_semester:number;
@@ -24,9 +25,8 @@ export default function ProjectsPage() {
   const [working,setWorking] = useState<number|null>(null);
   const [loading,setLoading] = useState(true);
   const [zones,setZones]=useState<{id:number;name:string}[]>([]);
-  const [commitments,setCommitments]=useState<{id:number;name:string}[]>([]);
   const [zoneFilter,setZoneFilter]=useState("");
-  const [commitmentFilter,setCommitmentFilter]=useState("");
+  const [odsFilter,setOdsFilter]=useState("");
   const [error,setError] = useState("");
   const [message,setMessage] = useState("");
 
@@ -47,17 +47,13 @@ export default function ProjectsPage() {
   },[]);
 
   useEffect(()=>{
-    Promise.all([
-      fetch("/api/project-classifications/zones"),
-      fetch("/api/project-classifications/commitments"),
-    ]).then(async ([a,b])=>{
+    fetch("/api/project-classifications/zones").then(async a=>{
       if(a.ok){const data:unknown=await a.json();setZones(Array.isArray(data)?data:[]);}
-      if(b.ok){const data:unknown=await b.json();setCommitments(Array.isArray(data)?data:[]);}
     }).catch(()=>undefined);
   },[]);
   const filteredProjects=projects.filter(p=>
     (!zoneFilter||(p.zone_ids??[]).includes(Number(zoneFilter)))&&
-    (!commitmentFilter||(p.commitment_ids??[]).includes(Number(commitmentFilter)))
+    (!odsFilter||(p.ods_ids??[]).includes(Number(odsFilter)))
   );
 
   async function seePeriods(id:number) {
@@ -93,7 +89,7 @@ export default function ProjectsPage() {
   }
 
   return <main className="forja-projects"><div className="forja-shell">
-    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<><Link href="/administracion/usuarios">Gestionar usuarios</Link><Link href="/administracion/catalogos">Zonas y compromisos</Link></>}<LogoutButton/></div></nav>
+    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<><Link href="/administracion/usuarios">Gestionar usuarios</Link><Link href="/administracion/catalogos">Administrar zonas</Link></>}<LogoutButton/></div></nav>
     <div className="forja-heading"><span className="forja-eyebrow">PLATAFORMA FORJA</span>
       <h1>Proyectos registrados</h1>
       <p>Consulta proyectos y aprobaciones por semestre. Los permisos se comprueban en el servidor.</p>
@@ -108,10 +104,10 @@ export default function ProjectsPage() {
             {zones.map(z=><option value={z.id} key={z.id}>{z.name}</option>)}
           </select>
         </label>
-        <label>Compromiso de sostenibilidad
-          <select value={commitmentFilter} onChange={e=>setCommitmentFilter(e.target.value)}>
-            <option value="">Todos los compromisos</option>
-            {commitments.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}
+        <label>Objetivo de Desarrollo Sostenible (ODS)
+          <select value={odsFilter} onChange={e=>setOdsFilter(e.target.value)}>
+            <option value="">Todos los ODS</option>
+            {ODS.map(o=><option value={o.id} key={o.id}>ODS {o.id}: {o.name}</option>)}
           </select>
         </label>
       </div>
