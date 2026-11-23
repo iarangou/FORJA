@@ -17,6 +17,11 @@ export class FacultyController {
         return this.facultyService.getAll();
     }
 
+    @Get("departments")
+    getDepartments() {
+        return this.facultyService.getDepartments();
+    }
+
     @Get("programs")
     getPrograms() {
         return this.facultyService.getPrograms();
