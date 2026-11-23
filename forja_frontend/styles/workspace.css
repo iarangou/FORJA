@@ -65,3 +65,102 @@
 .fw-status-finalized{background:#f0eafa;color:#6a5182}
 @media(max-width:1050px){.fw-project-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.fw-project-summary{gap:8px}.fw-project-summary>div{padding:14px}.fw-project-summary strong{font-size:25px}.fw-project-card{padding:18px}}
+
+/* Barra lateral violeta, adaptada de la propuesta visual de los compañeros. */
+.fw-sidebar{
+ background:linear-gradient(160deg,#744a96 0%,#613282 48%,#43225f 100%);
+ color:#fff;overflow-y:auto;isolation:isolate;border-right:0;
+ box-shadow:4px 0 24px #2a143323;
+}
+.fw-sidebar::before,.fw-sidebar::after{
+ content:"";position:absolute;width:245px;height:245px;z-index:-1;
+ border:1px solid #ffffff16;border-radius:50%;pointer-events:none;
+}
+.fw-sidebar::before{top:-145px;right:-155px;box-shadow:0 0 0 55px #ffffff05}
+.fw-sidebar::after{bottom:-170px;left:-135px;box-shadow:0 0 0 65px #ffffff05}
+.fw-logo{background:#fff;border-radius:14px;padding:14px;min-height:64px;display:flex;align-items:center}
+.fw-logo img{max-height:65px;object-fit:contain}
+.fw-navigation-caption{color:#d2c0df}
+.fw-link{color:#f3eaf9}
+.fw-link:hover{background:#ffffff1c;color:#fff}
+.fw-link--active,.fw-link--active:hover{
+ background:#ffffffed;color:#583077;box-shadow:inset 4px 0 0 #f39120
+}
+.fw-sidebar-bottom{border-top-color:#ffffff36}
+.fw-sidebar-logout{color:#f5ebf8}
+.fw-sidebar-logout:hover{background:#ffffff1b;color:#fff}
+
+/* Navegación lateral por pasos en el registro. Todas las secciones siguen montadas
+   para no perder datos y para conservar la validación nativa del formulario. */
+.fw-create-layout{display:grid;grid-template-columns:245px minmax(0,1fr);gap:22px;align-items:start}
+.fw-create-form{min-width:0}
+.fw-creation-steps{
+ position:sticky;top:100px;background:#fff;border:1px solid var(--fw-line);
+ border-radius:14px;padding:22px 14px;box-shadow:0 10px 28px #20102d10
+}
+.fw-steps-label{font-size:10px;letter-spacing:1.5px;color:#e98719;font-weight:800;margin:0 8px 8px}
+.fw-creation-steps h2{font-size:17px;line-height:1.3;margin:0 8px 20px;color:#522d75}
+.fw-creation-steps ol{padding:0;margin:0;list-style:none;display:grid;gap:6px}
+.fw-creation-step{
+ width:100%;display:flex;align-items:center;gap:10px;border:1px solid transparent;
+ border-radius:10px;background:transparent;color:#6f647c;padding:12px 9px;
+ text-align:left;cursor:pointer;font-family:inherit
+}
+.fw-creation-step:hover{background:#faf6fd}
+.fw-creation-step--active{background:#f3e9fa;color:#55267e;border-color:#e8d9f3}
+.fw-step-number{
+ display:grid;flex:0 0 35px;place-items:center;width:35px;height:35px;
+ border-radius:9px;color:#74468e;background:#f3edf7;font-size:12px;font-weight:900
+}
+.fw-creation-step--active .fw-step-number{color:#fff;background:#633582}
+.fw-step-copy{display:grid;gap:4px;min-width:0}
+.fw-step-copy strong{font-size:12px;font-weight:800}
+.fw-step-copy small{font-size:10px;line-height:1.4;opacity:.77}
+.fw-step-check{margin-left:auto;color:#16834f;font-weight:900}
+.fw-step-help{font-size:11px;line-height:1.65;color:#877c92;margin:20px 8px 4px}
+.fw-create-section,.fw-create-save{scroll-margin-top:28px}
+.fw-create-save{background:#fff;border:1px solid var(--fw-line);border-radius:14px;padding:20px}
+
+/* Seguimiento semestral derivado de estados reales del backend. */
+.fw-workflow{padding:25px 28px;margin:18px 0 24px;background:#fff;border:1px solid #e5ddec;
+ box-shadow:0 9px 30px #2b153710;border-radius:15px}
+.fw-workflow-header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.fw-workflow-header h2{font-size:22px;margin:7px 0;color:#402359}
+.fw-workflow-header p{margin:0;color:#84788e;font-size:12px}
+.fw-eyebrow{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#ea8d24}
+.fw-workflow-selector{display:grid;gap:7px}
+.fw-workflow-selector label{font-size:11px;color:#6d5c7f;font-weight:800}
+.fw-workflow-selector select{min-height:40px;border:1px solid #ded4e8;border-radius:8px;
+ font:600 13px inherit;padding:8px 12px;background:#fff;color:#4a2a68}
+.fw-workflow-status{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 24px}
+.fw-workflow-status strong{background:#f3e9fa;color:#5e3581;border-radius:99px;padding:9px 13px;font-size:12px}
+.fw-workflow-status span{font-size:11px;color:#908499}
+.fw-workflow-track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;padding:0;margin:0 0 22px;list-style:none}
+.fw-workflow-track li{display:grid;align-content:start;justify-items:center;gap:7px;position:relative;
+ min-width:0;text-align:center}
+.fw-workflow-track li:not(:last-child)::after{content:"";position:absolute;top:16px;left:calc(50% + 21px);
+ width:calc(100% - 35px);height:2px;background:#e1d7ea}
+.fw-track-number{display:grid;place-items:center;height:35px;width:35px;border-radius:50%;
+ border:2px solid #ddd3e6;background:#fff;color:#9d8cab;font-size:12px;font-weight:900}
+.fw-workflow-track strong{font-size:11px;line-height:1.45;color:#7b7085}
+.fw-workflow-track small{font-size:10px;line-height:1.45;color:#9b92a5}
+.fw-track-complete .fw-track-number{background:#5d3280;border-color:#5d3280;color:white}
+.fw-track-active .fw-track-number{background:#f19024;border-color:#f19024;color:#fff;box-shadow:0 0 0 5px #fff1df}
+.fw-track-active strong{color:#50306e}
+.fw-track-complete strong{color:#634184}
+.fw-workflow-note,.fw-historical-notice{border-left:3px solid #f19024;background:#fcf8ff;padding:13px 16px;border-radius:0 9px 9px 0}
+.fw-workflow-note p,.fw-historical-notice p{font-size:12px;line-height:1.6;margin:0;color:#554863}
+.fw-workflow-note span{display:block;margin-top:8px;font-size:11px;color:#746581}
+.fw-historical-notice strong{color:#573376;font-size:13px;display:block;margin-bottom:8px}
+@media(max-width:1100px){.fw-create-layout{grid-template-columns:210px minmax(0,1fr);gap:14px}
+ .fw-creation-steps{padding:16px 9px}.fw-workflow{padding:20px 15px}}
+@media(max-width:850px){.fw-create-layout{display:block}
+ .fw-creation-steps{position:static;margin-bottom:20px}
+ .fw-creation-steps ol{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .fw-workflow-track{grid-template-columns:1fr}
+ .fw-workflow-track li{display:flex;gap:12px;align-items:center;text-align:left;justify-items:unset}
+ .fw-workflow-track li:not(:last-child)::after{display:none}
+ .fw-workflow-track small{margin-left:auto}
+}
+@media(max-width:440px){.fw-creation-steps ol{grid-template-columns:1fr}
+ .fw-workflow-header{display:grid}.fw-workflow-track small{display:none}}
