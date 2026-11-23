@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import ClassificationPicker from "./ClassificationPicker";
 
 type Course = { id: number; name: string };
 type Faculty = { id:number;name:string };
@@ -58,6 +59,10 @@ export default function NewProjectForm() {
   const [faculties,setFaculties]=useState<Faculty[]>([]);
   const [programs,setPrograms]=useState<Program[]>([]);
   const [loading,setLoading]=useState(false);
+  const [zones,setZones]=useState<{id:number;name:string}[]>([]);
+  const [commitments,setCommitments]=useState<{id:number;name:string}[]>([]);
+  const [selectedZones,setSelectedZones]=useState<number[]>([]);
+  const [selectedCommitments,setSelectedCommitments]=useState<number[]>([]);
   const [message,setMessage]=useState("");
   const [error,setError]=useState("");
   const [project,setProject]=useState<CreateResponse|null>(null);
@@ -79,6 +84,15 @@ export default function NewProjectForm() {
   function change<K extends keyof typeof form>(field:K,value:(typeof form)[K]){
     setForm(current=>({...current,[field]:value}));
   }
+  useEffect(()=>{
+    Promise.all([
+      fetch("/api/project-classifications/zones"),
+      fetch("/api/project-classifications/commitments"),
+    ]).then(async ([a,b])=>{
+      if(a.ok){const v:unknown=await a.json();setZones(Array.isArray(v)?v:[]);}
+      if(b.ok){const v:unknown=await b.json();setCommitments(Array.isArray(v)?v:[]);}
+    }).catch(()=>undefined);
+  },[]);
   useEffect(()=>{
     fetch("/api/courses",{credentials:"same-origin"})
       .then(r=>r.ok?r.json():[])
@@ -153,6 +167,9 @@ export default function NewProjectForm() {
         });
         setPeriod(nextPeriod);
       }
+      // Las clasificaciones pertenecen al proyecto, no a un semestre.
+      await jsonRequest(`/api/projects/${nextProject.id}/classifications/zones`,"PUT",{ids:selectedZones});
+      await jsonRequest(`/api/projects/${nextProject.id}/classifications/commitments`,"PUT",{ids:selectedCommitments});
       if(form.registration_type==="NUEVO"){
         await jsonRequest(`/api/projects/${nextProject.id}/ethics`,"PUT",{
           external_population:form.external_population,
@@ -212,6 +229,11 @@ export default function NewProjectForm() {
               <label>Contacto comunitario (solo si se dispone de autorización)
                 <input disabled={!!project} value={form.community_contact} onChange={e=>change("community_contact",e.target.value)}/>
               </label>
+              <div className="full">
+                <ClassificationPicker title="Zonas territoriales FORJA"
+                  items={zones} selected={selectedZones} onChange={setSelectedZones}
+                  disabled={!!project}/>
+              </div>
               <label className="full">Problemática
                 <textarea disabled={!!project} rows={3} value={form.general_problem} onChange={e=>change("general_problem",e.target.value)}/>
               </label>
@@ -312,8 +334,19 @@ export default function NewProjectForm() {
                 </label>}
             </div>
           </section>
+          {form.registration_type==="HISTORICO"&&<section className="forja-panel">
+            <h2>03. Compromisos de sostenibilidad</h2>
+            <ClassificationPicker title="Compromisos de sostenibilidad asociados"
+              items={commitments} selected={selectedCommitments} onChange={setSelectedCommitments}
+              disabled={!!project}/>
+            <p className="forja-description">Para proyectos antiguos puedes dejar el campo vacío si no se conocen los compromisos.</p>
+          </section>}
           {form.registration_type==="NUEVO"&&<section className="forja-panel">
             <h2>03. Consideraciones éticas</h2>
+            <ClassificationPicker title="Compromisos de sostenibilidad asociados al proyecto"
+              items={commitments} selected={selectedCommitments} onChange={setSelectedCommitments}
+              disabled={!!project}/>
+
             <p className="forja-description">Preguntas iniciales propuestas a partir del formato recibido. No sustituyen una revisión ética institucional.</p>
             <div className="forja-fields">
               <label>Población externa predominante
