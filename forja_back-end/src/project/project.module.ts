@@ -9,10 +9,12 @@ import { ProjectLetterController } from './controller/project-letter.controller.
 import { ProjectLetterService } from './service/project-letter.service.js';
 import { CommunityFeedbackController } from './controller/community-feedback.controller.js';
 import { CommunityFeedbackService } from './service/community-feedback.service.js';
+import { ProjectClassificationsController } from './controller/project-classifications.controller.js';
+import { ProjectClassificationsService } from './service/project-classifications.service.js';
 
 @Module({
-  controllers: [ProjectController, ProjectWorkflowController, ProjectEvidenceController, ProjectLetterController, CommunityFeedbackController],
-  providers: [ProjectService, ProjectWorkflowService, ProjectEvidenceService, ProjectLetterService, CommunityFeedbackService],
+  controllers: [ProjectController, ProjectWorkflowController, ProjectEvidenceController, ProjectLetterController, CommunityFeedbackController, ProjectClassificationsController],
+  providers: [ProjectService, ProjectWorkflowService, ProjectEvidenceService, ProjectLetterService, CommunityFeedbackService, ProjectClassificationsService],
   exports: [ProjectService, ProjectWorkflowService],
 })
 export class ProjectModule {}
