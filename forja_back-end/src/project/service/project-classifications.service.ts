@@ -2,19 +2,17 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { DatabaseService } from '../../database/service/database.service.js';
 import type { PayloadJwt } from '../../shared/types/auth.types.js';
 
-export type ClassificationKind='zones'|'commitments';
+export type ClassificationKind='zones';
 
 @Injectable()
 export class ProjectClassificationsService {
   constructor(private readonly db:DatabaseService){}
 
-  private source(kind:ClassificationKind) {
-    return kind==='zones'?'forja_territories':'forja_sustainability_commitments';
+  private source(_kind:ClassificationKind) {
+    return 'forja_territories';
   }
-  private junction(kind:ClassificationKind) {
-    return kind==='zones'
-      ?{table:'project_territories',column:'territory_id'}
-      :{table:'project_sustainability_commitments',column:'commitment_id'};
+  private junction(_kind:ClassificationKind) {
+    return {table:'project_territories',column:'territory_id'};
   }
 
   async list(kind:ClassificationKind){
