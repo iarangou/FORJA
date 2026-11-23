@@ -9,8 +9,9 @@ type Evidence={
 interface Props{
   projectId:string;periodId:number;role:number|null;
   approvalStatus:string;recordType:string;projectStatus:string;executionStatus:string;
+  onChanged?:()=>void;
 }
-export default function EvidenceSection({projectId,periodId,role,approvalStatus,recordType,projectStatus,executionStatus}:Props){
+export default function EvidenceSection({projectId,periodId,role,approvalStatus,recordType,projectStatus,executionStatus,onChanged}:Props){
   const [items,setItems]=useState<Evidence[]>([]);
   const [file,setFile]=useState<File|null>(null);
   const [busy,setBusy]=useState(false);
@@ -56,6 +57,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
       if(control)control.value="";
       setMessage(historical?"PDF histórico archivado, sin aprobación retroactiva.":"PDF guardado. Quedó pendiente de revisión del administrador.");
       await refresh();
+      onChanged?.();
     }catch(e){setError(e instanceof Error?e.message:"Error al subir");}
     finally{setBusy(false);}
   }
@@ -70,6 +72,7 @@ export default function EvidenceSection({projectId,periodId,role,approvalStatus,
       if(!response.ok)throw new Error(typeof data.message==="string"?data.message:"No se pudo registrar la decisión");
       setMessage("Revisión de evidencia registrada.");
       await refresh();
+      onChanged?.();
     }catch(e){setError(e instanceof Error?e.message:"Error de revisión");}
     finally{setBusy(false);}
   }
