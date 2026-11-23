@@ -2,7 +2,6 @@ import {NextRequest,NextResponse} from "next/server";
 import {ODS} from "@/lib/ods";
 import {createWorkbook} from "@/lib/xlsx-export";
 
-export const runtime="nodejs";
 type Project={
  id:number;code:string;title:string;registration_type:string;general_status:string;
  external_population:string|null;ods_ids:number[];zone_ids:number[];
