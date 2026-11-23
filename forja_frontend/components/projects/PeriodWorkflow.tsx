@@ -103,8 +103,7 @@ export default function PeriodWorkflow({projectId,periods,selectedId,onSelect,re
     <>
      <ol className="fw-workflow-track">
       {stages.map((item,index)=>{
-        const number=index+1;
-        const finished=stage>number||closed;
+        const finished=index<stage||closed;
         const active=!closed&&stage===index; // stage is the zero-indexed active phase (closed=5)
         return <li key={item.number} className={finished?"fw-track-complete":active?"fw-track-active":"fw-track-pending"}>
          <span className="fw-track-number" aria-label={finished?"Etapa completada":active?"Etapa actual":"Etapa pendiente"}>
