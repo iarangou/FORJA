@@ -137,3 +137,20 @@ El script `20261122_community_feedback.sql` ahora crea tablas `community_period_
 - **Formulario original usado por la comunidad:** https://forms.cloud.microsoft/r/G80nKymrML
 - El contenido de ese Microsoft Forms todavía **no ha podido inspeccionarse desde las herramientas disponibles**; no afirmar que las tres preguntas de calificación 1–5 propuestas para el MVP coinciden con el cuestionario institucional. **Pendiente:** obtener capturas completas o exportación de todas las preguntas, opciones, instrucciones y secciones condicionales, y solo entonces sustituir el cuestionario provisional en frontend/backend.
 - Mantener inalterada la regla confirmada de **una evaluación comunitaria por semestre**, incluso al adaptar el cuestionario institucional. Preservar los datos de prueba previamente guardados y diseñar una migración compatible en vez de descartar respuestas.
+
+## Formulario comunitario institucional FORJA — PDF aportado (7 páginas)
+
+Fuente: `form_comunidad.pdf` compartido por el equipo (representa el Microsoft Forms con 19 preguntas). El cuestionario anterior de tres calificaciones era **solo una propuesta de pruebas**, ya reemplazada para **enlaces nuevos**.
+
+- Preguntas 1–3: nombre completo, datos de contacto (correo y celular), identificación como socio comunitario o aliado institucional (todas obligatorias).
+- Pregunta 4: semestre del proyecto; **FORJA lo autocompleta** con el período del enlace de un solo uso, en lugar de ofrecer una lista manual susceptible de errores.
+- Preguntas 5–10: entidad/barrio/comuna/ciudad/departamento, profesor/asignatura, identificación del proyecto, problemática, estudiantes participantes y personas de la comunidad participantes.
+- Preguntas 11–13: encuentros o actividades, logros y productos, impactos o beneficios.
+- Pregunta 14: **matriz de 14 afirmaciones** con cinco opciones exactamente diferenciadas: Totalmente de acuerdo, De acuerdo, Neutro, En desacuerdo, Totalmente en desacuerdo. Se guardan 14 respuestas numéricas 5–1 (sin promediar ni invertir puntuaciones).
+- Pregunta 15: una línea de acción de cinco: Salud y Bienestar; Desarrollo Humano, Paz, Equidad y Democracia; Hábitat, Conservación y Restauración Ecológica; Cultura y Creación; Industria, Biotecnología y Bioeconomía.
+- Preguntas 16–18: obstáculos, continuidad y otros proyectos posibles (obligatorias). Pregunta 19: recomendaciones opcionales.
+- La autorización para tratar datos personales es un **campo adicional de la aplicación**, no atribuirla a las 19 preguntas del PDF. Antes de producción hace falta revisar el aviso de privacidad, las bases de legitimación, conservación de contactos y acceso a respuestas personales con la oficina responsable.
+- Se mantiene una respuesta por **semestre** y el token privado, sin cuenta comunitaria.
+- Migración **aditiva** `Docker/database/migrations/20261123_institutional_community_form.sql`: agrega `form_version` y `form_responses` (JSONB) a `community_period_feedback`. Las respuestas antiguas quedan `MVP_2026`, intactas, visibles para pruebas. Las nuevas se guardan `INSTITUCIONAL_2026` y el resumen del administrador muestra todos sus datos.
+- Para **bases nuevas** se incluyó la misma estructura en `Docker/database/init/zzz_forja_forms_and_reviews.sql`.
+- **Por probar localmente:** aplicar migración con backup, reconstruir backend/frontend, crear un enlace para un semestre de pruebas que aún no tenga respuesta, completar cuestionario completo, comprobar resultados y bloqueo de reenvío. No reutilizar el semestre 2024-2 que ya tiene evaluación de prueba.
