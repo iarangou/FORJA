@@ -59,3 +59,13 @@ Nunca dejar códigos en logs de producción, ni subir `.env.dev`. En producción
 - **Períodos históricos:** presentan explícitamente «Archivado sin revisión» en lugar de simular aprobaciones que nunca se realizaron.
 - **Finalización definitiva:** el estado general del proyecto sigue separado del cierre de cada semestre; el indicador lo comunica sin modificar el backend.
 - **Prueba pendiente en navegador:** registro, aprobación, formulario 01–04, creación de un período en borrador, envío, aprobación, subir PDF, aprobación PDF, resultados y cierre; comprobar el estado de cada checkpoint y el cambio entre dos semestres. No se requieren nuevas migraciones para estos ajustes de interfaz posteriores a `20261123_registration_approval.sql`.
+
+## Permisos para registrar proyectos (23/11/2026)
+
+La creación inicial de proyectos y la creación de períodos académicos queda limitada a los roles:
+
+- **Profesor (3):** registra proyectos NUEVOS y semestres ACTUALES.
+- **Monitor (2):** digitaliza proyectos HISTÓRICOS y semestres HISTÓRICOS anteriores al vigente.
+- **Administrador (1):** **no registra proyectos ni crea semestres**. Conserva las facultades de consulta general, aprobación/devolución, cierre semestral, finalización definitiva, asignación del responsable para proyectos históricos activos, revisión de evidencias, cartas firmadas, evaluaciones y reportes.
+
+El enlace «Registrar proyecto» se oculta para el administrador en el menú lateral, el inicio y el listado. Si un administrador visita directamente `/proyectos/nuevo` verá la restricción en pantalla. El backend además devuelve 403 a un administrador que intente `POST /project` o `POST /project/:projectId/periods`, con validaciones en controlador y servicio. **No se han cambiado los permisos de edición, revisión o cierre.** Tampoco se requieren migraciones para este cambio.
