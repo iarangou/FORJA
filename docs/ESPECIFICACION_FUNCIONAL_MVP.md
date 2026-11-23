@@ -1,89 +1,109 @@
-# FORJA — Especificación funcional provisional del MVP
+# FORJA — Especificación funcional del MVP
 
-> **Estado: hipótesis de trabajo del equipo de desarrollo, NO reglas institucionales confirmadas.**
-> Basada en requisitos y decisiones levantadas en el proyecto, el borrador de análisis ético aportado y las limitaciones del código actual.
-> Se adopta para avanzar sin documentos internos a los que el equipo no tiene acceso. Cualquier cambio futuro se maneja como ajuste de requisitos y migración, sin borrar datos.
+**Estado a noviembre de 2026:** requisitos levantados con el equipo y capacidades disponibles en la rama `forja/primera-etapa-backend`. Es un **MVP para pruebas locales**, todavía no un sistema institucional autorizado para tratar datos reales. Los ítems pendientes se identifican expresamente.
 
-## Principios del sistema
+## 1. Conceptos y alcance
 
-1. Una **cuenta** tiene un rol: ADMINISTRADOR, PROFESOR o MONITOR. El administrador crea las cuentas de los profesores y de los monitores. **No hay registro público de profesores**. Se usará una contraseña provisional generada aleatoriamente, con cambio obligatorio al primer acceso: **no usar la cédula como contraseña real** aunque figurara como sugerencia antigua.
-2. Un **proyecto** conserva código único e identidad a través de varios semestres. Cada **período académico** (año y semestre) tiene su registro, responsable, asignaturas, información y decisión de aprobación independientes.
-3. El profesor registra proyectos y períodos actuales; el administrador revisa y aprueba o devuelve períodos. El monitor registra proyectos/períodos históricos con datos parciales, anotando qué falta; **no aprueba el semestre actual**.
-4. Para proyectos históricos en ejecución, los períodos pasados se conservan como **históricos** y el período actual lo registra el profesor como **actual** y lo somete a revisión.
-5. El administrador es quien marca el proyecto **finalizado**. El estado general del proyecto no sustituye el estado de aprobación de cada período.
-6. Evidencias y resultados pertenecen a un período. El administrador revisa las evidencias; si se reemplaza un archivo aprobado, debe quedar nuevamente **pendiente de revisión**.
-7. La **carta final firmada** se redacta y firma **fuera** del sistema; solo se almacena y consulta la versión final firmada. No hay editor de cartas ni versiones de borradores.
-8. El formulario comunitario se diligencia **una sola vez por semestre académico del proyecto**, conforme al requisito confirmado. Cada período tiene su evaluación y carta firmada independientes. No usar el código público del proyecto como mecanismo de autenticación: enlace con token aleatorio, de uso limitado.
-9. Los territorios (7), ODS y población se guardan como catálogos o relaciones; deben permitir exportar Excel por territorio. **Los nombres exactos de los siete territorios no están confirmados:** no inventarlos ni asignarlos en producción.
-10. Datos sensibles de participantes y beneficiarios: evitar listas nominativas innecesarias. El análisis ético registra **categorías agregadas**, no la pertenencia o condición de personas identificables.
+**Proyecto**: iniciativa de aprendizaje-servicio con código FORJA estable. Tiene título, comunidad u organización, problema/objetivo general, justificación, zonas territoriales, ODS, población predominante y estado general (`ACTIVO` / `FINALIZADO`).
 
-## Formulario A. Registro general del proyecto
+**Período académico (semestre)**: una ocurrencia del proyecto en un año y semestre (`2026-2`, por ejemplo), con profesor responsable, asignatura, facultad, departamento académico, programa principal, actividades, presupuesto, estudiantes, evidencias, resultados, conclusiones y estado propio. El proyecto conserva su código al continuar o reactivarse. Una misma combinación proyecto + año + semestre no se repite.
 
-### A1. Identidad y continuidad
-- **Título**: texto, obligatorio para guardar.
-- **Código FORJA**: autogenerado e inmutable; no lo escribe el profesor.
-- **Tipo**: nuevo o histórico, asignado según el flujo del usuario.
-- **¿Continúa un proyecto previo?**: sí/no. Si sí, referencia por código o ID existente (opcional para históricos incompletos).
-- **Problemática** y **justificación**: texto libre. Problemática requerida **al enviar a revisión**, no en borrador.
-- **Objetivo general**, **objetivos específicos** y **actividades**: textos. Obligatorios al enviar a revisión del período.
-- **ODS**: desplegable de selección múltiple entre los 17 Objetivos de Desarrollo Sostenible; campo del proyecto que también se utiliza en filtros. No existe un catálogo adicional de once compromisos.
+**Registro histórico**: digitalización de períodos anteriores con la información disponible, sin exigir aprobación retrospectiva ni completar campos desconocidos artificialmente. Un histórico aún activo puede pasar a un semestre actual con profesor asignado.
 
-### A2. Participantes y contexto institucional
-- **Facultad/instituto**, **departamento académico de los estudiantes**, **programa/carrera**, **asignatura(s)**: catálogos desplegables. La versión actual admite un programa principal por período; está pendiente formalizar varias carreras simultáneas.
-- **Docente(s)**: relación con usuarios profesores; uno responsable por período.
-- **Número de estudiantes por período**: entero no negativo, obligatorio antes de enviar.
-- **Nombres individuales de estudiantes**: **no recopilar en MVP** salvo exigencia posterior y autorización.
-- **Organización/comunidad**: nombre, formal/informal, ubicación, contacto, correo/teléfono opcionales.
-- **Zona(s) territorial(es)**: desplegable de selección múltiple que utiliza un catálogo de siete zonas FORJA, nombres oficiales por confirmar. No confundir con departamento académico.
-- **Población beneficiaria**: tipo, descripción y **cantidad estimada**; varios tipos posibles.
+Los **estados por período** incluyen `BORRADOR`, `EN_REVISION`, `DEVUELTO`, `APROBADO` y, por separado, ejecución `PENDIENTE`, `EN_CURSO`, `CERRADO`. El administrador marca la finalización definitiva del proyecto; un semestre cerrado no finaliza automáticamente el proyecto.
 
-### A3. Planeación por semestre
-- **Año académico y semestre**: 1 o 2; único por proyecto.
-- **Duración esperada del proyecto**: 1 o 2 semestres (tomado del formato ético); si el proyecto se reactiva, los períodos continúan por separado.
-- **Fechas de inicio y fin**: fechas; fin >= inicio.
-- **Presupuesto**: valor en COP no negativo y breve explicación; requerido para envío.
-- **Resultados y conclusiones**: se diligencian durante o al terminar la ejecución.
-- **Evidencias**: exclusivamente documentos PDF (hasta 20 MB por archivo en el MVP). Las fotos se incorporan dentro del PDF y los videos se referencian mediante enlaces a YouTube escritos dentro del PDF. Los enlaces no se descargan ni verifican automáticamente. La verificación antivirus debe añadirse antes del despliegue institucional.
-- **Documentación faltante**: nota explícita cuando el registro es histórico e incompleto.
+## 2. Roles
 
-### A4. Reglas de guardado
-- **BORRADOR**: permite datos incompletos, excepto título e identidad del autor.
-- **EN_REVISION**: backend exige campos obligatorios del proyecto, del período y análisis ético; **no exige avales automáticos por población seleccionada**.
-- **DEVUELTO**: el profesor puede corregir el período y reenviar; mantener observaciones/historial.
-- **APROBADO**: bloquear cambios de planeación; evidencias y resultados pueden avanzar bajo reglas de revisión.
-- El administrador puede aprobar/devolver cada **período**; se registra quién, cuándo y observaciones.
+| Rol | Flujo esperado |
+| --- | --- |
+| **Administrador** | Crea cuentas, gestiona catálogo territorial/asignaturas, decide aprobación/devolución por semestre, revisa evidencias, cierra períodos, finaliza proyectos, almacena cartas firmadas, genera enlaces comunitarios y descarga reportes Excel. |
+| **Profesor** | Registra proyectos nuevos o continúa proyectos existentes, crea períodos actuales, ingresa los datos requeridos, envía a revisión, aporta evidencias PDF y resultados. |
+| **Monitor** | Registra proyectos y semestres históricos, incluyendo profesor histórico sin cuenta, documentos existentes y campos faltantes; no debe inventar información ni aprobar períodos anteriores. |
+| **Comunidad** | Responde un formulario al término de **cada semestre**, mediante un enlace privado y sin cuenta de usuario. |
 
-## Formulario B. Consideraciones éticas
+**Cuentas:** las crea el administrador; no hay registro público de docentes. La primera cuenta administrativa se crea con `bootstrap-admin.mjs`. El cambio obligatorio de contraseña inicial y recuperación de contraseña son requerimientos pendientes; no describirlos como implementados.
 
-El Word disponible trae datos generales y preguntas numeradas **18 y 19**, sin preguntas 1–17. Por tanto se plantea un formulario ético MVP propio, **no se presenta como reproducción completa ni oficial del formato**.
+## 3. Campos y catálogos
 
-- Los datos generales se **autorrellenan** desde proyecto y período; no volver a pedir nombre, asignatura o profesor.
-- **Fecha de solicitud** automática; posibilidad de indicar un proyecto antecedente.
-- **Tipo de población externa predominante**: selector de *una* categoría (literal «más predominante» del Word). Lista del documento íntegra: menores; mayores de 65; institucionalizados; discapacidad; LGBTIQ+; víctimas del conflicto; excombatientes; personas enfermas; minorías étnicas; habitantes de calle; migrantes; embarazo; vulnerabilidad socioeconómica; otro; ninguno.
-- **Grupo universitario predominante**: una categoría: estudiantes de la institución, de otras instituciones, trabajadores/colaboradores, personas privadas de libertad, fuerzas armadas/policía, otro, ninguno.
-- **¿Habrá contacto directo con personas o tratamiento de información personal?** sí/no, y medidas de privacidad.
-- **¿Participarán menores o población vulnerable?** sí/no. La respuesta se guarda como información para que el administrador evalúe el proyecto, **sin exigir aval automáticamente**.
-- **¿Habrá fotografías, videos o testimonios identificables?** sí/no. Se registra esta condición para evaluación del administrador; no se bloquea automáticamente el envío por documentos.
-- **Medidas de confidencialidad, no discriminación y mitigación de riesgos**: campo descriptivo.
-- **Observaciones del profesor** y **declaración de veracidad**: casilla antes de enviar.
-- **Estado**: BORRADOR / EN_REVISION / APROBADO / DEVUELTO (distinto del estado del período). En el MVP se puede dejar la evaluación como datos de borrador mientras se implementa el proceso formal.
-- Se registra un análisis ético inicial **por proyecto** y se revisa nuevamente cuando cambien sustancialmente población/actividades. Se señala como regla asumida pendiente de aprobación institucional.
+| Sección | Datos principales | Periodicidad |
+| --- | --- | --- |
+| Información general | Título, código, problemática, objetivo general, justificación, comunidad, ubicación/contacto, fecha de inicio, duración y **zonas territoriales**. | Proyecto |
+| Consideraciones éticas | Población externa predominante, población universitaria, contacto/datos personales, tratamiento de imagen, medidas de privacidad, mitigación, declaración de veracidad; **17 ODS** en esta sección. | Análisis asociado al proyecto |
+| Período académico | Año, semestre, profesor, asignatura, facultad, departamento académico de los estudiantes, programa/carrera, objetivos, actividades, presupuesto, fechas y cantidad de estudiantes. | Semestre |
+| Ejecución | Evidencias PDF, resultados, conclusiones y revisiones. | Semestre |
+| Carta final firmada | Solo archivo **PDF firmado**; la carta se redacta fuera de la plataforma. | **Cada semestre** |
+| Evaluación comunitaria | Cuestionario institucional de 19 preguntas, incluidas 14 afirmaciones Likert. | **Cada semestre** |
 
-## Formulario C. Evaluación de la comunidad
+### Catálogos y campos de selección
 
-Una respuesta por semestre académico de cada proyecto mediante un enlace privado con token de alta entropía. **No requiere crear usuario**. Captura: nombre de organización, relación con el proyecto, cumplimiento de objetivos (escala propuesta 1–5), utilidad para la comunidad (1–5), participación (1–5), comentarios y autorización para guardar la evaluación. Solo se captura nombre de la persona si resulta estrictamente necesario. **Preguntas y escala son propuestas**, no tomadas del Word.
+- **Zonas FORJA:** catálogo institucional de **siete zonas** (nombres por aportar y validar). Una iniciativa puede vincularse a varias zonas; el desplegable permite selección múltiple. No confundir con el departamento académico universitario ni con una división administrativa de Colombia.
+- **ODS:** son los **17 Objetivos de Desarrollo Sostenible**. Pueden seleccionarse varios. No hay «once compromisos de sostenibilidad» como categoría distinta.
+- **Facultad, departamento y programa/carrera:** desplegables basados en las tablas locales de Javeriana Cali. La interfaz asocia **un programa principal por semestre**. El requisito de incluir varias carreras en un semestre simultáneamente aún necesita modelarse.
+- **Población externa predominante:** se selecciona **una** categoría desde consideraciones éticas; alimenta los filtros administrativos.
+- **Beneficiarios:** hay campos descriptivos de población e información agregada; la desagregación sistemática por edades, géneros y otros grupos, así como totales no duplicados, **no está íntegramente implementada**.
 
-## Flujo administrativo y documentos
+## 4. Flujo del semestre actual
 
-Ver `docs/CHECKLIST_DOCUMENTAL_ASUMIDO.md`: el formulario y su análisis ético se presentan al administrador, que aprueba o devuelve el período con observaciones. **No hay requisito automático de aval documental.** La carta firmada no se exige para registrar ni enviar un proyecto.
+1. El profesor crea o abre proyecto activo y registra un semestre `ACTUAL`.
+2. Guarda borrador; completa problemática, objetivo, comunidad, objetivos y actividades del semestre, fechas, curso, presupuesto, estudiantes y consideraciones éticas.
+3. Envía el semestre a revisión (`EN_REVISION`). El backend verifica requisitos.
+4. El administrador aprueba (`APROBADO`) o devuelve (`DEVUELTO`) con observaciones.
+5. En ejecución, el profesor adjunta evidencias **PDF**, máximo 20 MB cada una; el administrador aprueba o devuelve cada archivo.
+6. El profesor registra resultados y conclusiones.
+7. El administrador cierra el período después de contar con resultados, conclusiones, al menos una evidencia PDF aprobada y ninguna evidencia pendiente.
+8. Fuera del sistema, FORJA prepara y firma la carta final; el administrador sube el PDF firmado al **semestre**.
+9. El administrador genera enlace privado para la **evaluación comunitaria del semestre**.
+10. El proyecto continúa activo hasta que el administrador lo marque finalizado. Un nuevo semestre requiere su propia aprobación.
 
-## Qué no se debe asumir sin validación
+**Importante:** carta firmada y evaluación no son requisitos para crear o enviar inicialmente el semestre. La documentación histórica no necesita pasar nuevamente por estas validaciones.
 
-- Que el formato ético de dos páginas es oficial o exhaustivo.
-- Que FORJA obliga a recopilar documentos individuales de estudiantes o beneficiarios.
-- Que hay aval automático de proyectos en semestres posteriores.
-- Que los siete nombres de territorio, las preguntas finales de encuesta, el contenido exacto de las cartas o los plazos de retención ya están aprobados.
+## 5. Digitalización histórica
 
-## Alcance actual del código
+- El monitor registra proyectos `HISTORICO` y sus semestres anteriores sin exigir los documentos faltantes.
+- Puede consignar el nombre del profesor antiguo sin crearle cuenta y anotar «información faltante».
+- Puede adjuntar evidencias PDF y cartas firmadas que realmente existan.
+- Cuando el histórico sigue **activo**, el administrador asigna un profesor con cuenta; ese profesor registra el semestre actual que sí pasa por revisión.
+- Se conservan código de proyecto, semestres anteriores y documentos de cada período.
 
-La rama de desarrollo ya incorpora núcleo de proyectos y períodos en SQL, pero **NO significa que este documento entero esté implementado**. Las pantallas, roles y flujos deben evolucionar de forma incremental y probarse con PostgreSQL y Docker antes de fusionar.
+## 6. Evaluación comunitaria institucional
+
+**Fuente disponible:** formulario institucional de Microsoft Forms entregado al equipo (referencia: `https://forms.cloud.microsoft/r/G80nKymrML`) y su copia PDF de siete páginas. **Se diligencia una vez por semestre**, no por proyecto.
+
+El instrumento tiene 19 preguntas: identificación y contacto; tipo de socio; ubicación; profesor/asignatura y proyecto; problemática; cantidades de estudiantes y participantes comunitarios; encuentros, productos e impactos; **14 afirmaciones con cinco opciones**; línea de acción (cinco); obstáculos, continuidad, futuras iniciativas y comentarios opcionales.
+
+FORJA autocompleta el **semestre evaluado** mediante el enlace del período para evitar seleccionarlo incorrectamente. Al generar el enlace se crea un token aleatorio de 256 bits; solo su hash queda almacenado. Es de un único uso y expira a los 14 días. El administrador puede regenerarlo antes de recibir una evaluación; ello invalida el anterior. Después de una respuesta no se genera otra para el mismo semestre.
+
+`community_period_feedback.form_version` diferencia respuestas de la prueba inicial (`MVP_2026`) y del instrumento institucional (`INSTITUCIONAL_2026`) sin borrar los datos previamente recibidos.
+
+**Privacidad pendiente:** el formulario recoge nombre y datos de contacto; hace falta revisar aviso de privacidad, autorización, retención, acceso y seguridad antes de utilizarlo con comunidades reales.
+
+## 7. Filtros y reportes
+
+En el listado se pueden combinar los siguientes criterios:
+
+- **Año de inicio del proyecto**: año más antiguo entre fecha general de inicio y primeros períodos académicos; si ambos faltan, año de registro como referencia (en históricos incompletos es una aproximación).
+- Zona territorial FORJA.
+- Facultad no es todavía un filtro del listado; sí **departamento académico** y **carrera/programa** (la combinación debe corresponder al mismo semestre).
+- Los 17 ODS.
+- Población externa predominante.
+
+Solo el administrador descarga un **Excel `.xlsx` con los filtros aplicados**, en dos hojas: «Proyectos» y «Semestres». Se incluyen estados, zonas, ODS, datos académicos, cantidad de estudiantes por período y presupuesto. Se excluyen datos de contacto y respuestas nominativas comunitarias.
+
+La suma de estudiantes a lo largo de los semestres **no cuenta estudiantes únicos**.
+
+## 8. Evidencias y seguridad
+
+Solo se permiten PDFs de hasta 20 MB; las fotos pueden incorporarse en el PDF y los videos referenciarse mediante URL en el documento. Los archivos se almacenan en un directorio privado. La verificación de firma PDF, MIME y extensión no equivale a antivirus.
+
+La información de usuarios se restringe por rol y relaciones de proyecto. Falta asegurar despliegue público con HTTPS, respaldo y restauración comprobada, límites de solicitudes de formularios públicos y medidas de seguridad adecuadas para datos personales.
+
+## 9. Requisitos todavía no confirmados o implementados totalmente
+
+- Catálogo oficial con **nombres de siete zonas**.
+- Múltiples carreras simultáneas por semestre y desglose de estudiantes por carrera, si la institución lo solicita.
+- Modelo de beneficiarios desagregados por categorías y métricas oficiales de impacto.
+- Políticas definitivas de permisos y documentos adicionales, protección de datos, retención y cambio de contraseña inicial.
+- Revisión institucional final de textos del formulario y de otros documentos.
+- Pruebas integrales automatizadas; publicación institucional segura.
+
+Para ver qué se ha probado y qué falta: [Estado de implementación](ESTADO_IMPLEMENTACION.md) y [Manual de pruebas](COMO_PROBAR_MVP.md).
