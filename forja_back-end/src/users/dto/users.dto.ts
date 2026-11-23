@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
+import { IsBoolean, IsEmail, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
 import { Transform } from "class-transformer";
 import { ValidateIf } from "class-validator";
 
@@ -79,4 +79,15 @@ export class UserDeleteDto {
     @IsInt()
     @Min(1)
     id: number;
+}
+
+export class ReviewRegistrationDto {
+    @IsIn(['APPROVE','REJECT'])
+    decision:'APPROVE'|'REJECT';
+
+    @IsOptional() @IsIn([2,3])
+    rol_id?:number;
+
+    @IsOptional() @IsInt() @Min(1)
+    faculty_id?:number;
 }
