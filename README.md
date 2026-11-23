@@ -1,5 +1,7 @@
 # FORJA — Plataforma de gestión de proyectos
 
+> **RAMA EXPERIMENTAL:** Esta rama integra el diseño del equipo y cambia el registro: los usuarios verifican su correo con código y el administrador asigna Profesor o Monitor y activa/rechaza la cuenta. Para probarla debes aplicar la migración `Docker/database/migrations/20261123_registration_approval.sql`. Ver [Guía de integración](docs/INTEGRACION_FRONTEND_REGISTRO.md). La versión estable está en `main`.
+
 **FORJA** es una aplicación web para registrar, revisar y consultar proyectos de aprendizaje-servicio desarrollados con comunidades, organizados por **proyecto** y por **semestre académico**. Implementación en desarrollo; **no es un despliegue institucional de producción**.
 
 **Stack:** Next.js 16 (frontend), NestJS 12 (API), PostgreSQL 17 y Docker Compose. La rama utilizada para pruebas es [`forja/primera-etapa-backend`](https://github.com/iarangou/FORJA/tree/forja/primera-etapa-backend), con cambios reunidos en el [PR #1](https://github.com/iarangou/FORJA/pull/1).
