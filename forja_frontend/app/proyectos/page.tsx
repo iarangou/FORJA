@@ -147,7 +147,7 @@ export default function ProjectsPage() {
       <h1>Proyectos registrados</h1>
       <p>Consulta proyectos y aprobaciones por semestre. Los permisos se comprueban en el servidor.</p>
     </div>
-    <div className="forja-actions"><Link className="forja-button" href="/proyectos/nuevo">+ Registrar proyecto</Link></div>
+    {(profile?.rol_id===2||profile?.rol_id===3)&&<div className="forja-actions"><Link className="forja-button" href="/proyectos/nuevo">+ Registrar proyecto</Link></div>}
     <div className="fw-project-summary" aria-label="Resumen de proyectos">
       <div><span>Proyectos disponibles</span><strong>{projects.length}</strong></div>
       <div><span>Proyectos activos</span><strong>{projects.filter(p=>p.general_status==="ACTIVO").length}</strong></div>
@@ -210,7 +210,7 @@ export default function ProjectsPage() {
     {loading&&<p>Cargando proyectos...</p>}
     {error&&<p className="forja-alert" role="alert">{error} {error.includes("sesión")&&<Link href="/login">Iniciar sesión</Link>}</p>}
     {message&&<p className="forja-ok" role="status">{message}</p>}
-    {!loading&&!error&&projects.length===0&&<div className="forja-panel"><h2>No hay proyectos para mostrar</h2><p>Crea un borrador para empezar.</p></div>}
+    {!loading&&!error&&projects.length===0&&<div className="forja-panel"><h2>No hay proyectos para mostrar</h2><p>{profile?.rol_id===1?"Los profesores y monitores registran proyectos; aquí puedes consultar y revisarlos.":"Registra un proyecto para empezar."}</p></div>}
     <div className="forja-cards fw-project-list">
       {filteredProjects.map(p=><article className="forja-panel fw-project-card" key={p.id}>
         <div className="forja-cardhead"><span className="forja-code">{p.code}</span><span className={p.general_status==="ACTIVO"?"fw-status-active":"fw-status-finalized"}>{p.general_status}</span></div>
