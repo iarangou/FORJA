@@ -5,12 +5,14 @@ import Link from "next/link";
 import "@/styles/projects.css";
 import LogoutButton from "@/components/auth/LogoutButton";
 import {ODS} from "@/lib/ods";
+import {EXTERNAL_POPULATION_OPTIONS} from "@/lib/external-population";
 
 type Project = {
   id: number; code: string; title: string;
   registration_type: string; general_status: string;
   zone_ids:number[];ods_ids:number[];
   department_ids:number[];academic_program_ids:number[];
+  external_population:string|null;
 };
 type Period = {
   id:number; academic_year:number; academic_semester:number;
@@ -32,6 +34,8 @@ export default function ProjectsPage() {
   const [odsFilter,setOdsFilter]=useState("");
   const [departmentFilter,setDepartmentFilter]=useState("");
   const [programFilter,setProgramFilter]=useState("");
+  const [populationFilter,setPopulationFilter]=useState("");
+  const [exporting,setExporting]=useState(false);
   const [error,setError] = useState("");
   const [message,setMessage] = useState("");
 
@@ -66,8 +70,36 @@ export default function ProjectsPage() {
     (!zoneFilter||(p.zone_ids??[]).includes(Number(zoneFilter)))&&
     (!odsFilter||(p.ods_ids??[]).includes(Number(odsFilter)))&&
     (!departmentFilter||(p.department_ids??[]).includes(Number(departmentFilter)))&&
-    (!programFilter||(p.academic_program_ids??[]).includes(Number(programFilter)))
+    (!programFilter||(p.academic_program_ids??[]).includes(Number(programFilter)))&&
+    (!populationFilter||p.external_population===populationFilter)
   );
+
+  async function exportFiltered(){
+    if(profile?.rol_id!==1||exporting)return;
+    setError("");setExporting(true);
+    const params=new URLSearchParams();
+    if(zoneFilter)params.set("zone",zoneFilter);
+    if(odsFilter)params.set("ods",odsFilter);
+    if(departmentFilter)params.set("department",departmentFilter);
+    if(programFilter)params.set("program",programFilter);
+    if(populationFilter)params.set("population",populationFilter);
+    try{
+      const response=await fetch(`/api/projects/export?${params.toString()}`,{
+        credentials:"same-origin",cache:"no-store",
+      });
+      if(!response.ok){
+        const data=await response.json().catch(()=>({}));
+        throw new Error(typeof data.message==="string"?data.message:"No fue posible exportar el Excel");
+      }
+      const blob=await response.blob();
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement("a");
+      link.href=url;link.download="FORJA_reporte_filtrado.xlsx";
+      document.body.appendChild(link);link.click();link.remove();
+      URL.revokeObjectURL(url);
+    }catch(e){setError(e instanceof Error?e.message:"No fue posible exportar");}
+    finally{setExporting(false);}
+  }
 
   async function seePeriods(id:number) {
     try {
@@ -102,7 +134,7 @@ export default function ProjectsPage() {
   }
 
   return <main className="forja-projects"><div className="forja-shell">
-    <nav className="forja-nav"><Link href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<><Link href="/administracion/usuarios">Gestionar usuarios</Link><Link href="/administracion/catalogos">Administrar zonas</Link></>}<LogoutButton/></div></nav>
+    <nav className="forja-nav"><Link className="forja-brand" href="/">FORJA</Link><div className="forja-nav-actions">{profile?.rol_id===1&&<><Link className="forja-nav-action" href="/administracion/usuarios">Gestionar usuarios</Link><Link className="forja-nav-action" href="/administracion/catalogos">Administrar zonas</Link></>}<LogoutButton/></div></nav>
     <div className="forja-heading"><span className="forja-eyebrow">PLATAFORMA FORJA</span>
       <h1>Proyectos registrados</h1>
       <p>Consulta proyectos y aprobaciones por semestre. Los permisos se comprueban en el servidor.</p>
@@ -129,6 +161,12 @@ export default function ProjectsPage() {
             {programs.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}
           </select>
         </label>
+        <label>Población externa predominante
+          <select value={populationFilter} onChange={e=>setPopulationFilter(e.target.value)}>
+            <option value="">Todas las poblaciones</option>
+            {EXTERNAL_POPULATION_OPTIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
         <label>Objetivo de Desarrollo Sostenible (ODS)
           <select value={odsFilter} onChange={e=>setOdsFilter(e.target.value)}>
             <option value="">Todos los ODS</option>
@@ -136,7 +174,14 @@ export default function ProjectsPage() {
           </select>
         </label>
       </div>
-      <p className="forja-description">{filteredProjects.length} proyectos coinciden con los filtros seleccionados.</p>
+      <div className="forja-filter-footer">
+        <p className="forja-description">{filteredProjects.length} proyectos coinciden con los filtros seleccionados.</p>
+        {profile?.rol_id===1&&<button className="forja-export-button" type="button"
+          disabled={loading||exporting} onClick={exportFiltered}>
+          {exporting?"Generando Excel...":"Descargar Excel con estos filtros"}
+        </button>}
+      </div>
+      <p className="forja-description">El Excel incluye los proyectos coincidentes y el detalle de sus semestres, sin datos personales de contacto.</p>
     </div>
     {loading&&<p>Cargando proyectos...</p>}
     {error&&<p className="forja-alert" role="alert">{error} {error.includes("sesión")&&<Link href="/login">Iniciar sesión</Link>}</p>}
