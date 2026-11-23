@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import Link from "next/link";
+import LogoutButton from "@/components/auth/LogoutButton";
 import "@/styles/projects.css";
 import {ODS} from "@/lib/ods";
 
@@ -41,7 +42,7 @@ export default function ForjaCatalogsPage(){
   finally{setBusy(false)}
  }
  return <main className="forja-projects"><div className="forja-shell">
-  <nav className="forja-nav"><Link href="/proyectos">← Proyectos</Link><Link href="/">FORJA</Link></nav>
+  <nav className="forja-nav"><Link className="forja-brand" href="/proyectos">FORJA</Link><div className="forja-nav-actions"><Link className="forja-nav-action" href="/proyectos">Proyectos</Link><Link className="forja-nav-action" href="/administracion/usuarios">Gestionar usuarios</Link><LogoutButton/></div></nav>
   <div className="forja-heading">
    <span className="forja-eyebrow">ADMINISTRACIÓN FORJA</span>
    <h1>Zonas territoriales</h1>
