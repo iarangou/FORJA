@@ -267,7 +267,6 @@ export default function NewProjectForm() {
                     onChange={e=>change("historical_teacher_name",e.target.value)}/>
                 </label>
               </>}
-              <>
                 <label>Facultad (si se conoce)
                   <select disabled={!!period} value={form.faculty_id} onChange={e=>{
                     setForm(current=>({...current,faculty_id:e.target.value,department_id:"",academic_program_id:""}));
@@ -292,7 +291,6 @@ export default function NewProjectForm() {
                       .map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </label>
-              </>}
               <label>Asignatura
                 <select disabled={!!period} value={form.course_id} onChange={e=>change("course_id",e.target.value)}>
                   <option value="">Seleccionar asignatura</option>
