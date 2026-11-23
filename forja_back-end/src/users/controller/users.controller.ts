@@ -48,13 +48,6 @@ export class UsersController {
         return this.usersService.getById(id);
     }
 
-    @Post("create")
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(1)
-    create(@Body() dto: UserCreateDto) {
-        return this.usersService.create(dto);
-    }
-
     @Post("update")
     @UseGuards(AuthGuard, RolesGuard)
     @Roles(1)
