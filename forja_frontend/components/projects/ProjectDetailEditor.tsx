@@ -6,6 +6,7 @@ import Link from "next/link";
 import EvidenceSection from "./EvidenceSection";
 import PeriodResultsSection from "./PeriodResultsSection";
 import ProjectAccordion from "./ProjectAccordion";
+import PeriodWorkflow from "./PeriodWorkflow";
 import HistoricalProjectSection from "./HistoricalProjectSection";
 import FinalLetterSection from "./FinalLetterSection";
 import CommunityFeedbackSection from "./CommunityFeedbackSection";
@@ -75,6 +76,7 @@ export default function ProjectDetailEditor(){
   const [periods,setPeriods]=useState<Period[]>([]);
   const [activeId,setActiveId]=useState<number|null>(null);
   const [reviews,setReviews]=useState<Review[]>([]);
+  const [evidenceRevision,setEvidenceRevision]=useState(0);
   const [ethics,setEthics]=useState<Ethics|null>(null);
   const [courses,setCourses]=useState<{id:number;name:string}[]>([]);
   const [faculties,setFaculties]=useState<{id:number;name:string}[]>([]);
@@ -278,6 +280,9 @@ export default function ProjectDetailEditor(){
       <h1>{project.title}</h1>
       <p>{historicalEditor?"Completa los datos históricos que conozcas. Los semestres anteriores se archivan sin aprobación.":"Consulta y completa los datos de tu proyecto. Los campos solo se pueden editar antes de la aprobación."}</p>
     </div>
+    <PeriodWorkflow projectId={projectId} periods={periods}
+      selectedId={activeId} onSelect={id=>{setActiveId(id);setOpenSection("periods");}}
+      revision={evidenceRevision} projectStatus={project.general_status}/>
     {message&&<p className="forja-ok" role="status">{message}</p>}
     {error&&<p className="forja-alert" role="alert">{error}</p>}
     <ProjectAccordion id="general" title="01. Información general" open={openSection==="general"} onToggle={()=>toggleSection("general")}>
@@ -446,7 +451,7 @@ export default function ProjectDetailEditor(){
       </>}
     </ProjectAccordion>
     {period&&<ProjectAccordion id="evidence" title={project.registration_type==="HISTORICO"?"05. Evidencias del semestre (solo PDF)":"04. Evidencias del semestre (solo PDF)"} open={openSection==="evidence"} onToggle={()=>toggleSection("evidence")} summary={period.execution_status==="CERRADO"?"Semestre cerrado":undefined}>
-      <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status}/>
+      <EvidenceSection projectId={projectId} periodId={period.id} role={role} approvalStatus={period.approval_status} recordType={period.record_type} projectStatus={project.general_status} executionStatus={period.execution_status} onChanged={()=>setEvidenceRevision(v=>v+1)}/>
     </ProjectAccordion>}
     {period&&period.record_type==="ACTUAL"&&<ProjectAccordion id="results" title={project.registration_type==="HISTORICO"?"06. Resultados, conclusiones y cierre":"05. Resultados, conclusiones y cierre"} open={openSection==="results"} onToggle={()=>toggleSection("results")} summary={period.execution_status}>
       <PeriodResultsSection projectId={projectId} period={period} role={role} projectStatus={project.general_status} onSaved={reload}/>
