@@ -123,18 +123,5 @@ CREATE TABLE IF NOT EXISTS project_territories (
   PRIMARY KEY(project_id, territory_id)
 );
 
--- Catálogo de compromisos de sostenibilidad diferente al listado de ODS.
-CREATE TABLE IF NOT EXISTS forja_sustainability_commitments (
-  id SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name VARCHAR(180) NOT NULL UNIQUE
-);
-CREATE TABLE IF NOT EXISTS project_sustainability_commitments (
-  project_id INT NOT NULL REFERENCES project(id) ON DELETE RESTRICT,
-  commitment_id SMALLINT NOT NULL REFERENCES forja_sustainability_commitments(id) ON DELETE RESTRICT,
-  PRIMARY KEY(project_id,commitment_id)
-);
-CREATE INDEX IF NOT EXISTS idx_project_territories_zone ON project_territories(territory_id,project_id);
-CREATE INDEX IF NOT EXISTS idx_project_sustainability_commitments_filter
-  ON project_sustainability_commitments(commitment_id,project_id);
 
 COMMIT;
