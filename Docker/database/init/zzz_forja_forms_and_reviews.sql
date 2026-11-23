@@ -97,6 +97,8 @@ CREATE TABLE IF NOT EXISTS community_period_feedback (
   ratings JSONB NOT NULL DEFAULT '{}'::jsonb,
   comments TEXT,
   consent_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+  form_version VARCHAR(32) NOT NULL DEFAULT 'MVP_2026',
+  form_responses JSONB,
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
