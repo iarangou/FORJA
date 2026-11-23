@@ -1,109 +1,96 @@
-# FORJA — Cómo probar la rama MVP en Windows
+# FORJA — Manual de pruebas del MVP
 
-**Rama:** `forja/primera-etapa-backend` (Pull Request #1).  
-**Estado:** prototipo en desarrollo, **no es producción**. No ejecutar scripts sobre una base con información real sin respaldo y migración revisada.
+**Rama de trabajo:** `forja/primera-etapa-backend`. **Estado:** prototipo para pruebas locales, no producción institucional. Las pruebas deben utilizar personas, comunidades y proyectos ficticios.
 
-## 1. Actualizar tu copia local
+## 1. Preparación
 
-Si ya clonaste el repositorio propio en tu PC:
+Instalación desde cero: [INSTALACION_COMPANEROS.md](INSTALACION_COMPANEROS.md).
 
-```powershell
-git fetch origin
-git switch forja/primera-etapa-backend
-```
+En una instalación existente, desde la raíz `FORJA`:
 
-O clonar directamente la rama nueva:
-
-```powershell
-git clone --branch forja/primera-etapa-backend https://github.com/iarangou/FORJA.git
-cd FORJA
-```
-
-## 2. Preparar variables DEV
-
-Crea `Docker/.env.dev` con variables de prueba **sin subirlas a Git**:
-
-```dotenv
-FRONTEND_PORT=3000
-BACKEND_PORT=3001
-POSTGRES_PORT=5433
-NEXT_PUBLIC_API_URL=http://localhost:3001
-CORS_ORIGINS=http://localhost:3000
-POSTGRES_USER=forja_dev
-POSTGRES_PASSWORD=CAMBIA_ESTA_CLAVE_LOCALMENTE
-POSTGRES_DB=forja_dev
-JWT_SECRET=GENERA_UN_SECRETO_ALEATORIO_DE_32_CARACTERES_O_MAS
-JWT_EXPIRES_IN_SECONDS=7200
-EMAIL_VERIFICATION_SECRET=NO_USADO_TRAS_DESACTIVAR_REGISTRO
-VERIFICATION_LOG_CODES=false
-SMTP_HOST=
-SMTP_PORT=
-SMTP_SECURE=false
-SMTP_USER=
-SMTP_PASSWORD=
-SMTP_FROM=
-```
-
-Para generar `JWT_SECRET` desde PowerShell (requiere Node):
-
-```powershell
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
-
-**No compartas contraseñas o archivos .env en el chat, por correo o mediante commits.**
-
-## 3. Iniciar el entorno local
-
-Abre Docker Desktop y luego, en PowerShell:
-
-```powershell
+~~~powershell
+git pull origin forja/primera-etapa-backend
 cd Docker
-.\forja.ps1 dev up
-.\forja.ps1 dev ps
-```
+docker compose -p forja-dev --env-file .env.dev -f compose.dev.yml up -d --build --force-recreate backend frontend
+docker compose -p forja-dev --env-file .env.dev -f compose.dev.yml ps
+~~~
 
-Deberías tener frontend en `http://localhost:3000` y backend en `http://localhost:3001`.
+Las migraciones de PostgreSQL **no** se ejecutan por este comando: consultar [README — Base de datos](../README.md#base-de-datos-y-persistencia). No borrar carpetas de datos existentes. Abrir `http://localhost:3000/login`.
 
-PostgreSQL ejecuta `create_tables.sql`, `insert_values.sql` y las migraciones con prefijo `zz` **solo al inicializar un volumen vacío**. Si ya existe `Docker/database/data/dev`, los SQL nuevos no se aplican por `up`. **Respaldar primero** y planificar migración; `dev reset-db` borra todos los datos DEV.
+**Usuarios:** cada entorno necesita una cuenta administrador creada mediante `bootstrap-admin.mjs`; desde «Gestionar usuarios» el administrador crea profesor (rol 3, con facultad) y monitor (rol 2) de prueba. No hay registro público ni contraseña fija.
 
-## 4. Crear el primer administrador sin contraseña conocida
+## 2. Prueba: profesor y semestre actual
 
-Ya no se crean automáticamente cuentas con la contraseña `12345678` del código antiguo.
+1. Entrar como profesor; abrir «Registrar proyecto».
+2. Registrar título, problemática, objetivo, comunidad y zona territorial (si el administrador ya cargó el catálogo). Seleccionar ODS en «Consideraciones éticas».
+3. Registrar período `2026-2` (o el semestre actual), asignatura, facultad, departamento y carrera, objetivos, actividades, presupuesto, fechas y cantidad de estudiantes. El formulario admite un programa principal por período.
+4. Guardar: el proyecto debe recibir código `FORJA-...` y el semestre aparecer como `BORRADOR`.
+5. Revisar «Información general», «Períodos académicos» y «Consideraciones éticas» en el detalle. Seleccionar la población externa predominante; completar la declaración de veracidad.
+6. Enviar a revisión. Si faltan datos obligatorios, el servidor debe enumerarlos. Corregirlos sin duplicar el período.
+7. Entrar como administrador: consultar el período `EN_REVISION`, aprobarlo o devolverlo con observaciones. Si fue devuelto, el profesor puede corregir y reenviar.
+8. Con el semestre aprobado, el profesor puede subir evidencias **PDF de hasta 20 MB**; el administrador revisa cada PDF (`APROBADA` / `DEVUELTA`).
+9. Registrar resultados y conclusiones; cerrar el período como administrador solo después de tener evidencia aprobada y ninguna pendiente.
+10. Verificar que el proyecto pueda seguir `ACTIVO` aunque un semestre ya esté `CERRADO`. Solo el administrador marca la finalización definitiva, sujeto a los estados de los períodos actuales.
 
-Con los contenedores funcionando, desde la carpeta `Docker` abre un shell en el backend:
+> Nota: el ejemplo `2026-2` sirve para las pruebas descritas en noviembre de 2026. En semestres futuros utilizar el período vigente.
 
-```powershell
-docker compose -p forja-dev --env-file .env.dev -f compose.dev.yml exec backend bash
-```
+## 3. Prueba: monitor y proyectos históricos
 
-Dentro de Bash:
+1. Entrar como monitor y seleccionar «Digitalizar proyecto histórico».
+2. Registrar información disponible; dejar vacíos los campos desconocidos y escribir «Información faltante».
+3. Crear un período académico **anterior al semestre actual** y guardar **sin pedir aprobación retroactiva**.
+4. Adjuntar, si existen, las evidencias PDF y la carta final firmada de ese semestre; el monitor puede archivarlas sin aprobar retrospectivamente.
+5. Comprobar que el monitor tiene el mismo formulario general/semestre que el profesor, con campos adicionales para profesor histórico y datos faltantes.
+6. Para continuar un histórico **activo**, el administrador asigna un profesor; este crea el período **actual** en el mismo código FORJA y solicita aprobación por el flujo normal.
+7. Confirmar que un semestre histórico y uno actual permanecen independientes.
 
-```bash
-export ADMIN_USERNAME=admin
-export ADMIN_EMAIL=admin@javerianacali.edu.co
-read -rs -p "Contraseña nueva (mínimo 12 caracteres): " ADMIN_PASSWORD
-echo
-export ADMIN_PASSWORD
-npm run bootstrap:admin
-unset ADMIN_PASSWORD
-exit
-```
+## 4. Carta firmada y evaluación de la comunidad (por semestre)
 
-Usa un correo autorizado para el entorno de prueba. La contraseña se introduce sin imprimirse y **no se guarda en el repositorio**.
+**La carta firmada y la evaluación comunitaria pertenecen al mismo período académico, pero son registros distintos.**
 
-## 5. Probar en el navegador
+1. Seleccionar un período histórico o un semestre actual aprobado y **cerrado**.
+2. Como administrador o monitor, archivar **solo el PDF final firmado** de la carta, preparado externamente. Debe poder consultarse desde el semestre.
+3. Como administrador, abrir «Evaluación de la comunidad del semestre» y generar enlace privado.
+4. Abrir ese enlace en una **ventana de incógnito** sin iniciar sesión. Verificar código FORJA y semestre correctos.
+5. Completar el **formulario institucional de 19 preguntas**, incluidas las 14 afirmaciones con escala Likert y la línea de acción; autorizar el almacenamiento de datos.
+6. Enviar; la respuesta debe guardarse una sola vez y el enlace dejar de funcionar. El token tiene vigencia máxima de 14 días y regenerarlo invalida el anterior.
+7. Volver como administrador al semestre y verificar las respuestas.
+8. Seleccionar **otro semestre del mismo proyecto**: debe permitir su propia evaluación sin sobrescribir la anterior.
+9. Las antiguas respuestas MVP (`MVP_2026`) se conservan para pruebas y se distinguen del instrumento institucional (`INSTITUCIONAL_2026`). Un semestre que ya respondió **no** puede contestar otra vez.
 
-1. Abre `http://localhost:3000/login`, inicia sesión con el administrador.
-2. Al ingresar, verás `/proyectos`: listado de proyectos.
-3. En `/proyectos/nuevo`, crea un borrador y un período. El formulario de análisis ético se aplica a registros actuales.
-4. Para comprobar el flujo del profesor, crea primero un usuario con rol 3 mediante `POST /users/create` como administrador (aún falta interfaz de gestión de usuarios). Debe tener una facultad válida. No uses datos de personas reales para pruebas.
-5. Completa los campos requeridos y solicita revisión. Si falta algo, la API indicará qué se debe completar. El panel del administrador permite aprobar o devolver un período en revisión.
+**Datos personales:** el formulario recoge datos de contacto. No utilizar información real ni compartir enlaces/tokens sin autorización; revisar tratamiento de datos antes del despliegue.
 
-**Limitaciones conocidas del MVP:**
-- No hay aún editor de borradores guardados, carga binaria de evidencias, reporte Excel ni formulario comunitario desplegado.
-- Los permisos/avales que se requieran **bloquean el envío** si no se han adjuntado; el sistema de archivos seguro está pendiente.
-- Las asignaturas deben ser creadas por el administrador usando `POST /course/create` o una interfaz futura. No se suministran asignaturas ficticias como catálogo oficial.
-- El administrador aún no puede gestionar usuarios en interfaz gráfica; existe backend.
-- El cambio de contraseña temporal al primer inicio, la recuperación de contraseña y controles de despliegue requieren implementación.
-- La declaración de ética y los documentos finales se consideran supuestos funcionales, no aval institucional.
-- CI verifica compilación de código al estar habilitadas las acciones GitHub; no sustituye pruebas de PostgreSQL/seguridad.
+## 5. Reportes y exportación administrativa
+
+Como administrador, abrir `/proyectos`. Probar los filtros desplegables:
+
+| Filtro | Origen de la información |
+| --- | --- |
+| Año de inicio | Fecha general de inicio o año académico más antiguo; como último recurso, año de registro en la plataforma. |
+| Zona territorial | Catálogo administrable de zonas y relación con el proyecto. |
+| Departamento académico | Departamento asociado a los semestres registrados. |
+| Carrera / programa | Programa principal por semestre (coincidencia de carrera y departamento dentro del mismo semestre). |
+| ODS | Los **17 Objetivos de Desarrollo Sostenible** asignados al proyecto. |
+| Población externa predominante | Información guardada en «Consideraciones éticas». |
+
+1. Elegir un año y una zona; comprobar la cantidad de proyectos coincidentes.
+2. Combinar ODS y población externa; comprobar que el resultado corresponde al criterio.
+3. Descargar **Excel con estos filtros** (solo admin).
+4. Abrir el `.xlsx` y comprobar las hojas **Proyectos** y **Semestres**, los encabezados y los datos filtrados.
+5. Confirmar que «Año de inicio» aparece en «Proyectos». «Estudiantes (suma semestral)» no equivale a número de individuos únicos.
+6. Comprobar que el Excel **no expone** nombres, teléfonos, correos de contacto ni respuestas personales de comunidades.
+7. Entrar como profesor o monitor: el botón de exportación administrativa debe estar oculto y el endpoint devolver acceso denegado.
+
+## 6. Navegación
+
+En «Proyectos registrados», «Gestionar usuarios» y «Administrar zonas» verificar que la barra superior usa controles del mismo tamaño y se adapta a pantallas pequeñas.
+
+## 7. Qué falta validar antes de producción
+
+- Nombres oficiales de las siete zonas y posibles cambios en los catálogos académicos.
+- Política de privacidad, permisos de acceso, conservación y eliminación de respuestas.
+- Seguridad de archivos, análisis antivirus, límites de peticiones al formulario público.
+- Registro simultáneo de varias carreras por semestre, si FORJA lo requiere.
+- Pruebas automatizadas end-to-end, restauración de respaldos y publicación HTTPS.
+
+**Referencia:** [README principal](../README.md), [especificación](ESPECIFICACION_FUNCIONAL_MVP.md), [estado de implementación](ESTADO_IMPLEMENTACION.md).
