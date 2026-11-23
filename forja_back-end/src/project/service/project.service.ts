@@ -21,7 +21,10 @@ export class ProjectService {
               ARRAY(SELECT DISTINCT pp.department_id FROM project_periods pp
                     WHERE pp.project_id=p.id AND pp.department_id IS NOT NULL) AS department_ids,
               ARRAY(SELECT DISTINCT pp.academic_program_id FROM project_periods pp
-                    WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids
+                    WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids,
+              COALESCE((SELECT json_agg(json_build_object(
+                'department_id',pp.department_id,'academic_program_id',pp.academic_program_id))
+                FROM project_periods pp WHERE pp.project_id=p.id),'[]'::json) AS academic_pairs
          FROM project p
          LEFT JOIN project_ethics pe ON pe.project_id=p.id
         WHERE $1::boolean
@@ -69,7 +72,10 @@ export class ProjectService {
               ARRAY(SELECT DISTINCT pp.department_id FROM project_periods pp
                     WHERE pp.project_id=p.id AND pp.department_id IS NOT NULL) AS department_ids,
               ARRAY(SELECT DISTINCT pp.academic_program_id FROM project_periods pp
-                    WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids
+                    WHERE pp.project_id=p.id AND pp.academic_program_id IS NOT NULL) AS academic_program_ids,
+              COALESCE((SELECT json_agg(json_build_object(
+                'department_id',pp.department_id,'academic_program_id',pp.academic_program_id))
+                FROM project_periods pp WHERE pp.project_id=p.id),'[]'::json) AS academic_pairs
          FROM project p
          LEFT JOIN project_ethics pe ON pe.project_id=p.id
         WHERE p.id = $1
