@@ -1,248 +1,47 @@
-
 "use client";
-
-import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
-
+import {useState} from "react";
+import type {FormEvent} from "react";
 import RegisterField from "./RegisterField";
 import PasswordField from "./PasswordField";
-import FacultySelect from "./FacultySelect";
-import type { Faculty } from "./FacultySelect";
+import {registerUser,RegisterApiError} from "@/services/registerService";
 
-import { getFaculties } from "@/services/facultyService";
-import {
-  registerUser,
-  RegisterApiError,
-} from "@/services/registerService";
-
-interface RegisterErrors {
-  full_name?: string;
-  email?: string;
-  faculty_id?: string;
-  password?: string;
-}
-
-interface RegisterFormProps {
-  onRegistered: (email: string) => void;
-}
-
-export default function RegisterForm({
-  onRegistered,
-}: RegisterFormProps) {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [facultyId, setFacultyId] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [faculties, setFaculties] = useState<Faculty[]>([]);
-  const [isLoadingFaculties, setIsLoadingFaculties] = useState(true);
-  const [facultyLoadError, setFacultyLoadError] = useState("");
-
-  const [errors, setErrors] = useState<RegisterErrors>({});
-  const [submitError, setSubmitError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadFaculties() {
-      try {
-        const result = await getFaculties();
-
-        if (active) {
-          setFaculties(result);
-          setFacultyLoadError("");
-        }
-      } catch {
-        if (active) {
-          setFacultyLoadError(
-            "No pudimos cargar las facultades. Actualiza la página."
-          );
-        }
-      } finally {
-        if (active) {
-          setIsLoadingFaculties(false);
-        }
-      }
-    }
-
-    loadFaculties();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  function clearError(field: keyof RegisterErrors) {
-    setErrors((current) => ({
-      ...current,
-      [field]: undefined,
-    }));
-
-    setSubmitError("");
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (isSubmitting) return;
-
-    const nextErrors: RegisterErrors = {};
-    const normalizedEmail = email.trim().toLowerCase();
-
-    if (!fullName.trim()) {
-      nextErrors.full_name = "Ingresa tu nombre completo.";
-    }
-
-    if (!normalizedEmail) {
-      nextErrors.email = "Ingresa tu correo institucional.";
-    } else if (
-      !/^[^\s@]+@javerianacali\.edu\.co$/i.test(normalizedEmail)
-    ) {
-      nextErrors.email =
-        "Utiliza tu correo institucional @javerianacali.edu.co.";
-    }
-
-    if (
-      !facultyId ||
-      !faculties.some(
-        (faculty) => faculty.id === Number(facultyId)
-      )
-    ) {
-      nextErrors.faculty_id = "Selecciona una facultad válida.";
-    }
-
-    if (!password) {
-      nextErrors.password = "Ingresa una contraseña.";
-    } else if (password.length < 8) {
-      nextErrors.password =
-        "La contraseña debe tener mínimo 8 caracteres.";
-    }
-
-    setErrors(nextErrors);
-    setSubmitError("");
-
-    if (Object.keys(nextErrors).length > 0) return;
-
-    setIsSubmitting(true);
-
-    try {
-      await registerUser({
-        full_name: fullName.trim(),
-        email: normalizedEmail,
-        password,
-        faculty_id: Number(facultyId),
-      });
-
-      // Solo avanzamos cuando NestJS confirma el registro pendiente.
-      onRegistered(normalizedEmail);
-    } catch (error: unknown) {
-      if (error instanceof RegisterApiError) {
-        setSubmitError(error.message);
-      } else {
-        setSubmitError(
-          "No fue posible conectar con el servidor. Inténtalo nuevamente."
-        );
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  return (
-    <form
-      className="register-form"
-      onSubmit={handleSubmit}
-      noValidate
-    >
-      <RegisterField
-        id="register-name"
-        name="full_name"
-        label="Nombre completo"
-        type="text"
-        autoComplete="name"
-        placeholder="Escribe tu nombre completo"
-        value={fullName}
-        disabled={isSubmitting}
-        onChange={(event) => {
-          setFullName(event.target.value);
-          clearError("full_name");
-        }}
-        error={errors.full_name}
-      />
-
-      <RegisterField
-        id="register-email"
-        name="email"
-        label="Correo institucional"
-        type="email"
-        autoComplete="email"
-        placeholder="nombre@javerianacali.edu.co"
-        value={email}
-        disabled={isSubmitting}
-        onChange={(event) => {
-          setEmail(event.target.value);
-          clearError("email");
-        }}
-        error={errors.email}
-      />
-
-      <FacultySelect
-        value={facultyId}
-        faculties={faculties}
-        isLoading={isLoadingFaculties}
-        disabled={isSubmitting || Boolean(facultyLoadError)}
-        onChange={(value) => {
-          setFacultyId(value);
-          clearError("faculty_id");
-        }}
-        error={errors.faculty_id}
-      />
-
-      {facultyLoadError && (
-        <p className="field-error" role="alert">
-          {facultyLoadError}
-        </p>
-      )}
-
-      <PasswordField
-        value={password}
-        disabled={isSubmitting}
-        onChange={(event) => {
-          setPassword(event.target.value);
-          clearError("password");
-        }}
-        error={errors.password}
-      />
-
-      {submitError && (
-        <p className="form-message form-message--error" role="alert">
-          {submitError}
-        </p>
-      )}
-
-      <button
-        className="submit-button"
-        type="submit"
-        disabled={
-          isSubmitting ||
-          isLoadingFaculties ||
-          Boolean(facultyLoadError)
-        }
-        aria-busy={isSubmitting}
-      >
-        {isSubmitting ? (
-          <span
-            className="button-spinner"
-            aria-hidden="true"
-          />
-        ) : (
-          <>
-            Continuar
-            <span aria-hidden="true">→</span>
-          </>
-        )}
-      </button>
-    </form>
-  );
+interface Props {onRegistered:(email:string)=>void}
+export default function RegisterForm({onRegistered}:Props){
+ const [fullName,setFullName]=useState("");
+ const [email,setEmail]=useState("");
+ const [password,setPassword]=useState("");
+ const [errors,setErrors]=useState<Record<string,string>>({});
+ const [submitError,setSubmitError]=useState("");
+ const [busy,setBusy]=useState(false);
+ async function submit(event:FormEvent<HTMLFormElement>){
+  event.preventDefault();
+  if(busy)return;
+  const normalized=email.trim().toLowerCase();
+  const next:Record<string,string>={};
+  if(!fullName.trim())next.full_name="Ingresa tu nombre completo.";
+  if(!/^[^\s@]+@javerianacali\.edu\.co$/.test(normalized))next.email="Usa un correo @javerianacali.edu.co.";
+  if(password.length<12)next.password="La contraseña debe tener al menos 12 caracteres.";
+  setErrors(next);setSubmitError("");
+  if(Object.keys(next).length)return;
+  setBusy(true);
+  try{
+   await registerUser({full_name:fullName.trim(),email:normalized,password});
+   onRegistered(normalized);
+  }catch(e){setSubmitError(e instanceof RegisterApiError?e.message:"No fue posible completar el registro.");}
+  finally{setBusy(false);}
+ }
+ return <form className="register-form" onSubmit={submit} noValidate>
+  <RegisterField id="register-name" name="full_name" label="Nombre completo" type="text" autoComplete="name"
+   placeholder="Escribe tu nombre completo" value={fullName} disabled={busy}
+   onChange={e=>setFullName(e.target.value)} error={errors.full_name}/>
+  <RegisterField id="register-email" name="email" label="Correo institucional" type="email"
+   autoComplete="email" placeholder="nombre@javerianacali.edu.co"
+   value={email} disabled={busy} onChange={e=>setEmail(e.target.value)} error={errors.email}/>
+  <PasswordField value={password} disabled={busy} onChange={e=>setPassword(e.target.value)} error={errors.password}/>
+  <p className="form-message">Después de verificar el correo, el administrador decidirá si te asigna el rol de profesor o monitor. Si eres profesor, también seleccionará tu facultad.</p>
+  {submitError&&<p className="form-message form-message--error" role="alert">{submitError}</p>}
+  <button type="submit" className="submit-button" disabled={busy}>
+   {busy?"Enviando...":"Enviar código de verificación"}<span aria-hidden="true"> →</span>
+  </button>
+ </form>;
 }
